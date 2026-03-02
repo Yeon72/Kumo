@@ -3,14 +3,16 @@ document.addEventListener("DOMContentLoaded", function() {
     /* ==============================
        1. 다크모드 및 기본 설정
        ============================== */
+    const body = document.body;
+    const html = document.documentElement;
+    const theme = localStorage.getItem('theme');
     const toggleBtn = document.getElementById('darkModeBtn');
     const icon = document.getElementById('darkModeIcon');
-    const body = document.body;
 
     // 로컬 스토리지 테마 적용
-    const currentTheme = localStorage.getItem('theme');
-    if (currentTheme === 'dark') {
+    if (theme === 'dark') {
         body.classList.add('dark-mode');
+        html.classList.add('dark-mode');
         if(icon) {
             icon.classList.replace('fa-regular', 'fa-solid');
             icon.classList.replace('fa-sun', 'fa-moon');
@@ -19,8 +21,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
-            body.classList.toggle('dark-mode');
-            const isDark = body.classList.contains('dark-mode');
+            const isDark = body.classList.toggle('dark-mode');
+            html.classList.toggle('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
 
             if(icon) {
@@ -90,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const markAllReadBtn = document.getElementById('markAllReadBtn');
     const deleteAllBtn = document.getElementById('deleteAllBtn');
 
-    // "알림 없음" 요소를 미리 복제해둠 (innerHTML 초기화 시 삭제 방지)
+    // "알림 없음" 요소를 미리 복제해둠
     let emptyTemplate = null;
     const originalEmpty = document.getElementById('notifyEmpty');
     if (originalEmpty) {
@@ -104,10 +106,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (expandBtn) {
         expandBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-
-            // CSS 클래스 토글
             notifyList.classList.toggle('expanded');
-
             const span = this.querySelector('span');
             const icon = this.querySelector('i');
             const moreTxt = this.getAttribute('data-more') || "더 보기";
@@ -143,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function() {
             fetch('/api/notifications', { method: 'DELETE' })
                 .then(res => {
                     if (res.ok) {
-                        renderEmptyState(); // 화면 비우고 알림 없음 표시
+                        renderEmptyState();
                         updateBadgeCount();
                     }
                 });
@@ -152,15 +151,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // [3-4] 알림 로드 및 렌더링
     function loadNotifications() {
+        console.log("알림 로드 시도...");
         fetch('/api/notifications')
             .then(res => res.json())
             .then(data => {
-                notifyList.innerHTML = ''; // 일단 비움
+                console.log("받은 알림 데이터:", data);
+                notifyList.innerHTML = ''; 
 
                 if (!data || data.length === 0) {
-                    renderEmptyState(); // 데이터 없으면 Empty 표시
+                    renderEmptyState(); 
                 } else {
-                    // 데이터 있으면 리스트 생성
                     data.forEach(n => {
                         notifyList.insertAdjacentHTML('beforeend', createNotificationHTML(n));
                     });
@@ -170,12 +170,11 @@ document.addEventListener("DOMContentLoaded", function() {
             .catch(err => console.error("알림 로드 실패:", err));
     }
 
-    // "알림 없음" 상태 그리기 함수
     function renderEmptyState() {
         notifyList.innerHTML = '';
         if (emptyTemplate) {
             const emptyClone = emptyTemplate.cloneNode(true);
-            emptyClone.style.display = 'flex'; // 보이게 설정
+            emptyClone.style.display = 'flex'; 
             notifyList.appendChild(emptyClone);
         }
     }
@@ -183,21 +182,20 @@ document.addEventListener("DOMContentLoaded", function() {
     function createNotificationHTML(notif) {
         const isRead = notif.read || notif.isRead;
         const readClass = isRead ? '' : 'unread';
-        const timeStr = timeAgo(notif.createdAt);
+        const timeStr = window.timeAgo ? window.timeAgo(notif.createdAt) : notif.createdAt;
 
         return `
-            <div class="notify-item ${readClass}" onclick="readAndGo('${notif.targetUrl}', ${notif.notificationId}, this)">
+            <div class="notify-item ${readClass}" onclick="window.readAndGo('${notif.targetUrl}', ${notif.notificationId}, this)">
                 <div class="notify-icon"><i class="fa-solid fa-bell"></i></div>
                 <div class="notify-content">
                     <p class="notify-text"><strong>${notif.title}</strong><br>${notif.content}</p>
                     <span class="notify-time">${timeStr}</span>
                 </div>
-                <i class="fa-solid fa-xmark delete-btn" onclick="deleteNotification(event, ${notif.notificationId}, this)"></i>
+                <i class="fa-solid fa-xmark delete-btn" onclick="window.deleteNotification(event, ${notif.notificationId}, this)"></i>
             </div>
         `;
     }
 
-    // [3-5] 뱃지 카운트
     function updateBadgeCount() {
         fetch('/api/notifications/unread-count')
             .then(res => res.json())
@@ -212,38 +210,34 @@ document.addEventListener("DOMContentLoaded", function() {
             .catch(() => { notifyBadge.style.display = 'none'; });
     }
 
-    // 외부 호출용
     window.refreshBadge = updateBadgeCount;
 });
 
 /* ==============================
-   4. 유틸리티 함수
+   4. 전역 유틸리티 함수
    ============================== */
-function changeLang(lang) {
+window.changeLang = function(lang) {
     const url = new URL(window.location.href);
     url.searchParams.set('lang', lang);
     window.location.href = url.toString();
-}
+};
 
-function deleteNotification(event, id, btn) {
+window.deleteNotification = function(event, id, btn) {
     event.stopPropagation();
     fetch(`/api/notifications/${id}`, { method: 'DELETE' })
         .then(res => {
             if (res.ok) {
                 const item = btn.closest('.notify-item');
                 item.remove();
-
-                // 다 지웠으면 Empty 표시
-                const list = document.getElementById('notifyList');
-                if (list.querySelectorAll('.notify-item').length === 0) {
-                     if (window.refreshBadge) window.refreshBadge();
+                if (document.getElementById('notifyList').querySelectorAll('.notify-item').length === 0) {
+                     window.refreshBadge();
                 }
                 window.refreshBadge();
             }
         });
-}
+};
 
-function readAndGo(url, id, el) {
+window.readAndGo = function(url, id, el) {
     if (!el.classList.contains('unread')) {
         location.href = url;
         return;
@@ -251,17 +245,12 @@ function readAndGo(url, id, el) {
     fetch(`/api/notifications/${id}/read`, { method: 'PATCH' })
         .then(() => location.href = url)
         .catch(() => location.href = url);
-}
+};
 
-// ★ [수정] 화면에 '通知'가 보이면 무조건 일본어로 표시하도록 강화
-function timeAgo(dateString) {
+window.timeAgo = function(dateString) {
     if (!dateString) return "";
     const diff = Math.floor((new Date() - new Date(dateString)) / 1000);
 
-    // [감지 로직]
-    // 1. HTML 태그 lang="ja"
-    // 2. URL에 lang=ja 포함
-    // 3. (가장 중요) 화면 헤더에 '通知' 텍스트가 있는지 확인
     const headerTitle = document.querySelector('.notify-header span');
     const isTextJA = headerTitle && headerTitle.innerText.trim() === '通知';
 
@@ -277,4 +266,4 @@ function timeAgo(dateString) {
     if (diff < 3600) return Math.floor(diff / 60) + i18n.min;
     if (diff < 86400) return Math.floor(diff / 3600) + i18n.hr;
     return Math.floor(diff / 86400) + i18n.day;
-}
+};

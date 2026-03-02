@@ -1,5 +1,6 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
   <head>
     <meta charset="UTF-8" />
     <title>KUMO RECRUITER - 대시보드</title>
@@ -105,38 +106,36 @@
 
             <div class="mid-row mt-4">
               <section class="panel panel-scout">
-                <div class="panel-header">
-                  <h5
-                    class="panel-title mb-0"
-                    th:text="#{main.panel.scout_status}"
-                  >
-                    스카우트
-                  </h5>
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                  <h5 class="panel-title mb-0" th:text="#{main.panel.scout_status}">스카우트</h5>
+                  <a class="panel-link text-decoration-none" th:href="@{/Recruiter/TalentList}" th:text="#{main.sidebar.view_all}">전체보기</a>
                 </div>
                 <div class="panel-body">
                   <div
                     class="empty-state"
-                    th:if="${scoutList == null or #lists.isEmpty(scoutList)}"
+                    th:if="${talents == null or #lists.isEmpty(talents)}"
                     th:text="#{main.scout.empty}"
                   >
                     스카우트할 인재가 없습니다.
                   </div>
-                  <div class="scout-item" th:each="s : ${scoutList}">
+                  <div class="scout-item" th:each="t : ${talents}" style="cursor:pointer;" 
+                       th:onclick="|location.href='/Recruiter/TalentDetail?userId=${t.user.userId}'|">
                     <div class="scout-left">
-                      <input
-                        type="checkbox"
-                        name="scoutIds"
-                        th:value="${s.id}"
-                      />
                       <img
                         class="scout-avatar"
-                        th:src="${s.profileImage ?: '/images/default-avatar.png'}"
+                        th:src="${t.user.profileImage?.fileUrl ?: '/images/common/default_profile.png'}"
                         alt="avatar"
                       />
-                      <span class="scout-name" th:text="${s.name}">이름</span>
+                      <div class="scout-info">
+                        <span class="scout-name" 
+                              th:text="${#strings.length(t.user.nameKanjiMei ?: t.user.nickname) > 1 
+                                       ? #strings.substring(t.user.nameKanjiMei ?: t.user.nickname, 0, 1) + '*' + #strings.substring(t.user.nameKanjiMei ?: t.user.nickname, #strings.length(t.user.nameKanjiMei ?: t.user.nickname)-1) 
+                                       : t.user.nameKanjiMei ?: t.user.nickname}">이름</span>
+                        <span class="scout-sub-text" th:text="${t.careerType == 'EXPERIENCED' ? '경력' : '신입'}">등급</span>
+                      </div>
                     </div>
                     <div class="scout-right">
-                      <span class="scout-level" th:text="${s.level}">등급</span>
+                      <i class="fa-solid fa-chevron-right" style="color: #ccc; font-size: 0.8rem;"></i>
                     </div>
                   </div>
                 </div>
@@ -208,7 +207,6 @@
                       th:href="@{/Recruiter/editJobPosting(id=${job.id}, region=${job.regionType == '도쿄' ? 'TOKYO' : 'OSAKA'})}"
                       th:text="#{main.myjobs.btn.edit}">공고 수정</a>
                   </div>
-                </div>
                 </div>
               </div>
             </section>

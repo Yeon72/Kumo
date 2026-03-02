@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.kumo.kumo.domain.NotificationResponseDTO;
+import net.kumo.kumo.domain.entity.Enum;
 import net.kumo.kumo.domain.entity.NotificationEntity;
 import net.kumo.kumo.domain.entity.UserEntity;
 import net.kumo.kumo.repository.NotificationRepository;
@@ -36,9 +37,18 @@ public class NotificationService {
 		// 3. 엔티티 리스트를 DTO 리스트로 변환 (메시지 키 번역 포함)
 		return notifications.stream()
 				.map(notif -> {
-					// DB에 저장된 메시지 키를 실제 언어로 번역
-					String translatedTitle = messageSource.getMessage(notif.getTitle(), null, locale);
-					String translatedContent = messageSource.getMessage(notif.getContent(), null, locale);
+					String translatedTitle;
+					String translatedContent;
+
+					if (notif.getNotifyType() == Enum.NotificationType.SCOUT_OFFER) {
+						// 🌟 스카우트 제의는 특별 처리 (content에 저장된 닉네임을 인자로 사용)
+						translatedTitle = messageSource.getMessage("noti.scout.title", null, "새로운 스카우트 제의!", locale);
+						translatedContent = messageSource.getMessage("noti.scout.content", new Object[]{notif.getContent()}, locale);
+					} else {
+						// DB에 저장된 메시지 키를 실제 언어로 번역 (키가 없으면 원문 그대로 출력)
+						translatedTitle = messageSource.getMessage(notif.getTitle(), null, notif.getTitle(), locale);
+						translatedContent = messageSource.getMessage(notif.getContent(), null, notif.getContent(), locale);
+					}
 					
 					return NotificationResponseDTO.builder()
 							.notificationId(notif.getId())
@@ -94,5 +104,15 @@ public class NotificationService {
 		UserEntity user = userRepository.findByEmail(username)
 				.orElseThrow(() -> new IllegalArgumentException("User not found"));
 		return notificationRepository.countByUser_UserIdAndIsReadFalse(user.getUserId());
+	}
+
+	@Transactional
+	public void markAsRead(Long id, String username) {
+		NotificationEntity notification = notificationRepository.findById(id)
+				.orElseThrow(() -> new IllegalArgumentException("알림 없음"));
+		if (!notification.getUser().getEmail().equals(username)) {
+			throw new SecurityException("권한 없음");
+		}
+		notification.setRead(true);
 	}
 }

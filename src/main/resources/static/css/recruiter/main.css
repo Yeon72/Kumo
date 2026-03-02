@@ -255,28 +255,85 @@ footer {
   font-size: 1.1rem;
 }
 
-/* 3. 스카우트 개별 아이템 디자인 */
+/* 3. 스카우트 개별 아이템 디자인 개선 */
 .scout-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid #f9f9f9;
+  padding: 15px 0;
+  border-bottom: 1px solid #f9fafb;
+  transition: background-color 0.2s;
+}
+
+.scout-item:hover {
+  background-color: #fcfdfe;
+}
+
+.scout-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
 }
 
 .scout-avatar {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  margin-right: 10px;
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid #f2f4f6;
 }
 
-.scout-level {
-  font-size: 0.75rem;
-  background: #f2f4f6;
+.scout-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scout-name {
+  font-weight: 700;
+  color: #333d4b;
+  font-size: 0.95rem;
+}
+
+.scout-sub-text {
+  font-size: 0.8rem;
   color: #8b95a1;
-  padding: 4px 8px;
-  border-radius: 6px;
+}
+
+/* 제의하기 버튼 스타일 */
+.btn-scout-action {
+  background-color: #7db4e6;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-scout-action:hover {
+  background-color: #69a3d9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(125, 180, 230, 0.3);
+}
+
+.btn-scout-action:active {
+  transform: translateY(0);
+}
+
+body.dark-mode .scout-item:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+body.dark-mode .scout-name {
+  color: #e5e8eb;
+}
+
+body.dark-mode .btn-scout-action {
+  background-color: #4a8ec7;
 }
 
 /* 4. 내 공고 테이블 디자인 (칼정렬) */

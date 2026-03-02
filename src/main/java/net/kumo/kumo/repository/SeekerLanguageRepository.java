@@ -18,4 +18,6 @@ public interface SeekerLanguageRepository extends JpaRepository<SeekerLanguageEn
 	@Modifying
 	@Transactional
 	void deleteByUser(UserEntity user);
+	
+	List<SeekerLanguageEntity> findAllByUser_UserId(Long userId);
 }

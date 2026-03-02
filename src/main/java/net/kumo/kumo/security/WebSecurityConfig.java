@@ -49,18 +49,17 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 						.requestMatchers("/map_non_login_view", "/FindId", "/FindPw", "/findIdProc", "/nickname",
 								"/changePw", "/map/main", "/map/job-list-view")
 						.permitAll()
-						.requestMatchers("/Recruiter/**").permitAll() // 테스트용
+						
+						// (3) 권한별 접근 제한
+						.requestMatchers("/Recruiter/**").hasRole("RECRUITER")
+						.requestMatchers("/Seeker/**").hasRole("SEEKER")
 
-						// ★★★ [여기 추가] AJAX 중복확인 API는 로그인 없이 접근 가능해야 함 ★★★
+						// (4) API 접근 권한
 						.requestMatchers("/api/check/**", "/api/**", "/api/mail/**").permitAll()
 						.requestMatchers("/api/notifications/**").authenticated()
 
-						// (3) 관리자 전용
-						// .requestMatchers("/admin/**").hasRole("ADMIN")
-
-						// (4) 그 외 모든 요청은 인증 필요
-						// .anyRequest().authenticated()
-						.anyRequest().permitAll())
+						// (5) 그 외 모든 요청은 인증 필요
+						.anyRequest().authenticated())
 
 				// 3. 로그인 설정
 				.formLogin((form) -> form
@@ -85,6 +84,8 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 	// 비밀번호 암호화 빈
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
+//		return new BCryptPasswordEncoder();
+		return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
+		
 	}
 }

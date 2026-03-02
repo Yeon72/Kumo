@@ -20,4 +20,8 @@ public interface SeekerDocumentRepository extends JpaRepository<SeekerDocumentEn
 	@Modifying
 	@Transactional
 	void deleteByUser(UserEntity user);
+	
+	List<SeekerDocumentEntity> findAllByUser_UserId(Long userId);
+	
+	List<SeekerDocumentEntity> findByUser_UserId(Long userId);
 }

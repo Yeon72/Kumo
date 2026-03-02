@@ -187,3 +187,16 @@ body.dark-mode .file-display-input::placeholder {
     -webkit-text-fill-color: #ffffff !important;
     opacity: 1 !important;
 }
+
+/* Chrome, Safari, Edge, Opera 브라우저용 화살표 숨기기 */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox 브라우저용 화살표 숨기기 */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}

@@ -34,10 +34,10 @@
                 </a>
             </li>
             
-            <li th:classappend="${menu == 'settings'} ? 'active'">
-                <a th:href="@{/Seeker/settings}">
-                    <i class="fa-solid fa-gear"></i>
-                    <span th:text="#{sidebar.settings}">설정</span>
+            <li th:classappend="${menu == 'scout'} ? 'active'">
+                <a th:href="@{/Seeker/scout}">
+                    <i class="fa-solid fa-envelope-open-text"></i>
+                    <span th:text="#{sidebar.scout}">스카우트 현황</span>
                 </a>
             </li>
         </ul>

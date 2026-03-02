@@ -1,4 +1,11 @@
-document.addEventListener("DOMContentLoaded", function () {
+function sendScoutOffer(userId) {
+    if (confirm("해당 인재에게 스카우트 제의를 보내시겠습니까?")) {
+        // TODO: 실제 제의하기 API 호출 로직 (예: fetch /Recruiter/api/scout)
+        alert("제의를 보냈습니다. (userId: " + userId + ")");
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
   const navEntries = performance.getEntriesByType("navigation")[0];
   const isReload = navEntries && navEntries.type === "reload";
   const hasVisited = sessionStorage.getItem("hasVisitedHome");

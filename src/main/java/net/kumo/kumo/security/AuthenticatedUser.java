@@ -33,7 +33,7 @@ public class AuthenticatedUser implements UserDetails {
 	
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return Collections.singletonList(new SimpleGrantedAuthority(this.role));
+		return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role));
 	}
 	
 	/**

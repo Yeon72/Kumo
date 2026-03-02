@@ -67,6 +67,13 @@ public class NotificationController {
 		long count = notificationService.countUnreadNotifications(user.getUsername());
 		return ResponseEntity.ok(count);
 	}
+
+	// [추가] 알림 개별 읽음 처리 API
+	@PatchMapping("/api/notifications/{id}/read")
+	public ResponseEntity<Void> markAsRead(@PathVariable Long id, @AuthenticationPrincipal UserDetails user) {
+		notificationService.markAsRead(id, user.getUsername());
+		return ResponseEntity.ok().build();
+	}
 	
 	
 	

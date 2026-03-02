@@ -17,4 +17,6 @@ public interface SeekerCareerRepository extends JpaRepository<SeekerCareerEntity
 	@Modifying
 	@Transactional
 	void deleteByUser(UserEntity user);
+	
+	List<SeekerCareerEntity> findAllByUser_UserId(Long userId);
 }

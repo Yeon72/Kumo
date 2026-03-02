@@ -8,18 +8,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (location1 && location2) {
         const allOptions = Array.from(location2.querySelectorAll('option'));
+        
+        // 초기 로딩 시 선택되어 있는 값을 저장
+        const initialValue2 = location2.value;
 
         location1.addEventListener('change', function() {
             const selectedPrefecture = this.value;
             const targetClass = 'ward-' + selectedPrefecture;
+            
             location2.innerHTML = '';
             allOptions.forEach(option => {
                 if (option.classList.contains(targetClass)) {
-                    location2.appendChild(option);
+                    // 복제본을 추가하여 원본(allOptions)은 유지
+                    const clone = option.cloneNode(true);
+                    // 기존에 선택되었던 값과 일치하면 다시 선택 상태로 만듦
+                    if (clone.value === initialValue2) {
+                        clone.selected = true;
+                    }
+                    location2.appendChild(clone);
                 }
             });
         });
+        
+        // 초기 실행 (기존 데이터가 있을 경우를 고려)
         location1.dispatchEvent(new Event('change'));
+    }
+
+    // 초기 상태 설정 (경력/신입 토글에 따른 보임/숨김)
+    const initialCareerType = document.getElementById('careerType')?.value;
+    if (initialCareerType === 'NEWCOMER') {
+        const careerFields = document.getElementById('careerFields');
+        const btnAddCareerWrapper = document.getElementById('btnAddCareer')?.parentElement;
+        if (careerFields) {
+            careerFields.style.display = 'none';
+            careerFields.querySelectorAll('input, select, textarea').forEach(el => el.disabled = true);
+        }
+        if (btnAddCareerWrapper) btnAddCareerWrapper.style.display = 'none';
     }
 
     // ==========================================

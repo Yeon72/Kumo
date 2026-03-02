@@ -1,15 +1,17 @@
 package net.kumo.kumo.service;
 
+import net.kumo.kumo.domain.entity.Enum;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.kumo.kumo.domain.dto.JoinRecruiterDTO;
-import net.kumo.kumo.domain.entity.ProfileImageEntity;
-import net.kumo.kumo.domain.entity.UserEntity;
-import net.kumo.kumo.repository.ScheduleRepository;
-import net.kumo.kumo.repository.UserRepository;
+import net.kumo.kumo.domain.dto.ResumeDto;
+import net.kumo.kumo.domain.entity.*;
+import net.kumo.kumo.repository.*;
+import net.kumo.kumo.domain.entity.Enum.NotificationType;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +21,67 @@ public class RecruiterService {
 
     private final UserRepository userRepository;
     private final ScheduleRepository scheduleRepository;
+    private final SeekerProfileRepository seekerProfileRepo;
+    private final SeekerService seekerService;
+    private final ScoutOfferRepository scoutOfferRepo; // 🌟 추가
+    private final NotificationRepository notificationRepo; // 🌟 추가
 
     /**
-     * 유저 정보 불러오기
+     * 인재에게 스카우트 제의 보내기
+     */
+    @Transactional
+    public void sendScoutOffer(String recruiterEmail, Long seekerId) {
+        UserEntity recruiter = userRepository.findByEmail(recruiterEmail)
+                .orElseThrow(() -> new RuntimeException("구인자 정보를 찾을 수 없습니다."));
+        UserEntity seeker = userRepository.findById(seekerId)
+                .orElseThrow(() -> new RuntimeException("구직자 정보를 찾을 수 없습니다."));
+
+        // 이미 대기 중인 제안이 있는지 확인 (중복 제안 방지)
+        if (scoutOfferRepo.existsByRecruiterAndSeekerAndStatus(recruiter, seeker, ScoutOfferEntity.ScoutStatus.PENDING)) {
+            throw new RuntimeException("이미 제안을 보낸 인재입니다.");
+        }
+
+        // 1. 스카우트 제안 저장
+        ScoutOfferEntity offer = ScoutOfferEntity.builder()
+                .recruiter(recruiter)
+                .seeker(seeker)
+                .status(ScoutOfferEntity.ScoutStatus.PENDING)
+                .build();
+        scoutOfferRepo.save(offer);
+
+        // 2. 구직자에게 알림 생성
+        NotificationEntity noti = NotificationEntity.builder()
+                .user(seeker)
+				.notifyType(NotificationType.SCOUT_OFFER)
+                .title("noti.scout.title")
+                .content(recruiter.getNickname()) // 🌟 사장님 닉네임만 저장 (번역 시 인자로 사용)
+                .targetUrl("/Seeker/scout")
+                .isRead(false)
+                .build();
+        notificationRepo.save(noti);
+    } // 🌟 SeekerService 주입 (이력서 데이터 재사용)
+
+    /**
+     * 스카우트 동의 & 이력서 공개한 인재 목록 불러오기
      * 
-     * @param email
      * @return
      */
+    public List<SeekerProfileEntity> getScoutedProfiles() {
+        return seekerProfileRepo.findByScoutAgreeTrueAndIsPublicTrue();
+    }
+
+    /**
+     * 특정 인재의 이력서 상세 정보 가져오기
+     * 
+     * @param userId
+     * @return
+     */
+    public ResumeDto getTalentResume(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("인재 정보를 찾을 수 없습니다."));
+        return seekerService.getResume(user.getEmail());
+    }
+    
     public UserEntity getCurrentUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));

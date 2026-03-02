@@ -47,8 +47,8 @@ document.addEventListener("DOMContentLoaded", function() {
                         localStorage.removeItem("savedEmail");
                     }
 
-                    // 성공 시 메인으로 이동
-                    window.location.href = '/';
+                    // 🌟 서버에서 내려준 경로로 이동 (권한별 분기)
+                    window.location.href = response.redirectUrl || '/';
                 },
 
                 error: function(xhr) {

@@ -12,7 +12,8 @@ import java.util.List;
 
 @Repository
 public interface SeekerEducationRepository extends JpaRepository<SeekerEducationEntity, Long> {
-	List<SeekerEducationEntity> findByUser_UserId(Long userId);
+	
+	SeekerEducationEntity findByUser_UserId(Long userId);
 
 	@Modifying
 	@Transactional

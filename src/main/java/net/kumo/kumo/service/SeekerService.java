@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.kumo.kumo.domain.dto.JoinSeekerDTO;
 import net.kumo.kumo.domain.dto.ResumeDto;
+import net.kumo.kumo.domain.dto.SeekerApplicationHistoryDTO;
 import net.kumo.kumo.domain.dto.SeekerMyPageDTO;
 import net.kumo.kumo.domain.entity.*;
 import net.kumo.kumo.repository.*;
@@ -33,12 +34,123 @@ public class SeekerService {
     private final SeekerCareerRepository careerRepo;
     private final SeekerCertificateRepository certificateRepo;
     private final SeekerLanguageRepository languageRepo;
-    private final SeekerDocumentRepository seekerDocumentRepository; // 🌟 증빙서류 레포지토리 추가
+    private final SeekerDocumentRepository seekerDocumentRepository;
+    private final ScoutOfferRepository scoutOfferRepo;
+    private final ApplicationRepository applicationRepo;
+    private final TokyoGeocodedRepository tokyoRepo;
+    private final OsakaGeocodedRepository osakaRepo;
+    private final TokyoNoGeocodedRepository tokyoNoRepo; // 🌟 추가
+    private final OsakaNoGeocodedRepository osakaNoRepo; // 🌟 추가
+    private final JobPostingRepository jobPostingRepo;
+
+    /**
+     * 구직자의 지원 내역 가져오기
+     */
+    public List<SeekerApplicationHistoryDTO> getApplicationHistory(String email) {
+        UserEntity seeker = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        List<ApplicationEntity> applications = applicationRepo.findBySeekerOrderByAppliedAtDesc(seeker);
+        List<SeekerApplicationHistoryDTO> history = new ArrayList<>();
+
+        for (ApplicationEntity app : applications) {
+            SeekerApplicationHistoryDTO dto = SeekerApplicationHistoryDTO.builder()
+                    .appId(app.getId())
+                    .targetSource(app.getTargetSource())
+                    .targetPostId(app.getTargetPostId())
+                    .appliedAt(app.getAppliedAt())
+                    .status(app.getStatus().name())
+                    .build();
+
+            // 🌟 MapService와 동일하게 findById(PK) 기준으로 조회
+            String source = app.getTargetSource().toUpperCase();
+            Long postId = app.getTargetPostId();
+
+            try {
+                if ("TOKYO".equals(source)) {
+                    tokyoRepo.findById(postId).ifPresent(job -> {
+                        dto.setTitle(job.getTitle());
+                        dto.setBusinessName(job.getCompanyName());
+                        dto.setLocation(job.getAddress());
+                        dto.setWage(job.getWage());
+                        dto.setContact(job.getContactPhone());
+                        dto.setManager("담당자");
+                    });
+                } else if ("OSAKA".equals(source)) {
+                    osakaRepo.findById(postId).ifPresent(job -> {
+                        dto.setTitle(job.getTitle());
+                        dto.setBusinessName(job.getCompanyName());
+                        dto.setLocation(job.getAddress());
+                        dto.setWage(job.getWage());
+                        dto.setContact(job.getContactPhone());
+                        dto.setManager("담당자");
+                    });
+                } else if ("TOKYO_NO".equals(source)) {
+                    tokyoNoRepo.findById(postId).ifPresent(job -> {
+                        dto.setTitle(job.getTitle());
+                        dto.setBusinessName(job.getCompanyName());
+                        dto.setLocation(job.getAddress());
+                        dto.setWage(job.getWage());
+                        dto.setContact(job.getContactPhone());
+                        dto.setManager("담당자");
+                    });
+                } else if ("OSAKA_NO".equals(source)) {
+                    osakaNoRepo.findById(postId).ifPresent(job -> {
+                        dto.setTitle(job.getTitle());
+                        dto.setBusinessName(job.getCompanyName());
+                        dto.setLocation(job.getAddress());
+                        dto.setWage(job.getWage());
+                        dto.setContact(job.getContactPhone());
+                        dto.setManager("담당자");
+                    });
+                } else if ("KUMO".equals(source)) {
+                    jobPostingRepo.findById(postId).ifPresent(job -> {
+                        dto.setTitle(job.getTitle());
+                        dto.setBusinessName(job.getCompany() != null ? job.getCompany().getBizName() : "-");
+                        dto.setLocation(job.getWorkAddress());
+                        dto.setWage(job.getSalaryAmount() != null ? job.getSalaryAmount().toString() : "-");
+                        dto.setContact(job.getUser().getContact());
+                        dto.setManager(job.getUser().getNickname());
+                    });
+                }
+            } catch (Exception e) {
+                log.error("지원 내역 상세 정보 로드 실패 (Source: {}, PostID: {}): {}", source, postId, e.getMessage());
+                dto.setTitle("삭제된 공고입니다.");
+            }
+            
+            history.add(dto);
+        }
+        return history;
+    }
+
+    /**
+     * 지원 취소하기
+     */
+    @Transactional
+    public void cancelApplication(Long appId, String email) {
+        ApplicationEntity app = applicationRepo.findById(appId)
+                .orElseThrow(() -> new RuntimeException("지원 내역을 찾을 수 없습니다."));
+        
+        if (!app.getSeeker().getEmail().equals(email)) {
+            throw new RuntimeException("취소 권한이 없습니다.");
+        }
+        
+        applicationRepo.delete(app);
+    }
+
+    /**
+     * 구직자가 받은 스카우트 제안 목록 불러오기
+     */
+    public List<ScoutOfferEntity> getScoutOffers(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        return scoutOfferRepo.findBySeekerOrderByCreatedAtDesc(user);
+    }
 
     @Value("${file.upload.dir}")
-    private String uploadDir; // application.properties에서 가져옴 (C:/KumoUpload/)
+    private String uploadDir; // application.properties에서 가져옴
 
-    private final String EVIDENCE_FOLDER = "evidenceFiles/"; // 🌟 증빙서류 폴더명
+    private final String EVIDENCE_FOLDER = "evidenceFiles/";
 
     public SeekerMyPageDTO getDTO(String username) {
         UserEntity userEntity = userRepository.findByEmail(username)
@@ -47,54 +159,37 @@ public class SeekerService {
     }
 
     public String updateProfileImage(String username, MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("업로드할 파일이 없습니다.");
-        }
+        if (file == null || file.isEmpty()) { throw new IllegalArgumentException("업로드할 파일이 없습니다."); }
         UserEntity userentity = userRepository.findByEmail(username).orElseThrow(() -> new IllegalArgumentException("해당유저없음"));
-
         String profileFolder = "profileImage/";
         String absolutePath = uploadDir + profileFolder;
-
         File folder = new File(absolutePath);
         if (!folder.exists()) { folder.mkdirs(); }
-
         String originalFileName = file.getOriginalFilename();
         String uuid = UUID.randomUUID().toString();
         String saveFileName = uuid + "_" + originalFileName;
-
         File saveFile = new File(absolutePath, saveFileName);
         file.transferTo(saveFile);
-
         String fileUrl = "/uploads/" + profileFolder + saveFileName;
-
         ProfileImageEntity existingImage = userentity.getProfileImage();
         if (existingImage != null) {
-            File oldFile = new File(absolutePath, existingImage.getStoredFileName());
-            if (oldFile.exists()) { oldFile.delete(); }
             existingImage.setOriginalFileName(file.getOriginalFilename());
             existingImage.setStoredFileName(saveFileName);
             existingImage.setFileUrl(fileUrl);
             existingImage.setFileSize(file.getSize());
         } else {
             ProfileImageEntity newImage = ProfileImageEntity.builder()
-                    .originalFileName(file.getOriginalFilename())
-                    .storedFileName(saveFileName)
-                    .fileUrl(fileUrl)
-                    .fileSize(file.getSize())
-                    .user(userentity)
-                    .build();
+                    .originalFileName(file.getOriginalFilename()).storedFileName(saveFileName)
+                    .fileUrl(fileUrl).fileSize(file.getSize()).user(userentity).build();
             userentity.setProfileImage(newImage);
             profileImageRepository.save(newImage);
         }
         return fileUrl;
-		
-		
     }
 
     public void updateProfile(JoinSeekerDTO dto) {
         UserEntity user = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new RuntimeException("해당 이메일을 가진 유저를 찾을 수 없습니다: " + dto.getEmail()));
-
+                .orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
         user.setNickname(dto.getNickname());
         user.setZipCode(dto.getZipCode());
         user.setAddressMain(dto.getAddressMain());
@@ -104,188 +199,155 @@ public class SeekerService {
         user.setAddrTown(dto.getAddrTown());
         user.setLatitude(dto.getLatitude());
         user.setLongitude(dto.getLongitude());
-
         userRepository.save(user);
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public ResumeDto getResume(String username) {
+        UserEntity user = userRepository.findByEmail(username).orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        SeekerProfileEntity profile = profileRepo.findByUser_UserId(user.getUserId()).orElse(null);
+        SeekerDesiredConditionEntity condition = conditionRepo.findByUser_UserId(user.getUserId()).orElse(null);
+        SeekerEducationEntity education = educationRepo.findByUser_UserId(user.getUserId());
+        List<SeekerCareerEntity> careers = careerRepo.findByUser_UserId(user.getUserId());
+        List<SeekerCertificateEntity> certificates = certificateRepo.findByUser_UserId(user.getUserId());
+        List<SeekerLanguageEntity> languages = languageRepo.findByUser_UserId(user.getUserId());
+        List<SeekerDocumentEntity> documents = seekerDocumentRepository.findByUser_UserId(user.getUserId());
+
+        ResumeDto dto = new ResumeDto();
+        if (profile != null) {
+            dto.setCareerType(profile.getCareerType());
+            dto.setSelfIntroduction(profile.getSelfPr());
+            dto.setContactPublic(profile.getContactPublic());
+            dto.setResumePublic(profile.getIsPublic());
+            dto.setScoutAgree(profile.getScoutAgree());
+        }
+        if (condition != null) {
+            dto.setDesiredLocation1(condition.getLocationPrefecture());
+            dto.setDesiredLocation2(condition.getLocationWard());
+            dto.setDesiredJob(condition.getDesiredJob());
+            dto.setSalaryType(condition.getSalaryType());
+            dto.setDesiredSalary(condition.getDesiredSalary());
+            dto.setDesiredPeriod(condition.getDesiredPeriod());
+        }
+        if (education != null) {
+            dto.setEducationLevel(education.getEducationLevel());
+            dto.setEducationStatus(education.getStatus());
+            dto.setSchoolName(education.getSchoolName());
+        }
+        if (careers != null && !careers.isEmpty()) {
+            dto.setCompanyName(new ArrayList<>()); dto.setStartYear(new ArrayList<>()); dto.setStartMonth(new ArrayList<>());
+            dto.setEndYear(new ArrayList<>()); dto.setEndMonth(new ArrayList<>()); dto.setJobDuties(new ArrayList<>());
+            for (SeekerCareerEntity career : careers) {
+                dto.getCompanyName().add(career.getCompanyName());
+                if (career.getStartDate() != null) {
+                    dto.getStartYear().add(String.valueOf(career.getStartDate().getYear()));
+                    dto.getStartMonth().add(String.format("%02d", career.getStartDate().getMonthValue()));
+                } else { dto.getStartYear().add(""); dto.getStartMonth().add(""); }
+                if (career.getEndDate() != null) {
+                    dto.getEndYear().add(String.valueOf(career.getEndDate().getYear()));
+                    dto.getEndMonth().add(String.format("%02d", career.getEndDate().getMonthValue()));
+                } else { dto.getEndYear().add(""); dto.getEndMonth().add(""); }
+                dto.getJobDuties().add(career.getDescription());
+            }
+        }
+        if (certificates != null && !certificates.isEmpty()) {
+            dto.setCertName(new ArrayList<>()); dto.setCertPublisher(new ArrayList<>()); dto.setCertYear(new ArrayList<>());
+            for (SeekerCertificateEntity cert : certificates) {
+                dto.getCertName().add(cert.getCertName());
+                dto.getCertPublisher().add(cert.getIssuer());
+                dto.getCertYear().add(cert.getAcquisitionYear());
+            }
+        }
+        if (languages != null && !languages.isEmpty()) {
+            dto.setLanguageName(new ArrayList<>()); dto.setLanguageLevel(new ArrayList<>());
+            for (SeekerLanguageEntity lang : languages) {
+                dto.getLanguageName().add(lang.getLanguage());
+                dto.getLanguageLevel().add(lang.getLevel());
+            }
+        }
+        if (documents != null && !documents.isEmpty()) {
+            dto.setPortfolioFileUrls(new ArrayList<>());
+            for (SeekerDocumentEntity doc : documents) { dto.getPortfolioFileUrls().add(doc.getFileUrl()); }
+        }
+        return dto;
     }
 
     @Transactional
     public void saveResume(ResumeDto dto, String username) {
         UserEntity user = userRepository.findByEmail(username).orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        profileRepo.deleteByUser(user); conditionRepo.deleteByUser(user);
+        educationRepo.deleteByUser(user); careerRepo.deleteByUser(user);
+        certificateRepo.deleteByUser(user); languageRepo.deleteByUser(user);
+        boolean hasNewFiles = dto.getPortfolioFiles() != null && !dto.getPortfolioFiles().isEmpty()
+                && dto.getPortfolioFiles().stream().anyMatch(f -> !f.isEmpty());
+        if (hasNewFiles) { seekerDocumentRepository.deleteByUser(user); }
+        profileRepo.flush(); conditionRepo.flush(); educationRepo.flush();
+        careerRepo.flush(); seekerDocumentRepository.flush();
 
-        // ==========================================
-        // 0. 기존 데이터 삭제
-        // ==========================================
-        profileRepo.deleteByUser(user);
-        conditionRepo.deleteByUser(user);
-        profileRepo.flush();
-        conditionRepo.flush();
-
-        educationRepo.deleteByUser(user);
-        careerRepo.deleteByUser(user);
-        certificateRepo.deleteByUser(user);
-        languageRepo.deleteByUser(user);
-        seekerDocumentRepository.deleteByUser(user); // 🌟 기존 증빙서류 정보 삭제
-        
-        educationRepo.flush();
-        careerRepo.flush();
-        seekerDocumentRepository.flush();
-
-        // ==========================================
-        // 1. 프로필 기본 정보 저장
-        // ==========================================
         SeekerProfileEntity profile = SeekerProfileEntity.builder()
-                .user(user)
-                .careerType(dto.getCareerType())
-                .selfPr(dto.getSelfIntroduction())
+                .user(user).careerType(dto.getCareerType()).selfPr(dto.getSelfIntroduction())
                 .contactPublic(dto.getContactPublic() != null ? dto.getContactPublic() : false)
                 .isPublic(dto.getResumePublic() != null ? dto.getResumePublic() : false)
-                .scoutAgree(dto.getScoutAgree() != null ? dto.getScoutAgree() : false)
-                .build();
+                .scoutAgree(dto.getScoutAgree() != null ? dto.getScoutAgree() : false).build();
         profileRepo.save(profile);
 
-        // ==========================================
-        // 2. 희망근무조건 저장
-        // ==========================================
         SeekerDesiredConditionEntity condition = SeekerDesiredConditionEntity.builder()
-                .user(user)
-                .locationPrefecture(dto.getDesiredLocation1())
-                .locationWard(dto.getDesiredLocation2())
-                .desiredJob(dto.getDesiredJob())
-                .salaryType(dto.getSalaryType())
-                .desiredSalary(dto.getDesiredSalary())
-                .desiredPeriod(dto.getDesiredPeriod())
-                .build();
+                .user(user).locationPrefecture(dto.getDesiredLocation1()).locationWard(dto.getDesiredLocation2())
+                .desiredJob(dto.getDesiredJob()).salaryType(dto.getSalaryType())
+                .desiredSalary(dto.getDesiredSalary()).desiredPeriod(dto.getDesiredPeriod()).build();
         conditionRepo.save(condition);
 
-        // ==========================================
-        // 3. 학력사항 저장
-        // ==========================================
         if (dto.getSchoolName() != null && !dto.getSchoolName().trim().isEmpty()) {
-            SeekerEducationEntity education = SeekerEducationEntity.builder()
-                    .user(user)
-                    .educationLevel(dto.getEducationLevel())
-                    .schoolName(dto.getSchoolName())
-                    .status(dto.getEducationStatus())
-                    .build();
-            educationRepo.save(education);
+            educationRepo.save(SeekerEducationEntity.builder().user(user).educationLevel(dto.getEducationLevel())
+                    .schoolName(dto.getSchoolName()).status(dto.getEducationStatus()).build());
         }
 
-        // ==========================================
-        // 4. 경력사항 저장
-        // ==========================================
         if ("EXPERIENCED".equals(dto.getCareerType()) && dto.getCompanyName() != null) {
-            List<SeekerCareerEntity> careerList = new ArrayList<>();
-            int size = dto.getCompanyName().size();
-
-            for (int i = 0; i < size; i++) {
+            for (int i = 0; i < dto.getCompanyName().size(); i++) {
                 String compName = dto.getCompanyName().get(i);
                 if (compName == null || compName.trim().isEmpty()) continue;
-
-                if (i >= dto.getStartYear().size() || i >= dto.getEndYear().size()) break;
-
-                LocalDate startDate = parseDate(dto.getStartYear().get(i), dto.getStartMonth().get(i));
-                LocalDate endDate = parseDate(dto.getEndYear().get(i), dto.getEndMonth().get(i));
-
-                if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
-                    log.warn("날짜 역전 감지 ({}): 시작일({})이 종료일({})보다 늦습니다. 교체합니다.", compName, startDate, endDate);
-                    LocalDate temp = startDate; startDate = endDate; endDate = temp;
-                }
-
-                careerList.add(SeekerCareerEntity.builder()
-                        .user(user)
-                        .companyName(compName)
-                        .startDate(startDate)
-                        .endDate(endDate)
-                        .description(dto.getJobDuties() != null && dto.getJobDuties().size() > i ? dto.getJobDuties().get(i) : "")
-                        .build());
+                LocalDate sd = parseDate(dto.getStartYear().get(i), dto.getStartMonth().get(i));
+                LocalDate ed = parseDate(dto.getEndYear().get(i), dto.getEndMonth().get(i));
+                careerRepo.save(SeekerCareerEntity.builder().user(user).companyName(compName).startDate(sd).endDate(ed)
+                        .description(dto.getJobDuties().get(i)).build());
             }
-            careerRepo.saveAll(careerList);
         }
 
-        // ==========================================
-        // 5. 자격증 저장
-        // ==========================================
         if (dto.getCertName() != null) {
-            List<SeekerCertificateEntity> certList = new ArrayList<>();
             for (int i = 0; i < dto.getCertName().size(); i++) {
-                String certName = dto.getCertName().get(i);
-                if (certName == null || certName.trim().isEmpty()) continue;
-
-                String publisher = (dto.getCertPublisher() != null && dto.getCertPublisher().size() > i) ? dto.getCertPublisher().get(i) : "";
-                String certYear = (dto.getCertYear() != null && dto.getCertYear().size() > i) ? dto.getCertYear().get(i) : "";
-
-                certList.add(SeekerCertificateEntity.builder()
-                        .user(user).certName(certName).issuer(publisher).acquisitionYear(certYear).build());
+                if (dto.getCertName().get(i) == null || dto.getCertName().get(i).trim().isEmpty()) continue;
+                certificateRepo.save(SeekerCertificateEntity.builder().user(user).certName(dto.getCertName().get(i))
+                        .issuer(dto.getCertPublisher().get(i)).acquisitionYear(dto.getCertYear().get(i)).build());
             }
-            certificateRepo.saveAll(certList);
         }
 
-        // ==========================================
-        // 6. 어학 능력 저장
-        // ==========================================
         if (dto.getLanguageName() != null) {
-            List<SeekerLanguageEntity> langList = new ArrayList<>();
             for (int i = 0; i < dto.getLanguageName().size(); i++) {
-                String langName = dto.getLanguageName().get(i);
-                if (langName == null || langName.trim().isEmpty()) continue;
-
-                String level = (dto.getLanguageLevel() != null && dto.getLanguageLevel().size() > i) ? dto.getLanguageLevel().get(i) : "BEGINNER";
-
-                langList.add(SeekerLanguageEntity.builder()
-                        .user(user).language(langName).level(level).build());
+                if (dto.getLanguageName().get(i) == null || dto.getLanguageName().get(i).trim().isEmpty()) continue;
+                languageRepo.save(SeekerLanguageEntity.builder().user(user).language(dto.getLanguageName().get(i))
+                        .level(dto.getLanguageLevel().get(i)).build());
             }
-            languageRepo.saveAll(langList);
         }
 
-        // ==========================================
-        // 7. 📁 증빙서류 저장 (파일 업로드)
-        // ==========================================
         if (dto.getPortfolioFiles() != null && !dto.getPortfolioFiles().isEmpty()) {
-            String absolutePath = uploadDir + EVIDENCE_FOLDER;
-            File folder = new File(absolutePath);
-            if (!folder.exists()) folder.mkdirs();
-
-            List<SeekerDocumentEntity> seekerDocumentEntities = new ArrayList<>();
+            String ap = uploadDir + EVIDENCE_FOLDER;
+            File f = new File(ap); if (!f.exists()) f.mkdirs();
             for (MultipartFile file : dto.getPortfolioFiles()) {
                 if (file == null || file.isEmpty()) continue;
                 try {
-                    String originalFileName = file.getOriginalFilename();
-                    String uuid = UUID.randomUUID().toString();
-                    String saveFileName = uuid + "_" + originalFileName;
-
-                    File saveFile = new File(absolutePath, saveFileName);
-                    file.transferTo(saveFile);
-					
-					// 가상 경로 URL 생성
-					String fileUrl = "/uploads/" + EVIDENCE_FOLDER + saveFileName;
-
-					seekerDocumentEntities.add(SeekerDocumentEntity.builder()
-                            .fileName(originalFileName) // 원본명 저장
-                            .fileUrl(fileUrl)           // 가상 경로 저장
-                            .user(user)
-                            .build());
-                    log.info("증빙서류 저장 완료: {}", saveFileName);
-                } catch (IOException e) {
-                    log.error("파일 저장 실패: {}", e.getMessage());
-                }
-            }
-            if (!seekerDocumentEntities.isEmpty()) {
-                seekerDocumentRepository.saveAll(seekerDocumentEntities);
+                    String sfn = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+                    file.transferTo(new File(ap, sfn));
+                    seekerDocumentRepository.save(SeekerDocumentEntity.builder().fileName(file.getOriginalFilename())
+                            .fileUrl("/uploads/" + EVIDENCE_FOLDER + sfn).user(user).build());
+                } catch (IOException e) { log.error("저장실패: {}", e.getMessage()); }
             }
         }
-
-        log.info("== [ {} ] 님의 이력서 DB 저장 완료! ==", user.getNameKanjiMei());
     }
 
     private LocalDate parseDate(String year, String month) {
         try {
-            if (year == null || year.trim().isEmpty() || month == null || month.trim().isEmpty()) return null;
-            int m = Integer.parseInt(month);
-            String dateStr = String.format("%s-%02d-01", year, m);
-            return LocalDate.parse(dateStr);
-        } catch (Exception e) {
-            log.error("날짜 파싱 에러: {}년 {}월", year, month);
-            return null;
-        }
+            if (year == null || year.isEmpty() || month == null || month.isEmpty()) return null;
+            return LocalDate.parse(String.format("%s-%02d-01", year, Integer.parseInt(month)));
+        } catch (Exception e) { return null; }
     }
 }

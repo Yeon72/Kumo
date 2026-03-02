@@ -71,4 +71,7 @@ public class ResumeDto {
 	// ==========================================
 	// 🌟 multiple 속성이 있으므로 List<MultipartFile> 로 받아야 합니다!
 	private List<MultipartFile> portfolioFiles;
+	
+	// 🌟 이미 업로드된 파일들의 URL을 담기 위한 리스트
+	private List<String> portfolioFileUrls;
 }

@@ -83,7 +83,17 @@ public class AjaxAuthenticationSuccessHandler implements AuthenticationSuccessHa
 		
 		Map<String,Object> responseData = new HashMap<>();
 		responseData.put("message","로그인성공");
-		responseData.put("redirectUrl","/");
+		
+		// 🌟 권한에 따른 리다이렉트 경로 설정
+		String redirectUrl = "/";
+		boolean isRecruiter = authentication.getAuthorities().stream()
+				.anyMatch(a -> a.getAuthority().equals("ROLE_RECRUITER"));
+		
+		if (isRecruiter) {
+			redirectUrl = "/Recruiter/Main";
+		}
+		
+		responseData.put("redirectUrl", redirectUrl);
 		
 		objectMapper.writeValue(response.getWriter(),responseData);
 		

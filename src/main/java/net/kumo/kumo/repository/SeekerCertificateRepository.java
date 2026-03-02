@@ -17,4 +17,6 @@ public interface SeekerCertificateRepository extends JpaRepository<SeekerCertifi
 	@Modifying
 	@Transactional
 	void deleteByUser(UserEntity user);
+	
+	List<SeekerCertificateEntity> findAllByUser_UserId(Long userId);
 }
