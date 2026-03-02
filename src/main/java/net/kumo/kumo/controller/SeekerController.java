@@ -53,6 +53,7 @@ public class SeekerController {
 	public String SeekerResume(Model model, @AuthenticationPrincipal UserDetails userDetails){
 		
 		SeekerMyPageDTO dto = seekerService.getDTO(userDetails.getUsername());
+		
 		model.addAttribute("user", dto);
 		
 		return "SeekerView/SeekerResume";
