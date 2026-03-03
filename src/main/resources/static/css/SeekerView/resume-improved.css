@@ -1,0 +1,473 @@
+@charset "UTF-8";
+
+/* ==========================================
+   KUMO - 이력서 폼 전용 스타일 (중앙정렬 + 독립성 개선)
+   ========================================== */
+
+/* 🌟 의존성: myPage.css의 다크모드 변수 필요
+   --text-main, --border-color, --bg-main, --primary-color 등 */
+
+.resume-wrapper {
+    max-width: 850px;
+    background: transparent;
+    margin: 0 auto;
+    /* 🌟 중앙 정렬 */
+    padding: 0 40px;
+    /* 🌟 양측 패딩 (모바일 대응) */
+}
+
+/* 🌟 프로필 요약 카드 */
+.profile-summary-card {
+    display: flex;
+    gap: 25px;
+    padding: 30px;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    margin-bottom: 50px;
+    align-items: center;
+    background-color: #ffffff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    /* 시안의 은은한 그림자 */
+}
+
+.summary-photo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.summary-info h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.summary-info .sub-info {
+    font-size: 13px;
+    color: #888;
+    font-weight: 400;
+    margin-left: 10px;
+}
+
+.info-row {
+    font-size: 14px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    color: #111;
+    font-weight: 500;
+}
+
+.info-row .label {
+    color: #888;
+    display: inline-block;
+    width: 60px;
+    font-weight: 400;
+}
+
+/* 🌟 폼 섹션 공통 (★ 가로 꽉 차는 파란 선 구현) */
+.form-section {
+    margin-bottom: 60px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    /* 시안처럼 진한 파란색 텍스트와 하단 풀사이즈 선 */
+    color: #0b509e;
+    border-bottom: 2px solid #0b509e;
+}
+
+/* 폼 그룹 (가로 정렬) */
+.form-group.row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.form-group.row.align-top {
+    align-items: flex-start;
+}
+
+.form-group label {
+    width: 140px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+/* 🌟 입력 컨트롤 (★ 연한 회색 배경, 둥근 모서리) */
+.custom-input,
+.custom-select,
+.custom-textarea {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    /* 시안처럼 둥글게 */
+    padding: 12px 16px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: 0.2s;
+    background-color: #fafafa;
+    /* 완전 흰색이 아닌 아주 연한 회색 */
+    color: #333;
+}
+
+.custom-input:focus,
+.custom-select:focus,
+.custom-textarea:focus {
+    border-color: #42a5f5;
+    background-color: #fff;
+}
+
+.custom-textarea {
+    width: 100%;
+    height: 140px;
+    resize: none;
+}
+
+.full-width {
+    width: 350px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.wave {
+    color: #666;
+    font-weight: bold;
+}
+
+.mt-5 {
+    margin-top: 35px;
+}
+
+.mt-4 {
+    margin-top: 20px;
+}
+
+/* 🌟 통화 단위(円) 입력창 처리 */
+.currency-input-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.has-currency {
+    padding-right: 40px;
+    width: 200px;
+    text-align: right;
+}
+
+.currency-unit {
+    position: absolute;
+    right: 15px;
+    color: #888;
+    font-weight: 500;
+}
+
+/* 🌟 토글 버튼 (★ 파란색 Pill 형태 UI) */
+.toggle-group {
+    display: inline-flex;
+    border-radius: 30px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+}
+
+.toggle-btn {
+    border: none;
+    padding: 10px 40px;
+    font-size: 14px;
+    cursor: pointer;
+    background: #fff;
+    color: #888;
+    transition: 0.2s;
+}
+
+/* 활성화 시 연한 파란색 배경 + 파란 글씨 */
+.toggle-btn.active {
+    background: #e3f2fd;
+    color: #42a5f5;
+    font-weight: 700;
+}
+
+/* 여러 개 붙어있는 토글 (상/중/초급) */
+.multi-segment {
+    width: 100%;
+    border-radius: 8px;
+    display: flex;
+}
+
+.multi-segment .toggle-btn {
+    flex: 1;
+    border-right: 1px solid #e0e0e0;
+    padding: 12px 0;
+}
+
+.multi-segment .toggle-btn:last-child {
+    border-right: none;
+}
+
+/* 🌟 추가 / 삭제 / 업로드 버튼 */
+.center-btn-wrapper {
+    margin-left: 140px;
+    margin-top: 15px;
+}
+
+.btn-add-outline {
+    background: #fff;
+    border: 1px solid #4ea1ff;
+    color: #4ea1ff;
+    padding: 10px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    transition: 0.2s;
+}
+
+.btn-add-outline:hover {
+    background: #f0f8ff;
+}
+
+/* 가로로 긴 점선 버튼 래퍼 (자격증, 어학 추가) */
+.line-btn-wrapper {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.full-line-btn {
+    width: 100%;
+    border-style: dashed;
+    padding: 12px 0;
+}
+
+.btn-delete-item {
+    background: #ff8a8a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-delete-item:hover {
+    background: #ff6b6b;
+}
+
+.btn-upload-file {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    color: #4ea1ff;
+    font-weight: 700;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* 🌟 스카우트 동의 */
+.scout-section {
+    margin-top: 50px;
+}
+
+.scout-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #111;
+}
+
+.scout-box {
+    background-color: #f6f6f6;
+    padding: 30px;
+    border-radius: 12px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.custom-checkbox {
+    width: 20px;
+    height: 20px;
+    accent-color: #42a5f5;
+}
+
+.checkbox-text {
+    font-weight: 700;
+    font-size: 15px;
+    color: #111;
+}
+
+.scout-notice {
+    list-style: disc;
+    padding-left: 25px;
+    color: #555;
+    font-size: 14px;
+    line-height: 2;
+    margin: 0;
+}
+
+/* 🌟 제출 버튼 */
+.submit-wrapper {
+    text-align: center;
+    margin-top: 60px;
+    margin-bottom: 40px;
+}
+
+.btn-submit-resume {
+    background-color: #42a5f5;
+    color: #fff;
+    border: none;
+    padding: 18px 80px;
+    font-size: 18px;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 4px 12px rgba(66, 165, 245, 0.3);
+}
+
+.btn-submit-resume:hover {
+    background-color: #1e88e5;
+}
+
+
+/* ============================================================
+   🌙 다크 모드 대응 (myPage.css 호환 완벽 유지)
+   ============================================================ */
+body.dark-mode .profile-summary-card,
+body.dark-mode .scout-box {
+    background-color: var(--bg-main, #1e1e1e);
+    border-color: var(--border-color, #333);
+}
+
+/* 섹션 타이틀 파란색 유지하면서 조금 더 밝게 */
+body.dark-mode .section-title {
+    color: #64b5f6;
+    border-bottom-color: #64b5f6;
+}
+
+body.dark-mode .summary-info h3,
+body.dark-mode .form-group label,
+body.dark-mode .scout-title,
+body.dark-mode .checkbox-text {
+    color: var(--text-main, #fff);
+}
+
+body.dark-mode .summary-info .sub-info,
+body.dark-mode .info-row .label,
+body.dark-mode .info-row,
+body.dark-mode .scout-notice,
+body.dark-mode .wave,
+body.dark-mode .currency-unit {
+    color: var(--text-sub, #aaa);
+}
+
+/* 폼 입력창 다크모드 */
+body.dark-mode .custom-input,
+body.dark-mode .custom-select,
+body.dark-mode .custom-textarea {
+    background-color: var(--bg-main, #2d2d2d);
+    border-color: var(--border-color, #444);
+    color: var(--text-main, #fff);
+}
+
+body.dark-mode .custom-input:focus,
+body.dark-mode .custom-select:focus,
+body.dark-mode .custom-textarea:focus {
+    border-color: var(--primary-color, #42a5f5);
+    background-color: var(--bg-main, #333);
+}
+
+/* 토글 버튼 다크모드 */
+body.dark-mode .toggle-group {
+    border-color: var(--border-color, #444);
+}
+
+body.dark-mode .toggle-btn {
+    background: var(--bg-main, #2d2d2d);
+    color: var(--text-sub, #aaa);
+    border-color: var(--border-color, #444);
+}
+
+body.dark-mode .toggle-btn.active {
+    background: rgba(66, 165, 245, 0.15);
+    color: var(--primary-color, #42a5f5);
+}
+
+body.dark-mode .btn-add-outline {
+    background: transparent;
+    border-color: #4ea1ff;
+    color: #4ea1ff;
+}
+
+body.dark-mode .btn-upload-file {
+    background: var(--bg-main, #2d2d2d);
+    border-color: var(--border-color, #444);
+    color: #64b5f6;
+}
+
+/* ==========================================
+   [증빙서류] 읽기 전용 텍스트창 스타일
+   ========================================== */
+.file-display-input {
+    background-color: #f5f5f5;
+    color: #888;
+    opacity: 1;
+}
+
+.file-display-input.has-file {
+    color: #333;
+}
+
+body.dark-mode .file-display-input,
+body.dark-mode .file-display-input[readonly] {
+    background-color: var(--bg-main, #2d2d2d) !important;
+    border-color: var(--border-color, #444) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+body.dark-mode .file-display-input.has-file {
+    color: #ffffff;
+}
+
+body.dark-mode .file-display-input::placeholder {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+/* Chrome, Safari, Edge, Opera 브라우저용 화살표 숨기기 */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox 브라우저용 화살표 숨기기 */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}

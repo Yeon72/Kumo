@@ -13,7 +13,8 @@ body {
     color: #333;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
 }
 
 a {
@@ -30,21 +31,30 @@ ul {
    ============================ */
 .mypage-container {
     display: flex;
-    margin-left: 430px;
+    margin-left: 240px;
     /* 사이드바 너비 */
-    min-height: 100vh;
+    flex: 1;
+        /* body의 남은 공간 채우기 */
+    min-height: calc(100vh - 60px);
+    justify-content: center;
+        /* ← 중앙정렬 */
 }
 
 .content-area {
     flex: 1;
     overflow-y: auto;
+    overflow-x: auto;
     background-color: #f8faff;
     padding: 0;
-    max-width: 550px;
+    max-width: 700px;
     /* 헤더가 있다면 */
     margin-top: 40px;
     /* 헤더 높이 */
-    min-height: calc(100vh - 70px);
+    min-height: 0;
+        scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE */
 }
 
 body.dark-mode .content-area {
@@ -685,4 +695,29 @@ body.dark-mode footer,
 /* 다크모드 대응도 잊지 마세요! */
 body.dark-mode .age-suffix {
     color: #cbcbcb;
+}
+
+footer,
+.non-login-footer {
+    margin-left: 240px;
+    /* 사이드바 너비만큼 밀기 */
+    width: calc(100% - 240px);
+    /* 사이드바 제외한 너비 */
+    padding: 15px 40px !important;
+    /* 높이 줄이기 */
+    box-sizing: border-box;
+}
+
+footer,
+.non-login-footer,
+.dashboard-footer {
+    margin-left: 240px !important;
+    width: calc(100% - 240px) !important;
+    padding: 15px 40px !important;
+    box-sizing: border-box !important;
+}
+
+.content-area::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari */
 }

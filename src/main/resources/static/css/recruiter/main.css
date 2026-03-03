@@ -509,3 +509,10 @@ body.dark-mode .btn-detail:active {
   /* 누를 때 살짝 들어가는 느낌 */
 }
 
+/* main.css에 추가 */
+.chart-placeholder {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  /* 사장님 패널 높이에 맞게 조절하세요 (예: 250px ~ 350px) */
+}
