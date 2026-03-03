@@ -40,4 +40,62 @@ window.addEventListener("load", function () {
   if (container) {
     container.classList.add("fade-in");
   }
+
+  // 일별 지원자 수 차트 초기화
+  initApplicantChart();
 });
+
+function initApplicantChart() {
+  const ctx = document.getElementById('applicantChart');
+  if (!ctx) return;
+
+  // Thymeleaf에서 전달받은 전역 변수 (chartLabels, chartData) 사용
+  const labels = typeof chartLabels !== 'undefined' ? chartLabels : [];
+  const data = typeof chartData !== 'undefined' ? chartData : [];
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '지원자 수',
+        data: data,
+        borderColor: '#7db4e6',
+        backgroundColor: 'rgba(125, 180, 230, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#7db4e6',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            precision: 0
+          },
+          grid: {
+            display: true,
+            color: 'rgba(0,0,0,0.05)'
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          }
+        }
+      }
+    }
+  });
+}
+

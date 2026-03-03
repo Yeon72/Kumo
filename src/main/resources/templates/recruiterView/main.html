@@ -39,8 +39,15 @@
         th:replace="~{recruiterView/fragments/sidebar :: sidebarFragment}"
       ></div>
 
-      <div class="main-container">
-        <main class="content-body">
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script th:inline="javascript">
+          /*<![CDATA[*/
+          const chartLabels = /*[[${chartLabels}]]*/ [];
+          const chartData = /*[[${chartData}]]*/ [];
+          /*]]>*/
+      </script>
+
+      <div class="main-container">        <main class="content-body">
           <div class="dashboard-left-content">
             <div class="welcome-section mb-4">
               <div sec:authorize="isAuthenticated()">

@@ -70,11 +70,6 @@ public abstract class BaseEntity {
     @Column(length = 20)
     private JobStatus status;
 
-    // ==========================================
-    // 공고 작성자 식별자
-    // 크롤링 데이터는 작성자가 없으므로 null 허용
-    // geocoded 테이블에 컬럼 추가 필요!!!!!
-    // ==========================================
-    @Column(name = "user_id")
+    @Column(name = "user_id", insertable = false, updatable = false)
     private Long userId;
 }

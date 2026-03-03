@@ -60,6 +60,16 @@ public class RecruiterController {
     @GetMapping("Main")
     public String Main(Model model, Principal principal) {
         String userEmail = principal.getName();
+        
+        // 1. 대시보드 통계 데이터 가져오기
+        net.kumo.kumo.domain.dto.RecruiterDashboardDTO stats = rs.getDashboardStats(userEmail);
+        model.addAttribute("totalApplicants", stats.getTotalApplicants());
+        model.addAttribute("unreadApplicants", stats.getUnreadApplicants());
+        model.addAttribute("todayVisits", stats.getTotalVisits()); // '전체 조회수'로 매핑 (오늘 방문수는 별도 로직 필요하므로 일단 전체로)
+        model.addAttribute("chartLabels", stats.getChartLabels());
+        model.addAttribute("chartData", stats.getChartData());
+
+        model.addAttribute("user", ur.findByEmail(userEmail).get());
         model.addAttribute("jobList", js.getMyJobPostings(userEmail));
         model.addAttribute("talents", rs.getScoutedProfiles());
         model.addAttribute("currentMenu", "home");
