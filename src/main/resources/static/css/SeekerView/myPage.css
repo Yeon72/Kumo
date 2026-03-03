@@ -47,15 +47,20 @@ ul {
 
 .content-area {
     flex: 1;
+
+    /* 🌟 추가할 마법의 3줄! (절대 안 깨지는 유연한 상자 만들기) */
+    width: 100%;
+    /* 좁은 화면(배율 높은 윈도우)에서는 100%로 알아서 줄어듬! */
+    box-sizing: border-box;
+    /* 패딩을 너비에 포함시켜서 밖으로 안 터지게 막음! */
+    padding: 0 20px;
+    /* 화면이 좁아져도 내용물이 모니터 벽에 찰싹 붙지 않게 숨통을 트여줌! */
+
     overflow-y: visible;
     overflow-x: visible;
-    /* 🚨 가로 스크롤도 풀어주세요 */
     background-color: #f8faff;
-    padding: 0;
-    max-width: 700px;
     margin-top: 40px;
     margin-bottom: 80px;
-    /* 🌟 폼 다 쓰고 푸터랑 너무 딱 붙지 않게 여백 추가 */
     min-height: 0;
 }
 

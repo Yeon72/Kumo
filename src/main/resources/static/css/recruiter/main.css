@@ -59,6 +59,7 @@ footer {
   /* [수정] 푸터도 우측 사이드바 너비만큼 오른쪽 여백을 줘서 글자가 가려지지 않게 합니다. */
   padding: 20px 360px 20px 40px;
   border-top: 1px solid #f2f4f6;
+  margin-top: 15px;
   background-color: transparent;
   box-sizing: border-box;
 }

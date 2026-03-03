@@ -3,7 +3,7 @@
     background: white;
     border-radius: 20px;
     padding: 30px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     margin-top: 20px;
     transition: background-color 0.3s;
 }
@@ -12,36 +12,67 @@
     overflow-x: auto;
 }
 
+/* 🌟 이력서 폼(700px)의 감옥을 부수고, 표 전용으로 넓게(1000px) 확보! */
+/* 🌟 1. 1200px 제한 구역 완전히 폭파! 화면 끝까지 100% 사용! */
+/* 🌟 1. 영역은 화면에 맞게 100% 유연하게! */
+.content-area {
+    max-width: 100% !important;
+    padding: 0 20px !important;
+    /* 양옆 여백을 줄여서 공간 확보 */
+}
+
+/* 🌟 2. 가로 스크롤 완전 삭제! 화면 크기에 무조건 맞춤 */
 .job-table {
     width: 100%;
+    min-width: auto;
+    /* 기존의 1000px, 1200px 족쇄 완전히 삭제! */
     border-collapse: collapse;
 }
 
+/* 🌟 3. 글씨는 작게, 여백은 줄이고, '줄바꿈' 허용! */
 .job-table th {
-    background: #f8f9fa;
-    padding: 15px 10px;
+    padding: 12px 10px;
+    /* 빵빵했던 여백을 쫙 빼서 오밀조밀하게 압축 */
     text-align: left;
-    font-size: 14px;
+    font-size: 13px;
+    /* 글자 크기를 줄여서 한눈에 들어오게 조절 */
     color: #666;
-    border-bottom: 2px solid #eee;
-    white-space: nowrap;
+    /* 🚨 팩트 폭격: white-space: nowrap; 은 삭제해야 합니다! (이게 스크롤을 만드는 주범입니다) */
+    word-break: keep-all;
+    /* 단어가 길면 알아서 밑으로 예쁘게 줄바꿈되도록 허용! */
 }
 
 .job-table td {
-    padding: 15px 10px;
+    padding: 12px 10px;
+    /* 여기도 여백 다이어트! */
     border-bottom: 1px solid #eee;
-    font-size: 14px;
+    font-size: 13px;
+    /* 정보도 작게 압축 */
     vertical-align: middle;
     color: #333;
+
+    /* 🚨 여기서도 white-space: nowrap; 삭제! */
+    word-break: keep-all;
+    /* 좁아지면 글자가 밑으로 내려가면서 화면 안에 무조건 들어옵니다 */
+    transition: background-color 0.2s;
 }
 
+/* 🌟 4. 제목이나 뱃지 등 내부 요소들도 조금씩 다이어트 */
 .job-title-link {
+    font-size: 14px;
+    /* 제목만 살짝 크게 유지 */
     font-weight: 700;
     color: #1a1f27;
     text-decoration: none;
     cursor: pointer;
     display: block;
     margin-bottom: 5px;
+    transition: color 0.2s;
+}
+
+/* 🌟 표 줄(Row)에 마우스 올렸을 때 살짝 하이라이트 효과 */
+.job-table tbody tr:hover td {
+    background-color: #f8faff;
 }
 
 .job-title-link:hover {
@@ -51,25 +82,46 @@
 
 .status-badge {
     display: inline-block;
-    padding: 3px 8px;
     border-radius: 6px;
-    font-size: 11px;
+        padding: 3px 8px;
+            /* 뱃지 크기도 줄임 */
+            font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
+    
 }
 
-.status-applied { background: #e6f7ff; color: #1890ff; }
-.status-viewed { background: #f6ffed; color: #52c41a; }
-.status-passed { background: #f9f0ff; color: #722ed1; }
-.status-failed { background: #fff1f0; color: #f5222d; }
+/* 라이트모드 뱃지 (기존) */
+.status-applied {
+    background: #e6f7ff;
+    color: #1890ff;
+}
 
+.status-viewed {
+    background: #f6ffed;
+    color: #52c41a;
+}
+
+.status-passed {
+    background: #f9f0ff;
+    color: #722ed1;
+}
+
+.status-failed {
+    background: #fff1f0;
+    color: #f5222d;
+}
+
+/* 🌟 지원취소 버튼: 눈 안 아픈 부드러운 코랄 레드로 변경 */
 .btn-cancel-app {
-    background: #ff4d4f;
+    background: #ff6b6b;
+    /* 쨍한 빨강 -> 부드러운 파스텔 레드 */
     color: white;
     border: none;
-    padding: 8px 15px;
     border-radius: 8px;
-    font-size: 12px;
+        padding: 6px 12px;
+            /* 버튼 크기도 날씬하게 */
+            font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -77,32 +129,77 @@
 }
 
 .btn-cancel-app:hover {
-    background: #ff7875;
+    background: #fa5252;
+    /* 마우스 올렸을 때 살짝 진해짐 */
     transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(250, 82, 82, 0.2);
 }
 
-/* Dark Mode */
+
+/* =========================================
+   🌙 Dark Mode (완전 럭셔리하게 리뉴얼)
+   ========================================= */
 body.dark-mode .history-container {
-    background: #1e1e1e;
-    border: 1px solid #2d2d2d;
+    background: #1e1e24;
+    /* 너무 까만색보단 고급스러운 진회색 */
+    border: 1px solid #2a2a35;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 body.dark-mode .job-table th {
-    background: #252525;
-    color: #888;
-    border-bottom-color: #333;
+    color: #d9dbe3;
 }
 
 body.dark-mode .job-table td {
-    border-bottom-color: #2d2d2d;
-    color: #e5e8eb;
+    border-bottom-color: #2a2a35;
+    color: #d1d1d1;
+}
+
+body.dark-mode .job-table tbody tr:hover td {
+    background-color: #2a2a35;
+    /* 다크모드용 호버 하이라이트 */
 }
 
 body.dark-mode .job-title-link {
-    color: #ffffff;
+    color: #e2e8f0;
 }
 
+body.dark-mode .job-title-link:hover {
+    color: #7db4e6;
+}
+
+/* 🌟 다크모드 뱃지: 반투명 배경 + 네온톤 글씨 (요즘 실무 트렌드!) */
 body.dark-mode .status-applied {
-    background: #111d2c;
-    color: #177ddc;
+    background: rgba(24, 144, 255, 0.15);
+    color: #69b1ff;
+}
+
+body.dark-mode .status-viewed {
+    background: rgba(82, 196, 26, 0.15);
+    color: #95de64;
+}
+
+body.dark-mode .status-passed {
+    background: rgba(114, 46, 209, 0.15);
+    color: #b37feb;
+}
+
+body.dark-mode .status-failed {
+    background: rgba(245, 34, 45, 0.15);
+    color: #ff7875;
+}
+
+/* 🌟 다크모드 전용 취소 버튼 (눈부심 방지용 고스트 버튼 스타일) */
+body.dark-mode .btn-cancel-app {
+    background: rgba(255, 107, 107, 0.15);
+    /* 반투명한 빨강 배경 */
+    color: #ff8787;
+    /* 부드러운 빨강 글씨 */
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    /* 은은한 테두리 */
+}
+
+body.dark-mode .btn-cancel-app:hover {
+    background: rgba(255, 107, 107, 0.25);
+    color: #ffaaaa;
 }
