@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 <head>
     <meta charset="UTF-8" />
-    <title>KUMO RECRUITER - 지원자 정보</title>
+    <title>KUMO RECRUITER - 지원자 관리</title>
 
     <script th:src="@{/js/recruiter/main.js}"></script>
     <script th:src="@{/js/recruiter/recruiterHeader.js}"></script>
@@ -108,7 +108,7 @@
                                             <td class="status-cell">
                                                 <span class="badge bg-warning text-dark" th:if="${app.status.name() == 'APPLIED'}">검토중</span>
                                                 <span class="badge bg-success" th:if="${app.status.name() == 'PASSED'}">합격</span>
-                                                <span class="badge bg-secondary" th:if="${app.status.name() == 'REJECTED'}">불합격</span>
+                                                <span class="badge bg-secondary" th:if="${app.status.name() == 'FAILED'}">불합격</span>
                                             </td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#resumeModal"
