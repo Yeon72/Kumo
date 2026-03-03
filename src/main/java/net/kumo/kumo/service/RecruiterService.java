@@ -25,6 +25,64 @@ public class RecruiterService {
     private final SeekerService seekerService;
     private final ScoutOfferRepository scoutOfferRepo; // 🌟 추가
     private final NotificationRepository notificationRepo; // 🌟 추가
+    private final OsakaGeocodedRepository osakaGeocodedRepository;
+    private final TokyoGeocodedRepository tokyoGeocodedRepository;
+    private final ApplicationRepository applicationRepository;
+
+    /**
+     * 구인자 대시보드 통계 데이터 가져오기
+     */
+    public net.kumo.kumo.domain.dto.RecruiterDashboardDTO getDashboardStats(String email) {
+        // 1. 공고 정보 가져오기
+        List<OsakaGeocodedEntity> osakaJobs = osakaGeocodedRepository.findByUser_Email(email);
+        List<TokyoGeocodedEntity> tokyoJobs = tokyoGeocodedRepository.findByUser_Email(email);
+
+        long totalJobs = osakaJobs.size() + tokyoJobs.size();
+        long totalVisits = osakaJobs.stream().mapToLong(j -> j.getViewCount() != null ? j.getViewCount() : 0).sum()
+                + tokyoJobs.stream().mapToLong(j -> j.getViewCount() != null ? j.getViewCount() : 0).sum();
+
+        // 2. 지원자 정보 조회를 위한 ID 리스트 생성
+        List<Long> osakaIds = osakaJobs.stream().map(OsakaGeocodedEntity::getId).toList();
+        List<Long> tokyoIds = tokyoJobs.stream().map(TokyoGeocodedEntity::getId).toList();
+
+        List<ApplicationEntity> allApps = new java.util.ArrayList<>();
+        if (!osakaIds.isEmpty()) {
+            allApps.addAll(applicationRepository.findByTargetSourceAndTargetPostIdIn("OSAKA", osakaIds));
+        }
+        if (!tokyoIds.isEmpty()) {
+            allApps.addAll(applicationRepository.findByTargetSourceAndTargetPostIdIn("TOKYO", tokyoIds));
+        }
+
+        long totalApplicants = allApps.size();
+        long unreadApplicants = allApps.stream()
+                .filter(a -> a.getStatus() == Enum.ApplicationStatus.APPLIED)
+                .count();
+
+        // 3. 차트용 데이터 (최근 7일)
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.util.List<String> labels = new java.util.ArrayList<>();
+        java.util.List<Long> data = new java.util.ArrayList<>();
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("MM.dd");
+
+        for (int i = 6; i >= 0; i--) {
+            java.time.LocalDate date = today.minusDays(i);
+            labels.add(date.format(formatter));
+
+            long count = allApps.stream()
+                    .filter(a -> a.getAppliedAt().toLocalDate().equals(date))
+                    .count();
+            data.add(count);
+        }
+
+        return net.kumo.kumo.domain.dto.RecruiterDashboardDTO.builder()
+                .totalApplicants(totalApplicants)
+                .unreadApplicants(unreadApplicants)
+                .totalJobs(totalJobs)
+                .totalVisits(totalVisits)
+                .chartLabels(labels)
+                .chartData(data)
+                .build();
+    }
 
     /**
      * 인재에게 스카우트 제의 보내기

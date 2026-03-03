@@ -1,9 +1,14 @@
 package net.kumo.kumo.domain.dto.projection;
 
+import net.kumo.kumo.domain.enums.JobStatus;
+
 public interface JobSummaryView {
 
     Long getId();
     String getImgUrls(); // 이미지 원본
+    
+    // 🌟 [추가] 상태값을 가져오기 위해 선언! (이제 빨간 줄이 사라집니다)
+    JobStatus getStatus();
 
     // --- 🇰🇷 한국어 원본 데이터 ---
     String getTitle();

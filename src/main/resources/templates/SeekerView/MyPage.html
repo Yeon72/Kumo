@@ -158,26 +158,11 @@
 
     <script th:src="@{/js/SeekerView/MyPage.js}"></script>
     <script th:inline="javascript">
-        // SNS 토글 모달
+        // SNS 토글 모달용 메시지 (JS에서 참조)
             const snsMsg = {
                 snsTitle: /*[[#{set.swal.sns_title}]]*/ 'Service Notice',
                 snsText:  /*[[#{set.swal.sns_text}]]*/ '아직 서비스 준비 중입니다.',
             };
-
-            document.querySelectorAll('.sns-toggle').forEach(toggle => {
-                toggle.onclick = function (e) {
-                    e.preventDefault();
-                    const isDark = document.documentElement.classList.contains('dark-mode');
-                    Swal.fire({
-                        title: snsMsg.snsTitle,
-                        text: snsMsg.snsText,
-                        icon: 'info',
-                        confirmButtonColor: '#7db4e6',
-                        background: isDark ? '#2b2b2b' : '#fff',
-                        color: isDark ? '#fff' : '#333'
-                    });
-                };
-            });
 
         const msg = {
             selectPhoto: [[#{ msg.select.photo }]],
@@ -186,27 +171,6 @@
             notService: [[#{ msg.not.service }]],
             fileNone: [[#{ modal.file.none }]]
         };
-
-        // 프로필 모달
-        const modal = document.getElementById("profileModal");
-        const openBtn = document.getElementById("btnOpenModal");
-
-        function closeModal() {
-            modal.classList.add('closing');
-            setTimeout(() => {
-                modal.style.display = "none";
-                modal.classList.remove('closing');
-            }, 250);
-        }
-
-        if (openBtn) openBtn.onclick = () => { modal.style.display = "flex"; };
-
-        const closeBtn = document.querySelector(".close-btn");
-        const cancelBtn = document.getElementById("btnCancel");
-        if (closeBtn) closeBtn.onclick = closeModal;
-        if (cancelBtn) cancelBtn.onclick = closeModal;
-        window.onclick = (e) => { if (e.target === modal) closeModal(); };
-
     </script>
 </body>
 

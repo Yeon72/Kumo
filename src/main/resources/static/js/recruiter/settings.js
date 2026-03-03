@@ -2,25 +2,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById('profileModal');
     const btnOpenModal = document.getElementById('btnOpenModal');
     const btnCloseX = document.querySelector('.close-btn');
-    const btnCancel = document.getElementById('btnCancel');
-    const btnSave = document.getElementById('btnSaveImage');
+    const btnCancel = document.getElementById('cancelProfileBtn');
+    const btnSave = document.getElementById('saveProfileBtn');
 
     const fileInput = document.getElementById('fileInput');
-    const modalPreview = document.getElementById('modalPreview');
-    const currentProfileImg = document.getElementById('currentProfileImg');
+    const profilePreview = document.getElementById('profilePreview'); // 모달 내 미리보기
+    const currentProfileImg = document.getElementById('currentProfileImg'); // 메인 화면 이미지
     const fileNameSpan = document.getElementById('fileName');
 
-    // [1] 프로필 모달 열기 & 초기화 (Seeker 로직 유지: 현재 이미지 미리보기에 반영)
+    // [1] 프로필 모달 열기 & 초기화 (Seeker 로직: 현재 이미지 미리보기에 반영)
     if (btnOpenModal) {
         btnOpenModal.addEventListener('click', function () {
             modal.style.display = "flex";
-            if (currentProfileImg && modalPreview) {
-                modalPreview.src = currentProfileImg.src;
+            if (currentProfileImg && profilePreview) {
+                profilePreview.src = currentProfileImg.src;
             }
             fileInput.value = '';
             if (fileNameSpan) {
-                fileNameSpan.innerText = typeof msg !== 'undefined' ? msg.fileNone : '선택된 파일 없음';
-                fileNameSpan.style.color = "#888";
+                fileNameSpan.innerText = typeof settingsMsg !== 'undefined' ? settingsMsg.fileNone : '선택된 파일 없음';
             }
         });
     }
@@ -48,25 +47,24 @@ document.addEventListener("DOMContentLoaded", function () {
             if (file) {
                 if (fileNameSpan) {
                     fileNameSpan.innerText = file.name;
-                    fileNameSpan.style.color = "#333";
                 }
                 const reader = new FileReader();
                 reader.onload = function (evt) {
-                    if (modalPreview) modalPreview.src = evt.target.result;
+                    if (profilePreview) profilePreview.src = evt.target.result;
                 };
                 reader.readAsDataURL(file);
             }
         });
     }
 
-    // [3] 서버 전송 (저장 버튼 - Recruiter의 Swal UI 적용)
+    // [3] 서버 전송 (저장 버튼 - Seeker의 비동기 방식 + Recruiter의 Swal UI)
     if (btnSave) {
         btnSave.addEventListener('click', function () {
             const file = fileInput.files[0];
             if (!file) {
                 Swal.fire({
                     icon: 'warning',
-                    title: typeof msg !== 'undefined' ? msg.selectPhoto : '사진을 선택해주세요.'
+                    title: typeof settingsMsg !== 'undefined' ? settingsMsg.noPhoto : '사진을 선택해주세요.'
                 });
                 return;
             }
@@ -74,19 +72,21 @@ document.addEventListener("DOMContentLoaded", function () {
             const formData = new FormData();
             formData.append("profileImage", file);
 
-            fetch('/api/profileImage', {
+            fetch('/Recruiter/UploadProfile', {
                 method: 'POST',
                 body: formData
             })
             .then(response => {
-                if (response.ok) return response.text();
-                throw new Error('FAILED');
+                if (response.ok) return response.text(); // Seeker 방식: URL 텍스트 응답
+                throw new Error('UPLOAD_FAILED');
             })
             .then(newImageUrl => {
+                // 성공 알림 (Recruiter 방식: Swal)
                 Swal.fire({
                     icon: 'success',
-                    title: typeof msg !== 'undefined' ? msg.uploadSuccess : '프로필 사진이 변경되었습니다.'
+                    title: typeof settingsMsg !== 'undefined' ? settingsMsg.uploadSuccess : '프로필 사진이 업로드 되었습니다.'
                 }).then(() => {
+                    // 비동기 업데이트 (Seeker 방식: 새로고침 없음)
                     if (newImageUrl && currentProfileImg) {
                         currentProfileImg.src = newImageUrl;
                     }
@@ -96,21 +96,21 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(err => {
                 Swal.fire({
                     icon: 'error',
-                    title: typeof msg !== 'undefined' ? msg.error : '에러 발생',
+                    title: typeof settingsMsg !== 'undefined' ? settingsMsg.uploadFail : '업로드 실패',
                     text: err.message
                 });
             });
         });
     }
 
-    // [4] 소셜 연동 알림 (LINE, Google)
+    // SNS 토글 알림 (기존 로직 유지)
     document.querySelectorAll('.sns-toggle').forEach(toggle => {
         toggle.addEventListener('click', (e) => {
             e.preventDefault();
             const isDark = document.documentElement.classList.contains('dark-mode');
             Swal.fire({
-                title: typeof snsMsg !== 'undefined' ? snsMsg.snsTitle : 'Service Notice',
-                text: typeof snsMsg !== 'undefined' ? snsMsg.snsText : '아직 서비스 준비 중입니다.',
+                title: typeof settingsMsg !== 'undefined' ? settingsMsg.snsTitle : 'Service Notice',
+                text: typeof settingsMsg !== 'undefined' ? settingsMsg.snsText : '아직 서비스 준비 중입니다.',
                 icon: 'info',
                 confirmButtonColor: '#7db4e6',
                 background: isDark ? '#2b2b2b' : '#fff',
