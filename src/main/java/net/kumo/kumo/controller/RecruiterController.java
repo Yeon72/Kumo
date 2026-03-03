@@ -399,4 +399,18 @@ public class RecruiterController {
             return ResponseEntity.internalServerError().build(); // 에러 시 500 리턴
         }
     }
+
+    // 🌟 [추가할 부분] 합격/불합격 처리 비동기 API
+    @PostMapping("/api/application/{appId}/status")
+    @ResponseBody
+    public ResponseEntity<?> updateAppStatus(@org.springframework.web.bind.annotation.PathVariable Long appId,
+                                             @RequestParam String status) {
+        try {
+            net.kumo.kumo.domain.entity.Enum.ApplicationStatus appStatus = net.kumo.kumo.domain.entity.Enum.ApplicationStatus.valueOf(status);
+            jobPostingService.updateApplicationStatus(appId, appStatus);
+            return ResponseEntity.ok("success");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("상태 업데이트 실패: " + e.getMessage());
+        }
+    }
 }

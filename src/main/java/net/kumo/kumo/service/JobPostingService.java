@@ -565,7 +565,17 @@ public class JobPostingService {
                 // 엔티티 -> DTO 변환 및 최신 지원순 정렬
                 List<ApplicationDTO.ApplicantResponse> appResponses = appsForThisJob.stream()
                         .map(app -> ApplicationDTO.ApplicantResponse.from(app, job.getTitle()))
-                        .sorted((a, b) -> b.getAppId().compareTo(a.getAppId()))
+                        .sorted((a, b) -> {
+                            // 1순위: APPLIED(검토중)가 위로, 처리된 것(PASSED/REJECTED)은 아래로
+                            boolean aIsProcessed = "PASSED".equals(a.getStatus().name()) || "REJECTED".equals(a.getStatus().name());
+                            boolean bIsProcessed = "PASSED".equals(b.getStatus().name()) || "REJECTED".equals(b.getStatus().name());
+
+                            if (!aIsProcessed && bIsProcessed) return -1;
+                            if (aIsProcessed && !bIsProcessed) return 1;
+
+                            // 2순위: 최신 지원순
+                            return b.getAppId().compareTo(a.getAppId());
+                        })
                         .toList();
 
                 groupedList.add(JobApplicantGroupDTO.builder()
@@ -656,7 +666,7 @@ public class JobPostingService {
                 .map(ResumeResponseDTO.CareerDTO::from)
                 .collect(Collectors.toList());
 
-        // 4. 학력 (1:N 리스트)
+        // 4. 학력 (1:1)
         SeekerEducationEntity eduEntities = educationRepository.findByUser_UserId(seekerId);
 		ResumeResponseDTO.EducationDTO eduDTO = null;
 		if (eduEntities != null) {
@@ -699,5 +709,13 @@ public class JobPostingService {
                 .languages(langDTOs)
                 .documents(docDTOs) // 특별 처리된 문서 DTO 리스트 장착!
                 .build();
+    }
+
+    // 지원서 상태(합격/불합격) 업데이트
+    @Transactional
+    public void updateApplicationStatus(Long appId, net.kumo.kumo.domain.entity.Enum.ApplicationStatus status) {
+        ApplicationEntity application = applicationRepository.findById(appId)
+                .orElseThrow(() -> new IllegalArgumentException("지원서를 찾을 수 없습니다."));
+        application.setStatus(status);
     }
 }
