@@ -13,8 +13,12 @@ body {
     color: #333;
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+
+    /* 🚨 기존의 height: 100vh; 와 overflow: hidden; 삭제!! */
+    min-height: 100vh;
+    /* 화면이 짧을 땐 100% 채우고, 길어지면 늘어나게 변경 */
+    overflow-y: auto;
+    /* 브라우저 기본 스크롤바 허용 */
 }
 
 a {
@@ -34,27 +38,25 @@ ul {
     margin-left: 240px;
     /* 사이드바 너비 */
     flex: 1;
-        /* body의 남은 공간 채우기 */
+    /* body의 남은 공간 채우기 (푸터를 밑으로 밀어냄) */
     min-height: calc(100vh - 60px);
     justify-content: center;
-        /* ← 중앙정렬 */
+
+    /* 🚨 기존의 overflow-y: auto; 삭제!! (이제 body가 알아서 스크롤합니다) */
 }
 
 .content-area {
     flex: 1;
-    overflow-y: auto;
-    overflow-x: auto;
+    overflow-y: visible;
+    overflow-x: visible;
+    /* 🚨 가로 스크롤도 풀어주세요 */
     background-color: #f8faff;
     padding: 0;
     max-width: 700px;
-    /* 헤더가 있다면 */
     margin-top: 40px;
-    /* 헤더 높이 */
+    margin-bottom: 80px;
+    /* 🌟 폼 다 쓰고 푸터랑 너무 딱 붙지 않게 여백 추가 */
     min-height: 0;
-        scrollbar-width: none;
-            /* Firefox */
-            -ms-overflow-style: none;
-            /* IE */
 }
 
 body.dark-mode .content-area {
