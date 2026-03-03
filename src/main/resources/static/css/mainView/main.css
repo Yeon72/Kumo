@@ -34,9 +34,9 @@ html, body {
     position: relative;
     width: 100%;
     z-index: 1000;
-    background-color: #ffffff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: background-color 0.3s ease;
+    /*background-color: #ffffff;*/
+    /*box-shadow: 0 2px 5px rgba(0,0,0,0.05);*/
+    /*transition: background-color 0.3s ease;*/
 }
 
 .map-header-wrapper .non-login-header,
@@ -46,27 +46,31 @@ html, body {
     margin: 0 !important;
 }
 
-.map-header-wrapper .nav-menu a,
-.map-header-wrapper .icon-btn i {
+.nav-menu .icon-btn i {
     color: #ffffff;
     transition: color 0.3s ease;
 }
 
-.map-header-wrapper .nav-menu .lang-item{
-    color: #2d2d2d;
-}
-
-/* 🌙 다크 모드 */
-body.dark-mode .map-header-wrapper {
-    background-color: #232323 !important;
-    border-bottom: 1px solid #333;
-}
-
-body.dark-mode .map-header-wrapper .nav-menu a,
-body.dark-mode .map-header-wrapper .icon-btn i {
+.nav-menu a:first-child {
     color: #ffffff;
     transition: color 0.3s ease;
 }
+
+/*.map-header-wrapper .nav-menu .lang-item{*/
+/*    color: #2d2d2d;*/
+/*}*/
+
+/*!* 🌙 다크 모드 *!*/
+/*body.dark-mode .map-header-wrapper {*/
+/*    background-color: #232323 !important;*/
+/*    border-bottom: 1px solid #333;*/
+/*}*/
+
+/*body.dark-mode .map-header-wrapper .nav-menu a,*/
+/*body.dark-mode .map-header-wrapper .icon-btn i {*/
+/*    color: #ffffff;*/
+/*    transition: color 0.3s ease;*/
+/*}*/
 
 
 /* ============================================================

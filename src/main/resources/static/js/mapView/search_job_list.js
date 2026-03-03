@@ -101,6 +101,9 @@ const SearchService = {
     renderTable: function(jobs) {
         const $tbody = $('#searchListBody');
 
+        // 🌟 [추가] 1. 현재 URL에서 언어 설정 가져오기
+        const currentLang = new URLSearchParams(window.location.search).get('lang') || 'kr';
+
         if (!jobs || jobs.length === 0) {
             $tbody.html(`<tr><td colspan="7" style="text-align:center; padding: 40px; color: #888;">${LIST_MESSAGES.empty}</td></tr>`);
             return;
@@ -108,10 +111,13 @@ const SearchService = {
 
         let html = '';
         jobs.forEach(job => {
-            // 🌟 1. 로그인 여부에 따라 찜하기 버튼 생성/숨김
+            // 로그인 여부에 따라 찜하기 버튼 생성/숨김
             const saveBtnHtml = isUserLoggedIn
                 ? `<button class="btn-outline">${LIST_MESSAGES.saveBtn}</button>`
                 : '';
+
+            // 🌟 [추가] 2. 상세보기 URL에 id, source, lang 파라미터 완벽하게 조립!
+            const detailUrl = `/map/jobs/detail?id=${job.id}&source=${job.source}&lang=${currentLang}`;
 
             html += `
             <tr>
@@ -143,7 +149,7 @@ const SearchService = {
                 <td>
                     <div class="action-buttons">
                         ${saveBtnHtml}
-                        <button class="btn-filled" onclick="location.href='/map/jobs/detail?id=${job.id}'">${LIST_MESSAGES.detailBtn}</button>
+                        <button class="btn-filled" onclick="location.href='${detailUrl}'">${LIST_MESSAGES.detailBtn}</button>
                     </div>
                 </td>
             </tr>`;

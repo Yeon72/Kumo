@@ -36,11 +36,15 @@ public class MapService {
     public List<JobSummaryDTO> getJobListInMap(Double minLat, Double maxLat, Double minLng, Double maxLng, String lang) {
         List<JobSummaryView> osakaRaw = osakaRepo.findTop300ByLatBetweenAndLngBetween(minLat, maxLat, minLng, maxLng);
         List<JobSummaryDTO> result = new ArrayList<>(osakaRaw.stream()
+                // 🌟 [추가] 상태가 null(기존 데이터)이거나 'RECRUITING'인 것만 필터링!
+                .filter(view -> view.getStatus() == null || "RECRUITING".equals(view.getStatus().name()))
                 .map(view -> new JobSummaryDTO(view, lang, "OSAKA"))
                 .toList());
 
         List<JobSummaryView> tokyoRaw = tokyoRepo.findTop300ByLatBetweenAndLngBetween(minLat, maxLat, minLng, maxLng);
         result.addAll(tokyoRaw.stream()
+                // 🌟 [추가] 도쿄도 마찬가지로 필터링!
+                .filter(view -> view.getStatus() == null || "RECRUITING".equals(view.getStatus().name()))
                 .map(view -> new JobSummaryDTO(view, lang, "TOKYO"))
                 .toList());
 
@@ -158,6 +162,9 @@ public class MapService {
     // ==========================================
     // --- 4. [NEW] 검색 리스트 조회 (JobDetailDTO 반환) ---
     // ==========================================
+    // ==========================================
+    // --- 4. [NEW] 검색 리스트 조회 (JobDetailDTO 반환) ---
+    // ==========================================
     @Transactional(readOnly = true)
     public List<JobDetailDTO> searchJobsList(String keyword, String mainRegion, String subRegion, String lang) {
         
@@ -167,20 +174,28 @@ public class MapService {
         if ("tokyo".equalsIgnoreCase(mainRegion)) {
             // 위치 O: 도쿄는 wardCityJp, wardCityKr 컬럼을 확인
             tokyoRepo.findAll(JobSearchSpec.searchConditions(keyword, subRegion, "wardCityJp", "wardCityKr"))
+                    .stream() // 🌟 stream() 열고
+                    .filter(entity -> entity.getStatus() == null || "RECRUITING".equals(entity.getStatus().name())) // 🌟 필터 추가!
                     .forEach(entity -> results.add(new JobDetailDTO(entity, lang, "TOKYO")));
             
             // 위치 X: address 컬럼에서 확인
             tokyoNoRepo.findAll(JobSearchSpec.searchConditions(keyword, subRegion, "address"))
+                    .stream()
+                    .filter(entity -> entity.getStatus() == null || "RECRUITING".equals(entity.getStatus().name()))
                     .forEach(entity -> results.add(new JobDetailDTO(entity, lang, "TOKYO_NO")));
         }
         // 2. 오사카 검색
         else if ("osaka".equalsIgnoreCase(mainRegion)) {
             // 위치 O: 오사카는 wardJp, wardKr 컬럼을 확인
             osakaRepo.findAll(JobSearchSpec.searchConditions(keyword, subRegion, "wardJp", "wardKr"))
+                    .stream()
+                    .filter(entity -> entity.getStatus() == null || "RECRUITING".equals(entity.getStatus().name()))
                     .forEach(entity -> results.add(new JobDetailDTO(entity, lang, "OSAKA")));
             
             // 위치 X: address 컬럼에서 확인
             osakaNoRepo.findAll(JobSearchSpec.searchConditions(keyword, subRegion, "address"))
+                    .stream()
+                    .filter(entity -> entity.getStatus() == null || "RECRUITING".equals(entity.getStatus().name()))
                     .forEach(entity -> results.add(new JobDetailDTO(entity, lang, "OSAKA_NO")));
         }
         

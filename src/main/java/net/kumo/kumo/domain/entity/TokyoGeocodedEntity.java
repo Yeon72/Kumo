@@ -1,21 +1,12 @@
 package net.kumo.kumo.domain.entity;
 
-import java.time.LocalDateTime;
-
-import org.hibernate.annotations.CreationTimestamp;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import net.kumo.kumo.domain.enums.JobStatus;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 
 @Entity
@@ -65,6 +56,9 @@ public class TokyoGeocodedEntity extends BaseEntity {
 
 	@Column(name = "wage_jp")
 	private String wageJp;
+	
+	@Column(name = "notes", columnDefinition = "TEXT")
+	private String notes;
 
 	@Column(name = "title_jp", length = 200)
 	private String titleJp;
