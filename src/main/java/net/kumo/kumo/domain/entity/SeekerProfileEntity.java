@@ -13,16 +13,24 @@ import lombok.*;
 @Builder
 public class SeekerProfileEntity {
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "seeker_profile_id")
-	private Long id;
+	private Long seekerProfileId;
 	
-	@OneToOne(fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.LAZY) // 1:1 관계
 	@JoinColumn(name = "user_id", nullable = false, unique = true)
 	private UserEntity user;
 	
-	@Column(name = "self_pr", columnDefinition = "TEXT")
+	@Column(length = 20)
+	private String careerType; // EXPERIENCED / NEWCOMER
+	
+	@Column(columnDefinition = "TEXT")
 	private String selfPr;
 	
-	@Column(name = "is_public")
+	@Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
+	private Boolean contactPublic;
+	
+	@Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
 	private Boolean isPublic;
+	
+	@Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
+	private Boolean scoutAgree;
 }

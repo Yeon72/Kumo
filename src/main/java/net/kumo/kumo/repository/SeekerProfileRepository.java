@@ -1,18 +1,19 @@
 package net.kumo.kumo.repository;
 
-import net.kumo.kumo.domain.entity.EvidenceFileEntity;
+import net.kumo.kumo.domain.entity.SeekerProfileEntity;
 import net.kumo.kumo.domain.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Optional;
 
-public interface EvidenceFileRepository extends JpaRepository<EvidenceFileEntity, Long> {
-	//유저랑 파일 가져오기
-	List<EvidenceFileEntity> findByUserAndFileType(UserEntity user, String fileType);
-	
-	
+@Repository
+public interface SeekerProfileRepository extends JpaRepository<SeekerProfileEntity, Long> {
+	Optional<SeekerProfileEntity> findByUser_UserId(Long userId);
+
 	@Modifying
 	@Transactional
 	void deleteByUser(UserEntity user);

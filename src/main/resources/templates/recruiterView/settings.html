@@ -102,7 +102,7 @@
                   <span class="label" th:text="#{join.label.birth}">생년월일</span>
                   <span class="value">
                     <span th:text="${#temporals.format(user.birthDate, 'yyyy / MM / dd')}">1990 / 01 / 01</span>
-                    <span class="age-suffix" th:text="#{set.label.age_suffix(${age})}">( 만 40세 )</span>
+                    <span class="age-suffix" th:text="#{set.label.age_suffix(${age})}"></span>
                   </span>
                 </div>
         

@@ -1,4 +1,4 @@
-package net.kumo.kumo.repository.chat;
+package net.kumo.kumo.repository;
 
 import net.kumo.kumo.domain.entity.ChatRoomEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,13 +10,14 @@ import java.util.Optional;
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoomEntity, Long> {
 
-    // ★ 수정됨: findBySeeker_Id -> findBySeeker_UserId
-    // (UserEntity 안의 변수명이 userId라고 가정함)
+    // 1. 기존에 있던 메서드들 (이름 뒤에 _ 가 붙은 방식)
     Optional<ChatRoomEntity> findBySeeker_UserIdAndRecruiter_UserId(Long seekerId, Long recruiterId);
 
-    // ★ 수정됨: findBySeeker_Id -> findBySeeker_UserId
     List<ChatRoomEntity> findBySeeker_UserId(Long seekerId);
 
-    // ★ 수정됨: findByRecruiter_Id -> findByRecruiter_UserId
     List<ChatRoomEntity> findByRecruiter_UserId(Long recruiterId);
+
+    // 2. [추가된 정석 메서드] 목록 조회를 위해 꼭 필요합니다!
+    // Seeker 혹은 Recruiter 둘 중 하나라도 내 ID와 일치하는 방을 다 가져옵니다.
+    List<ChatRoomEntity> findBySeekerUserIdOrRecruiterUserId(Long seekerId, Long recruiterId);
 }

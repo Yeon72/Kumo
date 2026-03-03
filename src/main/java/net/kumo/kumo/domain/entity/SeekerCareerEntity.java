@@ -2,6 +2,7 @@ package net.kumo.kumo.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.catalina.User;
 
 import java.time.LocalDate;
 
@@ -12,23 +13,19 @@ import java.time.LocalDate;
 @Builder
 public class SeekerCareerEntity {
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "career_id")
-	private Long id;
+	private Long careerId;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private UserEntity user;
 	
-	@Column(name = "company_name", length = 100)
+	@Column(length = 100, nullable = false)
 	private String companyName;
 	
 	@Column(length = 100)
 	private String department;
 	
-	@Column(name = "start_date")
 	private LocalDate startDate;
-	
-	@Column(name = "end_date")
 	private LocalDate endDate;
 	
 	@Column(columnDefinition = "TEXT")

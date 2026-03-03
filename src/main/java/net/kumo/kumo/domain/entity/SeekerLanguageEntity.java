@@ -12,14 +12,13 @@ import lombok.*;
 @Builder
 public class SeekerLanguageEntity {
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "lang_id")
-	private Long id;
+	private Long langId;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private UserEntity user;
 	
-	@Column(length = 50)
+	@Column(length = 50, nullable = false)
 	private String language;
 	
 	@Column(length = 50)

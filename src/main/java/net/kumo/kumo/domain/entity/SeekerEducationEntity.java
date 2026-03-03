@@ -13,19 +13,21 @@ import lombok.*;
 @Builder
 public class SeekerEducationEntity {
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "edu_id")
-	private Long id;
+	private Long eduId;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY) // 한 유저가 여러 학력(고졸, 대졸 등) 가질 수 있음
 	@JoinColumn(name = "user_id", nullable = false)
 	private UserEntity user;
 	
-	@Column(name = "school_name", length = 100)
+	@Column(length = 50, nullable = false)
+	private String educationLevel;
+	
+	@Column(length = 100, nullable = false)
 	private String schoolName;
 	
 	@Column(length = 100)
 	private String major;
 	
-	@Column(length = 50)
-	private String status;
+	@Column(length = 20)
+	private String status; // GRADUATED, EXPECTED 등
 }

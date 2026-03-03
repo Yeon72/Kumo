@@ -25,20 +25,22 @@
     --border-color: #eeeeee;
     --primary-color: #7db4e6;
     --danger-color: #ff6b6b;
-    --hover-bg: #f8f9fa;
+    --hover-bg: #f5f7fa;
     --bg-card: #ffffff;
-    --dropdown-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    --dropdown-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 body.dark-mode {
-    --bg-main: #121212;
-    --bg-card: #121212;
+    --bg-main: #1e1e1e;
+    --bg-card: #2d2d2d;
+    /* ← 검정 → 회색으로 */
     --text-main: #e0e0e0;
-    --text-sub: #cbcbcb;
-    --border-color: #333333;
+    --text-sub: #aaaaaa;
+    --border-color: #2d2d2d;
     --primary-color: #7db4e6;
-    --hover-bg: #252525;
-    --dropdown-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    --hover-bg: #383838;
+    /* ← 회색 계열로 */
+    --dropdown-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
 /* 1. 헤더 레이아웃 */
@@ -139,12 +141,12 @@ body.dark-mode {
 .profile-dropdown {
     display: none;
     position: absolute;
-    top: 35px;
+    top: 45px;
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: var(--dropdown-shadow);
-    z-index: 2000;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    z-index: 1030;
     overflow: hidden;
     flex-direction: column;
 }
@@ -156,6 +158,27 @@ body.dark-mode {
     animation: fadeIn 0.2s ease;
 }
 
+.lang-dropdown {
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    min-width: 100px;
+    padding: 5px;
+}
+
+/* notify-dropdown 위치 통일 */
+.notify-dropdown {
+    right: -10px;
+    left: auto;
+    transform: none;
+    width: 320px;
+}
+.profile-dropdown {
+    right: 0;
+    left: auto;
+    min-width: 200px;
+}
+
 /* 위치 및 크기 조정 */
 .lang-dropdown {
     left: 50%;
@@ -165,7 +188,6 @@ body.dark-mode {
     padding: 6px;
     border-radius: 14px;
 }
-.notify-dropdown { right: -10px; width: 320px; }
 .profile-dropdown { right: 0; min-width: 200px; }
 
 
@@ -314,3 +336,7 @@ body.dark-mode {
     to { opacity: 1; transform: translate(-50%, 0); }
 }
 .lang-dropdown.show { animation: fadeInCenter 0.2s ease; }
+
+.profile-dropdown hr {
+    display: none !important;
+}

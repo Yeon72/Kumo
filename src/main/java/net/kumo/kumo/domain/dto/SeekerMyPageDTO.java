@@ -22,6 +22,8 @@ public class SeekerMyPageDTO {
 	private String fileUrl;    // 프로필 이미지 URL
 	private String address;         // 주소
 	private LocalDate birthDate;    // 생년월일
+	private  String contact;
+	
 	
 	// 소셜 연동 여부 (화면의 토글 스위치용)
 	private Enum.SocialProvider SocialProvider;
@@ -33,6 +35,7 @@ public class SeekerMyPageDTO {
 		return SeekerMyPageDTO.builder()
 				.id(userEntity.getUserId())
 				.email(userEntity.getEmail())
+				.contact(userEntity.getContact())
 				.name(userEntity.getNameKanjiSei()+ " " +userEntity.getNameKanjiSei())
 				.nickname(userEntity.getNickname())
 				.fileUrl(userEntity.getProfileImage() != null ? userEntity.getProfileImage().getFileUrl() : null) // 없으면 null

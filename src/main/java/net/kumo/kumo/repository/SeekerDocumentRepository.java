@@ -1,17 +1,21 @@
 package net.kumo.kumo.repository;
 
-import net.kumo.kumo.domain.entity.EvidenceFileEntity;
+
+import net.kumo.kumo.domain.entity.SeekerDocumentEntity;
 import net.kumo.kumo.domain.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-public interface EvidenceFileRepository extends JpaRepository<EvidenceFileEntity, Long> {
-	//유저랑 파일 가져오기
-	List<EvidenceFileEntity> findByUserAndFileType(UserEntity user, String fileType);
+@Repository
+public interface SeekerDocumentRepository extends JpaRepository<SeekerDocumentEntity, Long> {
 	
+	// 🌟 특정 유저의 증빙서류 리스트만 쏙 뽑아올 때 사용합니다.
+	List<SeekerDocumentEntity> findByUser(UserEntity user);
 	
 	@Modifying
 	@Transactional

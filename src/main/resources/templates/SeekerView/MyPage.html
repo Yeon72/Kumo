@@ -1,158 +1,213 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+
 <head>
     <meta charset="UTF-8">
     <title>KUMO - 마이페이지</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/SeekerView/myPage.css}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
 
-<div th:replace="~{AuthenticatedFragments/AuthenticatedHeader :: headerFragment}"></div>
+    <div th:replace="~{AuthenticatedFragments/AuthenticatedHeader :: headerFragment}"></div>
 
-<div class="mypage-container">
-
-    <aside th:replace="~{SeekerView/SeekerSidebar :: sidebarFragment('account')}"></aside>
-
-    <main class="content-area">
-        <div class="content-header">
-            <h2 class="setting-title" th:text="#{mypage.header}">내 계정</h2>
-        </div>
-
-        <div class="profile-section">
-            <div class="profile-photo-area">
-                <div class="img-wrapper">
-                    <img th:src="${user.fileUrl ?: '/images/common/default_profile.png'}" id="currentProfileImg" alt="Profile">
-                </div>
-                <button type="button" class="btn-upload-photo" id="btnOpenModal" th:text="#{profile.upload.btn}">프로필 사진 업로드</button>
+    <!-- 프로필 업로드 모달 -->
+    <div id="profileModal" class="profile-modal-overlay">
+        <div class="profile-modal-window">
+            <div class="profile-modal-header">
+                <h3 th:text="#{modal.title}">프로필 사진 변경</h3>
+                <span class="close-btn">&times;</span>
             </div>
-
-            <div id="profileModal" class="modal-overlay">
-                <div class="modal-window">
-                    <div class="modal-header">
-                        <h3 th:text="#{modal.title}">프로필 사진 변경</h3>
-                        <span class="close-btn">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <div class="preview-wrapper">
-                            <img th:src="${user.fileUrl ?: '/images/common/default_profile.png'}" id="modalPreview" alt="Profile">
-                        </div>
-                        <p class="guide-text" th:text="#{modal.guide}">JPG, PNG, GIF 파일만 업로드 가능합니다.</p>
-                        <div class="file-input-container">
-                            <input type="file" id="fileInput" accept="image/*" class="hidden-input">
-                            <label for="fileInput" class="custom-file-btn">
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                                <span th:text="#{modal.file.select}">파일 선택</span>
-                            </label>
-                            <span id="fileName" class="file-name" th:text="#{modal.file.none}">파일 없음</span>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-cancel" th:text="#{btn.cancel}">취소</button>
-                        <button class="btn-save" id="btnSaveImage" th:text="#{btn.save}">저장하기</button>
-                    </div>
+            <div class="profile-modal-body">
+                <div class="preview-wrapper">
+                    <img th:src="${user.fileUrl ?: '/images/common/default_profile.png'}" id="modalPreview"
+                        alt="Profile">
                 </div>
-            </div>
-
-            <div class="info-list">
-                <div class="info-row">
-                    <span class="label" th:text="#{label.name}">이름</span>
-                    <span class="value" th:text="${user.name}">홍길동</span>
-                </div>
-                <div class="info-row">
-                    <span class="label" th:text="#{label.birth}">생년월일</span>
-                    <span class="value" th:text="${user.birthDate}">2000 / 01 / 01</span>
-                </div>
-                <div class="info-row">
-                    <span class="label" th:text="#{label.nickname}">닉네임</span>
-                    <span class="value" th:text="${user.nickname}">닉네임</span>
-                </div>
-                <div class="info-row">
-                    <span class="label" th:text="#{label.email}">이메일</span>
-                    <span class="value" th:text="${user.email}">email@email.com</span>
-
-                </div>
-                <div class="info-row">
-                    <span class="label" th:text="#{label.address}">주소</span>
-                    <span class="value" th:text="${user.address}">주소 정보</span>
-                </div>
-                <div class="info-row">
-                    <span class="label" th:text="#{label.line}">LINE 연동</span>
-                    <label class="switch">
-                        <input type="checkbox" th:checked="${user.socialProvider != null and user.socialProvider.name() == 'LINE'}" onclick="return false;">
-                        <span class="slider round"></span>
+                <p class="guide-text" th:text="#{modal.guide}">JPG, PNG, GIF 파일만 업로드 가능합니다.</p>
+                <div class="file-selection-area">
+                    <input type="file" id="fileInput" accept="image/*" style="display:none;">
+                    <label for="fileInput" class="custom-file-btn">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span th:text="#{modal.file.select}">파일 선택</span>
                     </label>
-                </div>
-                <div class="info-row">
-                    <span class="label" th:text="#{label.google}">Google 연동</span>
-                    <label class="switch">
-                        <input type="checkbox" th:checked="${user.socialProvider != null and user.socialProvider.name() == 'GOOGLE'}" onclick="return false;">
-                        <span class="slider round"></span>
-                    </label>
+                    <p id="fileName" class="file-name" th:text="#{modal.file.none}">선택된 파일 없음</p>
                 </div>
             </div>
-
-            <div class="action-buttons">
-                <button type="button" class="btn-delete" onclick="openDeleteModal()" th:text="#{btn.delete.account}">회원 탈퇴</button>
-                <a th:href="@{/Seeker/ProfileEdit}" class="btn-edit" th:text="#{btn.edit.profile}">회원정보 수정</a>
+            <div class="profile-modal-footer">
+                <button class="btn-cancel" id="btnCancel" th:text="#{btn.cancel}">취소</button>
+                <button class="btn-save" id="btnSaveImage" th:text="#{btn.save}">저장하기</button>
             </div>
-        </div>
-    </main>
-</div>
-
-<div th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"></div>
-
-<script th:src="@{/js/SeekerView/MyPage.js}"></script>
-<script th:inline="javascript">
-    const msg = {
-        selectPhoto: [[#{msg.select.photo}]],
-        uploadSuccess: [[#{msg.upload.success}]],
-        error: [[#{msg.error}]],
-        notService: [[#{msg.not.service}]],
-        fileNone: [[#{modal.file.none}]]
-    };
-</script>
-
-
-<div id="deleteAccountModal" class="delete-modal-overlay">
-    <div class="delete-modal-content">
-        <div class="delete-modal-header">
-            <h3>회원 탈퇴</h3>
-            <button type="button" class="btn-close-modal" onclick="closeDeleteModal()">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-
-        <div class="delete-modal-body">
-            <div class="warning-box">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <p class="warning-title">정말 KUMO를 떠나시겠습니까?</p>
-                <ul class="warning-list">
-                    <li>등록된 이력서 및 프로필 정보가 <strong>영구적으로 삭제</strong>됩니다.</li>
-                    <li>진행 중인 모든 <strong>지원 내역이 취소</strong> 처리됩니다.</li>
-                    <li>탈퇴 후에는 데이터를 <strong>절대 복구할 수 없습니다.</strong></li>
-                </ul>
-            </div>
-
-            <div class="delete-input-group">
-                <label for="deleteConfirmPw">본인 확인을 위해 비밀번호를 입력해 주세요.</label>
-                <input type="password" id="deleteConfirmPw" class="custom-modal-input" placeholder="비밀번호 입력" oninput="checkDeleteInput()">
-
-                <label for="deleteConfirmPwCheck" style="margin-top: 15px;">비밀번호 확인</label>
-                <input type="password" id="deleteConfirmPwCheck" class="custom-modal-input" placeholder="비밀번호 다시 입력" oninput="checkDeleteInput()">
-
-                <p id="deleteMismatchMsg" class="error-msg" style="display: none; margin-top: 8px;">비밀번호가 일치하지 않습니다.</p>
-                <p id="deleteErrorMsg" class="error-msg" style="display: none; margin-top: 8px;">비밀번호가 틀렸습니다.</p>
-            </div>
-        </div>
-
-        <div class="delete-modal-footer">
-            <button type="button" class="btn-modal-cancel" onclick="closeDeleteModal()">취소</button>
-            <button type="button" id="btnConfirmDelete" class="btn-modal-danger" onclick="executeDelete()" disabled>탈퇴하기</button>
         </div>
     </div>
-</div>
 
+    <div class="mypage-container">
+        <aside th:replace="~{SeekerView/SeekerSidebar :: sidebarFragment('account')}"></aside>
+
+        <main class="content-area">
+            <div class="settings-container">
+                <div class="content-header">
+                    <h2 class="settings-title" th:text="#{mypage.header}">내 계정</h2>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-photo-area">
+                        <div class="img-wrapper">
+                            <img th:src="${user.fileUrl ?: '/images/common/default_profile.png'}" id="currentProfileImg"
+                                class="profile-img-lg" alt="Profile">
+                        </div>
+                        <button type="button" class="btn-upload-photo" id="btnOpenModal"
+                            th:text="#{profile.upload.btn}">
+                            프로필 사진 업로드
+                        </button>
+                    </div>
+
+                    <div class="info-list">
+                        <div class="info-row">
+                            <span class="label" th:text="#{label.name}">이름</span>
+                            <span class="value" th:text="${user.name}">홍길동</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label" th:text="#{label.birth}">생년월일</span>
+                            <span class="value" th:text="${#temporals.format(user.birthDate, 'yyyy / MM / dd  ')}">1990 / 01 / 01</span>
+                            <span class="age-suffix" th:text="#{set.label.age_suffix(${age})}"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label" th:text="#{label.nickname}">닉네임</span>
+                            <span class="value" th:text="${user.nickname}">닉네임</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label" th:text="#{label.email}">이메일</span>
+                            <span class="value" th:text="${user.email}">email@email.com</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label" th:text="#{label.address}">주소</span>
+                            <span class="value" th:text="${user.address}">주소 정보</span>
+                        </div>
+                        <div class="info-row align-items-center">
+                            <span class="label" th:text="#{label.line}">LINE 연동</span>
+                            <label class="switch">
+                                <input type="checkbox" class="sns-toggle"
+                                    th:checked="${user.socialProvider == 'LINE'}">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="info-row align-items-center">
+                            <span class="label" th:text="#{label.google}">Google 연동</span>
+                            <label class="switch">
+                                <input type="checkbox" class="sns-toggle"
+                                    th:checked="${user.socialProvider == 'GOOGLE'}">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="button" class="btn-quit" onclick="openDeleteModal()"
+                            th:text="#{btn.delete.account}">회원 탈퇴</button>
+                        <a th:href="@{/Seeker/ProfileEdit}" class="btn-edit" th:text="#{btn.edit.profile}">회원정보 수정</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"></div>
+
+    <!-- 회원 탈퇴 모달 (기존 유지) -->
+    <div id="deleteAccountModal" class="delete-modal-overlay">
+        <div class="delete-modal-content">
+            <div class="delete-modal-header">
+                <h3>회원 탈퇴</h3>
+                <button type="button" class="btn-close-modal" onclick="closeDeleteModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="delete-modal-body">
+                <div class="warning-box">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <p class="warning-title">정말 KUMO를 떠나시겠습니까?</p>
+                    <ul class="warning-list">
+                        <li>등록된 이력서 및 프로필 정보가 <strong>영구적으로 삭제</strong>됩니다.</li>
+                        <li>진행 중인 모든 <strong>지원 내역이 취소</strong> 처리됩니다.</li>
+                        <li>탈퇴 후에는 데이터를 <strong>절대 복구할 수 없습니다.</strong></li>
+                    </ul>
+                </div>
+                <div class="delete-input-group">
+                    <label for="deleteConfirmPw">본인 확인을 위해 비밀번호를 입력해 주세요.</label>
+                    <input type="password" id="deleteConfirmPw" class="custom-modal-input" placeholder="비밀번호 입력"
+                        oninput="checkDeleteInput()">
+                    <label for="deleteConfirmPwCheck" style="margin-top: 15px;">비밀번호 확인</label>
+                    <input type="password" id="deleteConfirmPwCheck" class="custom-modal-input" placeholder="비밀번호 다시 입력"
+                        oninput="checkDeleteInput()">
+                    <p id="deleteMismatchMsg" class="error-msg" style="display: none; margin-top: 8px;">비밀번호가 일치하지 않습니다.
+                    </p>
+                    <p id="deleteErrorMsg" class="error-msg" style="display: none; margin-top: 8px;">비밀번호가 틀렸습니다.</p>
+                </div>
+            </div>
+            <div class="delete-modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeDeleteModal()">취소</button>
+                <button type="button" id="btnConfirmDelete" class="btn-modal-danger" onclick="executeDelete()"
+                    disabled>탈퇴하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/SeekerView/MyPage.js}"></script>
+    <script th:inline="javascript">
+        // SNS 토글 모달
+            const snsMsg = {
+                snsTitle: /*[[#{set.swal.sns_title}]]*/ 'Service Notice',
+                snsText:  /*[[#{set.swal.sns_text}]]*/ '아직 서비스 준비 중입니다.',
+            };
+
+            document.querySelectorAll('.sns-toggle').forEach(toggle => {
+                toggle.onclick = function (e) {
+                    e.preventDefault();
+                    const isDark = document.documentElement.classList.contains('dark-mode');
+                    Swal.fire({
+                        title: snsMsg.snsTitle,
+                        text: snsMsg.snsText,
+                        icon: 'info',
+                        confirmButtonColor: '#7db4e6',
+                        background: isDark ? '#2b2b2b' : '#fff',
+                        color: isDark ? '#fff' : '#333'
+                    });
+                };
+            });
+
+        const msg = {
+            selectPhoto: [[#{ msg.select.photo }]],
+            uploadSuccess: [[#{ msg.upload.success }]],
+            error: [[#{ msg.error }]],
+            notService: [[#{ msg.not.service }]],
+            fileNone: [[#{ modal.file.none }]]
+        };
+
+        // 프로필 모달
+        const modal = document.getElementById("profileModal");
+        const openBtn = document.getElementById("btnOpenModal");
+
+        function closeModal() {
+            modal.classList.add('closing');
+            setTimeout(() => {
+                modal.style.display = "none";
+                modal.classList.remove('closing');
+            }, 250);
+        }
+
+        if (openBtn) openBtn.onclick = () => { modal.style.display = "flex"; };
+
+        const closeBtn = document.querySelector(".close-btn");
+        const cancelBtn = document.getElementById("btnCancel");
+        if (closeBtn) closeBtn.onclick = closeModal;
+        if (cancelBtn) cancelBtn.onclick = closeModal;
+        window.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+    </script>
 </body>
+
 </html>

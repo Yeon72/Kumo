@@ -8,72 +8,10 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" th:href="@{/css/chat_room.css(v='3.1')}">
+    <link rel="stylesheet" th:href="@{/css/chat_room.css(v='3.2')}">
 
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-
-    <style>
-        .image-modal {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-
-        .modal-content-img {
-            max-width: 90%;
-            max-height: 80%;
-            border-radius: 5px;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-            object-fit: contain;
-            animation: zoomIn 0.2s ease-out;
-        }
-
-        .close-modal-btn {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            color: #f1f1f1;
-            font-size: 40px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            z-index: 10000;
-        }
-
-        .close-modal-btn:hover {
-            color: #bbb;
-        }
-
-        @keyframes zoomIn {
-            from {
-                transform: scale(0.8);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .chat-image {
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        .chat-image:active {
-            transform: scale(0.98);
-        }
-    </style>
 </head>
 
 <body>
@@ -83,6 +21,9 @@
 
     <div class="mobile-container">
         <div class="chat-header">
+            <a th:href="@{/chat/list(userId=${userId})}" class="header-back-btn">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
 
             <div class="header-translate-btn">
                 <img th:src="@{/images/icons/chat_room_translate.svg}" class="translate-icon-img" alt="번역">
@@ -92,7 +33,6 @@
                 <div class="store-profile-row">
                     <img th:src="@{/images/dog_profile.jpg}" class="header-store-img">
                     <span class="header-store-name" th:text="${roomName}">상대방 이름</span>
-                    <div class="online-dot"></div>
                 </div>
 
                 <div class="header-info-row">
@@ -108,43 +48,66 @@
         <div class="msg-area" id="msgArea">
             <th:block th:each="msg, stat : ${history}">
 
-                <th:block
-                    th:if="${stat.first} or ${!#strings.equals(#temporals.format(msg.createdAt, 'yyyy-MM-dd'), #temporals.format(history[stat.index-1].createdAt, 'yyyy-MM-dd'))}">
-                    <div class="date-divider">
-                        <span class="date-divider-text"
-                            th:text="${#temporals.format(msg.createdAt, 'yyyy년 M월 d일 EEEE')}"></span>
+                <th:block th:if="${stat.first or msg.createdDate != history[stat.index - 1].createdDate}">
+                    <div class="date-divider" th:if="${msg.createdDate != null}">
+                        <span class="date-divider-text" th:text="${msg.createdDate}">2026-02-26</span>
                     </div>
                 </th:block>
 
-                <div th:if="${msg.sender.userId != userId}" class="msg-row other"
-                    th:data-date="${#temporals.format(msg.createdAt, 'yyyy-MM-dd')}">
-
+                <div th:if="${msg.senderId != userId}" class="msg-row other">
                     <img th:src="@{/images/dog_profile.jpg}" class="profile-img">
 
-                    <th:block th:if="${msg.messageType.name() == 'TEXT'}">
+                    <th:block th:if="${msg.messageType == 'TEXT'}">
                         <div class="msg-bubble" th:text="${msg.content}">내용</div>
                     </th:block>
-                    <th:block th:if="${msg.messageType.name() == 'IMAGE'}">
+
+                    <th:block th:if="${msg.messageType == 'IMAGE'}">
                         <img th:src="${msg.content}" class="chat-image"
                             style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
                             onclick="openImageModal(this.src)">
                     </th:block>
 
-                    <span class="msg-time" th:text="${#temporals.format(msg.createdAt, 'HH:mm')}"></span>
+                    <th:block th:if="${msg.messageType == 'FILE'}">
+                        <div class="file-bubble" th:data-url="${msg.content}"
+                            onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
+                            <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+                            <div class="file-info-box">
+                                <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
+                                <div class="file-display-name"></div>
+                                <div class="file-display-sub">파일 열기</div>
+                            </div>
+                        </div>
+                    </th:block>
+
+                    <span class="msg-time" th:text="${msg.createdAt}"></span>
                 </div>
 
-                <div th:if="${msg.sender.userId == userId}" class="msg-row me"
-                    th:data-date="${#temporals.format(msg.createdAt, 'yyyy-MM-dd')}">
+                <div th:if="${msg.senderId == userId}" class="msg-row me">
+                    <div class="msg-info">
+                        <span class="unread-count" th:if="${msg.isRead == false}">1</span>
+                        <span class="msg-time" th:text="${msg.createdAt}"></span>
+                    </div>
 
-                    <span class="msg-time" th:text="${#temporals.format(msg.createdAt, 'HH:mm')}"></span>
-
-                    <th:block th:if="${msg.messageType.name() == 'TEXT'}">
+                    <th:block th:if="${msg.messageType == 'TEXT'}">
                         <div class="msg-bubble" th:text="${msg.content}">내용</div>
                     </th:block>
-                    <th:block th:if="${msg.messageType.name() == 'IMAGE'}">
+
+                    <th:block th:if="${msg.messageType == 'IMAGE'}">
                         <img th:src="${msg.content}" class="chat-image"
                             style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
                             onclick="openImageModal(this.src)">
+                    </th:block>
+
+                    <th:block th:if="${msg.messageType == 'FILE'}">
+                        <div class="file-bubble" th:data-url="${msg.content}"
+                            onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
+                            <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+                            <div class="file-info-box">
+                                <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
+                                <div class="file-display-name"></div>
+                                <div class="file-display-sub">파일 열기</div>
+                            </div>
+                        </div>
                     </th:block>
                 </div>
 
@@ -161,294 +124,72 @@
             <button class="btn-send" onclick="sendMessage()">전송</button>
         </div>
 
-        <div id="imageModal" class="image-modal" onclick="closeImageModal()">
-            <span class="close-modal-btn">&times;</span>
-            <img class="modal-content-img" id="modalImage">
-        </div>
+        <dialog id="imageModal" class="std-dialog-clear">
+            <div class="image-modal" style="display: flex; position: static;">
+                <span class="close-modal-btn" onclick="closeImageModal()">&times;</span>
+                <img class="modal-content-img" id="modalImage">
+            </div>
+        </dialog>
 
-        <div id="mainPlusMenu" class="main-menu-overlay" onclick="closeMainMenu()">
+        <dialog id="mainPlusMenu" class="std-dialog-clear" style="margin-bottom: 0;">
             <div class="main-menu-box" onclick="event.stopPropagation()">
                 <div class="menu-grid">
 
                     <div class="menu-item" onclick="openSubMenu('template')">
-                        <div class="menu-icon-circle" style="background-color: #fef01b;">
-                            <i class="fa-solid fa-comment-dots" style="color: #3b1e1e;"></i>
+                        <div class="menu-icon-circle" style="background-color: #fff4cc;">
+                            <i class="fa-regular fa-message" style="color: #ffb800;"></i>
                         </div>
                         <span class="menu-name">자주 쓰는 메시지</span>
                     </div>
 
-                    <div class="menu-item" onclick="alert('지도 기능은 준비 중입니다!')">
-                        <div class="menu-icon-circle" style="background-color: #e3f2fd;">
-                            <i class="fa-solid fa-location-dot" style="color: #2196f3;"></i>
-                        </div>
-                        <span class="menu-name">위치 공유</span>
-                    </div>
-
                     <div class="menu-item" onclick="document.getElementById('fileInput').click(); closeMainMenu();">
-                        <div class="menu-icon-circle" style="background-color: #ffebee;">
-                            <i class="fa-solid fa-image" style="color: #f44336;"></i>
+                        <div class="menu-icon-circle" style="background-color: #ffe8e8;">
+                            <i class="fa-regular fa-image" style="color: #ff5252;"></i>
                         </div>
                         <span class="menu-name">앨범</span>
                     </div>
 
-                    <div class="menu-item" onclick="alert('이력서 전송 기능')">
+                    <div class="menu-item" onclick="document.getElementById('docFileInput').click(); closeMainMenu();">
                         <div class="menu-icon-circle" style="background-color: #e8f5e9;">
-                            <i class="fa-solid fa-address-card" style="color: #4caf50;"></i>
+                            <i class="fa-regular fa-file-lines" style="color: #4caf50;"></i>
                         </div>
                         <span class="menu-name">문서</span>
                     </div>
 
+                    <div class="menu-item" onclick="alert('추후에 구현 예정이에요!')">
+                        <div class="menu-icon-circle" style="background-color: #e3f2fd;">
+                            <i class="fa-regular fa-calendar" style="color: #2196f3;"></i>
+                        </div>
+                        <span class="menu-name">면접 일정</span>
+                    </div>
+
                 </div>
             </div>
-        </div>
+        </dialog>
 
-        <div id="templateMenu" class="template-menu-overlay" onclick="closeTemplateMenu()">
-            <div class="template-box" onclick="event.stopPropagation()">
-                <div class="template-header">
-                    <span>자주 쓰는 메시지</span>
-                    <span class="close-btn" onclick="closeTemplateMenu()">&times;</span>
-                </div>
-                <div class="template-list">
-                    <button onclick="insertText('안녕하세요, 면접 제안 드리고 싶습니다. :)')">📅 면접 제안</button>
-                    <button onclick="insertText('이력서를 추가로 요청드려도 될까요? :)')">📂 이력서 요청</button>
-                    <button onclick="insertText('합격 통보 드립니다. 축하합니다! :)')">🎉 합격 통보</button>
-                    <button onclick="insertText('네, 면접 일정 확인했습니다. :)')">✅ 일정 확인</button>
-                    <button onclick="insertText('도착했습니다. 기다리고 있어요. :)')">📍 도착 알림</button>
-                </div>
+        <input type="file" id="docFileInput" style="display: none;" accept=".pdf, .xlsx, .xls, .docx, .doc, .txt"
+            onchange="uploadFile()">
+
+    </div>
+
+    <dialog id="templateMenu" class="std-dialog-clear" style="margin-bottom: 0;">
+        <div class="template-box" onclick="event.stopPropagation()">
+            <div class="template-header">
+                <span>자주 쓰는 메시지</span>
+                <span class="close-btn" onclick="closeTemplateMenu()">&times;</span>
+            </div>
+            <div class="template-list">
+                <button onclick="insertText('안녕하세요, 면접 제안 드리고 싶습니다. :)')">📅 면접 제안</button>
+                <button onclick="insertText('이력서를 추가로 요청드려도 될까요? :)')">📂 이력서 요청</button>
+                <button onclick="insertText('합격 통보 드립니다. 축하합니다! :)')">🎉 합격 통보</button>
+                <button onclick="insertText('네, 면접 일정 확인했습니다. :)')">✅ 일정 확인</button>
+                <button onclick="insertText('도착했습니다. 기다리고 있어요. :)')">📍 도착 알림</button>
             </div>
         </div>
+    </dialog>
 
-        <script>
-            var stompClient = null;
-            var roomId = document.getElementById("roomId").value;
-            var myId = document.getElementById("myId").value;
-            var msgArea = document.getElementById("msgArea");
-            var lastChatDate = null;
+    <script th:src="@{/js/chat_room.js(v='1.0')}"></script>
 
-            connect();
-
-            function connect() {
-                var socket = new SockJS('/ws-stomp');
-                stompClient = Stomp.over(socket);
-
-                stompClient.connect({}, function (frame) {
-                    console.log('Connected: ' + frame);
-                    initLastChatDate();
-                    stompClient.subscribe('/sub/chat/room/' + roomId, function (messageOutput) {
-                        showMessage(JSON.parse(messageOutput.body));
-                    });
-                    scrollToBottom();
-                });
-            }
-
-            function sendMessage() {
-                var msgInput = document.getElementById("msgInput");
-                var messageContent = msgInput.value.trim();
-
-                if (messageContent && stompClient) {
-                    var chatMessage = {
-                        room: { id: roomId },
-                        sender: { userId: myId },
-                        content: messageContent,
-                        messageType: 'TEXT'
-                    };
-                    stompClient.send("/pub/chat/message", {}, JSON.stringify(chatMessage));
-
-                    msgInput.value = '';
-                    msgInput.style.height = 'auto';
-                    msgInput.style.overflowY = 'hidden';
-                    msgInput.focus();
-                }
-            }
-
-            function autoResize(textarea) {
-                textarea.style.height = 'auto';
-                var maxHeight = 120;
-                if (textarea.scrollHeight > maxHeight) {
-                    textarea.style.height = maxHeight + 'px';
-                    textarea.style.overflowY = 'auto';
-                } else {
-                    textarea.style.height = textarea.scrollHeight + 'px';
-                    textarea.style.overflowY = 'hidden';
-                }
-            }
-
-            function handleEnter(e) {
-                if (e.isComposing || e.keyCode === 229) return;
-                if (e.key === 'Enter') {
-                    if (!e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                    }
-                }
-            }
-
-            function showMessage(message) {
-                var dateObj = message.createdAt ? new Date(message.createdAt) : new Date();
-                checkAndAddDateDivider(dateObj);
-
-                var isMe = (message.sender.userId == myId);
-                var div = document.createElement('div');
-                var timeString = dateObj.getHours().toString().padStart(2, '0') + ':' +
-                    dateObj.getMinutes().toString().padStart(2, '0');
-
-                var year = dateObj.getFullYear();
-                var month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-                var day = dateObj.getDate().toString().padStart(2, '0');
-                var dateStr = year + "-" + month + "-" + day;
-
-                var finalContentHtml = "";
-                if (message.messageType === 'IMAGE') {
-                    finalContentHtml = `<img src="${message.content}" class="chat-image" 
-                                        style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
-                                        onclick="openImageModal(this.src)">`;
-                } else {
-                    finalContentHtml = `<div class="msg-bubble">${message.content}</div>`;
-                }
-
-                if (isMe) {
-                    div.className = "msg-row me";
-                    div.setAttribute("data-date", dateStr);
-                    div.innerHTML = `
-                        <span class="msg-time">${timeString}</span>
-                        ${finalContentHtml}
-                    `;
-                } else {
-                    div.className = "msg-row other";
-                    div.setAttribute("data-date", dateStr);
-                    div.innerHTML = `
-                        <img src="/images/dog_profile.jpg" class="profile-img">
-                        ${finalContentHtml}
-                        <span class="msg-time">${timeString}</span>
-                    `;
-                }
-
-                msgArea.appendChild(div);
-                scrollToBottom();
-            }
-
-            function uploadImage() {
-                var fileInput = document.getElementById('fileInput');
-                var file = fileInput.files[0];
-                if (file) {
-                    var formData = new FormData();
-                    formData.append("file", file);
-                    fetch('/chat/upload', {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(response => response.text())
-                        .then(imageUrl => {
-                            if (imageUrl.includes("실패")) {
-                                alert("사진 업로드 실패");
-                                return;
-                            }
-                            var chatMessage = {
-                                room: { id: roomId },
-                                sender: { userId: myId },
-                                content: imageUrl,
-                                messageType: 'IMAGE'
-                            };
-                            stompClient.send("/pub/chat/message", {}, JSON.stringify(chatMessage));
-                        });
-                    fileInput.value = '';
-                }
-            }
-
-            function checkAndAddDateDivider(dateObj) {
-                var year = dateObj.getFullYear();
-                var month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-                var day = dateObj.getDate().toString().padStart(2, '0');
-                var dateStr = year + "-" + month + "-" + day;
-                if (lastChatDate !== dateStr) {
-                    var days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-                    var dayName = days[dateObj.getDay()];
-                    var fullDateText = year + "년 " + parseInt(month) + "월 " + parseInt(day) + "일 " + dayName;
-                    var dividerDiv = document.createElement('div');
-                    dividerDiv.className = "date-divider";
-                    dividerDiv.innerHTML = `<span class="date-divider-text">${fullDateText}</span>`;
-                    msgArea.appendChild(dividerDiv);
-                    lastChatDate = dateStr;
-                }
-            }
-            function initLastChatDate() {
-                var rows = document.querySelectorAll('.msg-row');
-                if (rows.length > 0) {
-                    var lastRow = rows[rows.length - 1];
-                    var dateAttr = lastRow.getAttribute('data-date');
-                    if (dateAttr) lastChatDate = dateAttr;
-                }
-            }
-            function scrollToBottom() {
-                setTimeout(function () {
-                    msgArea.scrollTop = msgArea.scrollHeight;
-                }, 50);
-            }
-            function goBackToList() {
-                var userId = document.getElementById("myId").value;
-                location.href = userId ? '/chat/list?userId=' + userId : '/chat/list';
-            }
-
-            function openImageModal(src) {
-                var modal = document.getElementById("imageModal");
-                var modalImg = document.getElementById("modalImage");
-                modal.style.display = "flex";
-                modalImg.src = src;
-            }
-
-            function closeImageModal() {
-                document.getElementById("imageModal").style.display = "none";
-            }
-
-            // [메인 메뉴] 열기
-            function openMainMenu() {
-                document.getElementById('mainPlusMenu').style.display = 'flex';
-            }
-
-            // [메인 메뉴] 닫기
-            function closeMainMenu() {
-                document.getElementById('mainPlusMenu').style.display = 'none';
-            }
-
-            // [서브 메뉴 연결] 메인 메뉴 닫으면서 -> 원하는 기능 열기
-            function openSubMenu(type) {
-                closeMainMenu(); // 1차 메뉴 닫고
-
-                if (type === 'template') {
-                    openTemplateMenu(); // 아까 만든 '상용구' 메뉴 열기
-                }
-                // 나중에 여기에 'map' 등 추가 가능
-            }
-
-            // 1. 메뉴 열기
-            function openTemplateMenu() {
-                document.getElementById('templateMenu').style.display = 'flex';
-            }
-
-            // 2. 메뉴 닫기
-            function closeTemplateMenu() {
-                document.getElementById('templateMenu').style.display = 'none';
-            }
-
-            // 3. [수정됨] 텍스트 입력창에 글자 넣기
-            function insertText(text) {
-                // 지존용사님의 HTML ID인 'msgInput'을 찾도록 수정했습니다!
-                const inputField = document.getElementById('msgInput');
-
-                if (inputField) {
-                    inputField.value = text; // 글자 입력
-                    inputField.focus();      // 커서 깜빡임
-                    // (옵션) 높이 자동 조절 함수가 있다면 실행 (지존용사님 코드에 autoResize가 있어서 추가함)
-                    if (typeof autoResize === 'function') {
-                        autoResize(inputField);
-                    }
-                } else {
-                    alert("입력창(msgInput)을 찾을 수 없습니다!");
-                }
-
-                closeTemplateMenu(); // 메뉴 닫기
-            }
-        </script>
 </body>
 
 </html>

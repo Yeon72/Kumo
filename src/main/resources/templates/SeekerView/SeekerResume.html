@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{resume.pageTitle}">KUMO - 내 이력서 작성</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/SeekerView/myPage.css}">
+    <link rel="stylesheet" th:href="@{/css/SeekerView/resume.css}">
+
+    <style>
+        #careerFields .clonable-item:first-child > .btn-delete-item { display: none; }
+        #certFields .clonable-item:first-child .btn-delete-item { display: none; }
+        #langFields .clonable-item:first-child .btn-delete-item { display: none; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{AuthenticatedFragments/AuthenticatedHeader :: headerFragment}"></div>
+
+<div class="mypage-container">
+
+    <aside th:replace="~{SeekerView/SeekerSidebar :: sidebarFragment('resume')}"></aside>
+
+    <main class="content-area">
+        <div class="content-header">
+            <h2 th:text="#{resume.header.title}">이력서 작성</h2>
+        </div>
+
+        <div class="resume-wrapper">
+            <div class="profile-summary-card">
+                <img th:src="${user?.fileUrl ?: '/images/common/default_profile.png'}" alt="Profile" class="summary-photo">
+                <div class="summary-info">
+                    <h3>
+                        <span th:text="${user?.name} ?: #{resume.defaultName}">홍길동</span>
+                        <span class="sub-info" th:text="#{resume.defaultSubInfo}">남자 40세 / 1899년생</span>
+                    </h3>
+                    <div class="info-row">
+                        <span class="label" th:text="#{resume.label.address}">주소</span>
+                        <span class="value" th:text="${user?.address} ?: #{resume.defaultAddress}">도쿄도 미나토구</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label" th:text="#{resume.label.phone}">휴대폰</span>
+                        <span class="value" th:text="${user?.contact} ?: #{resume.defaultPhone}">010-1234-5678</span>
+                    </div>
+                </div>
+            </div>
+
+            <form th:action="@{/Seeker/resume}" method="post" id="resumeForm" class="resume-form" enctype="multipart/form-data">
+
+                <section class="form-section">
+                    <h3 class="section-title" th:text="#{resume.section.education}">학력사항</h3>
+                    <div class="form-group row">
+                        <label th:text="#{resume.label.finalEducation}">최종학력</label>
+                        <div class="input-group">
+                            <select name="educationLevel" class="custom-select">
+                                <option value="graduateSchool" th:text="#{edu.level.graduateSchool}">대학원</option>
+                                <option value="university" th:text="#{edu.level.university}">대학교</option>
+                                <option value="highSchool" selected th:text="#{edu.level.highSchool}">고등학교</option>
+                                <option value="middleSchool" th:text="#{edu.level.middleSchool}">중학교</option>
+                                <option value="primarySchool" th:text="#{edu.level.primarySchool}">초등학교</option>
+                            </select>
+
+                            <select name="educationStatus" class="custom-select">
+                                <option value="graduated" th:text="#{edu.status.graduated}">졸업</option>
+                                <option value="expected" th:text="#{edu.status.expected}">졸업예정</option>
+                                <option value="attending" th:text="#{edu.status.attending}">재학중</option>
+                                <option value="leave" th:text="#{edu.status.leave}">휴학</option>
+                                <option value="completed" th:text="#{edu.status.completed}">수료</option>
+                                <option value="withdrawn" th:text="#{edu.status.withdrawn}">중퇴</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label th:text="#{resume.label.schoolName}">학교명</label>
+                        <input type="text" name="schoolName" th:placeholder="#{resume.placeholder.schoolName}" class="custom-input full-width">
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h3 class="section-title" th:text="#{resume.section.career}">경력사항</h3>
+                    <div class="form-group row">
+                        <label th:text="#{resume.label.careerType}">경력구분</label>
+                        <div class="toggle-group pill-shape">
+                            <button type="button" class="toggle-btn active" data-value="EXPERIENCED" th:text="#{resume.btn.experienced}">경력</button>
+                            <button type="button" class="toggle-btn" data-value="NEWCOMER" th:text="#{resume.btn.newcomer}">신입</button>
+                            <input type="hidden" name="careerType" id="careerType" value="EXPERIENCED">
+                        </div>
+                    </div>
+
+                    <div id="careerFields">
+                        <div class="career-item clonable-item" style="position: relative; padding-bottom: 20px; border-bottom: 1px dashed #eee; margin-bottom: 20px;">
+                            <button type="button" class="btn-delete-item" style="position: absolute; right: 0; top: 0;"><i class="fa-solid fa-xmark"></i></button>
+
+                            <div class="form-group row">
+                                <label th:text="#{resume.label.companyName}">회사명</label>
+                                <input type="text" name="companyName" th:placeholder="#{resume.placeholder.companyName}" class="custom-input full-width">
+                            </div>
+                            <div class="form-group row">
+                                <label th:text="#{resume.label.workPeriod}">근무기간</label>
+                                <div class="input-group date-group">
+                                    <select name="startYear" class="custom-select">
+                                        <option value="" selected disabled th:text="#{resume.label.year}">YYYY</option>
+                                        <option th:each="year : ${#numbers.sequence(2026, 1970, -1)}" th:value="${year}" th:text="${year}"></option>
+                                    </select>
+                                    <select name="startMonth" class="custom-select">
+                                        <option value="" selected disabled th:text="#{resume.label.month}">MM</option>
+                                        <option th:each="month : ${#numbers.sequence(1, 12)}" th:value="${#numbers.formatInteger(month, 2)}" th:text="${#numbers.formatInteger(month, 2)}"></option>
+                                    </select>
+
+                                    <span class="wave">~</span>
+
+                                    <select name="endYear" class="custom-select">
+                                        <option value="" selected disabled th:text="#{resume.label.year}">YYYY</option>
+                                        <option th:each="year : ${#numbers.sequence(2026, 1970, -1)}" th:value="${year}" th:text="${year}"></option>
+                                    </select>
+                                    <select name="endMonth" class="custom-select">
+                                        <option value="" selected disabled th:text="#{resume.label.month}">MM</option>
+                                        <option th:each="month : ${#numbers.sequence(1, 12)}" th:value="${#numbers.formatInteger(month, 2)}" th:text="${#numbers.formatInteger(month, 2)}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row align-top">
+                                <label th:text="#{resume.label.jobDuties}">담당업무</label>
+                                <textarea name="jobDuties" class="custom-textarea" th:placeholder="#{resume.placeholder.jobDuties}"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="center-btn-wrapper">
+                        <button type="button" id="btnAddCareer" class="btn-add-outline" th:text="#{resume.btn.addCareer}">경력사항 추가</button>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h3 class="section-title" th:text="#{resume.section.desiredConditions}">희망근무조건</h3>
+                    <div class="form-group row">
+                        <label th:text="#{resume.label.desiredLocation}">희망근무지</label>
+                        <div class="input-group">
+                            <select name="desiredLocation1" id="location1" class="custom-select">
+                                <option value="tokyo" selected th:text="#{loc.tokyo}">東京都</option>
+                                <option value="osaka" th:text="#{loc.osaka}">大阪府</option>
+                            </select>
+
+                            <select name="desiredLocation2" id="location2" class="custom-select">
+                                <option value="chiyoda" class="ward-tokyo" th:text="#{ward.tokyo.chiyoda}">千代田区</option>
+                                <option value="chuo" class="ward-tokyo" th:text="#{ward.tokyo.chuo}">中央区</option>
+                                <option value="minato" class="ward-tokyo" th:text="#{ward.tokyo.minato}">港区</option>
+                                <option value="shinjuku" class="ward-tokyo" th:text="#{ward.tokyo.shinjuku}">新宿区</option>
+                                <option value="bunkyo" class="ward-tokyo" th:text="#{ward.tokyo.bunkyo}">文京区</option>
+                                <option value="taito" class="ward-tokyo" th:text="#{ward.tokyo.taito}">台東区</option>
+                                <option value="sumida" class="ward-tokyo" th:text="#{ward.tokyo.sumida}">墨田区</option>
+                                <option value="koto" class="ward-tokyo" th:text="#{ward.tokyo.koto}">江東区</option>
+                                <option value="shinagawa" class="ward-tokyo" th:text="#{ward.tokyo.shinagawa}">品川区</option>
+                                <option value="meguro" class="ward-tokyo" th:text="#{ward.tokyo.meguro}">目黒区</option>
+                                <option value="ota" class="ward-tokyo" th:text="#{ward.tokyo.ota}">大田区</option>
+                                <option value="setagaya" class="ward-tokyo" th:text="#{ward.tokyo.setagaya}">世田谷区</option>
+                                <option value="shibuya" class="ward-tokyo" th:text="#{ward.tokyo.shibuya}">渋谷区</option>
+                                <option value="nakano" class="ward-tokyo" th:text="#{ward.tokyo.nakano}">中野区</option>
+                                <option value="suginami" class="ward-tokyo" th:text="#{ward.tokyo.suginami}">杉並区</option>
+                                <option value="toshima" class="ward-tokyo" th:text="#{ward.tokyo.toshima}">豊島区</option>
+                                <option value="kita" class="ward-tokyo" th:text="#{ward.tokyo.kita}">北区</option>
+                                <option value="arakawa" class="ward-tokyo" th:text="#{ward.tokyo.arakawa}">荒川区</option>
+                                <option value="itabashi" class="ward-tokyo" th:text="#{ward.tokyo.itabashi}">板橋区</option>
+                                <option value="nerima" class="ward-tokyo" th:text="#{ward.tokyo.nerima}">練馬区</option>
+                                <option value="adachi" class="ward-tokyo" th:text="#{ward.tokyo.adachi}">足立区</option>
+                                <option value="katsushika" class="ward-tokyo" th:text="#{ward.tokyo.katsushika}">葛飾区</option>
+                                <option value="edogawa" class="ward-tokyo" th:text="#{ward.tokyo.edogawa}">江戸川区</option>
+                                <option value="kita" class="ward-osaka" th:text="#{ward.osaka.kita}">北区</option>
+                                <option value="miyakojima" class="ward-osaka" th:text="#{ward.osaka.miyakojima}">都島区</option>
+                                <option value="fukushima" class="ward-osaka" th:text="#{ward.osaka.fukushima}">福島区</option>
+                                <option value="konohana" class="ward-osaka" th:text="#{ward.osaka.konohana}">此花区</option>
+                                <option value="chuo" class="ward-osaka" th:text="#{ward.osaka.chuo}">中央区</option>
+                                <option value="nishi" class="ward-osaka" th:text="#{ward.osaka.nishi}">西区</option>
+                                <option value="minato" class="ward-osaka" th:text="#{ward.osaka.minato}">港区</option>
+                                <option value="taisho" class="ward-osaka" th:text="#{ward.osaka.taisho}">大正区</option>
+                                <option value="tennoji" class="ward-osaka" th:text="#{ward.osaka.tennoji}">天王寺区</option>
+                                <option value="naniwa" class="ward-osaka" th:text="#{ward.osaka.naniwa}">浪速区</option>
+                                <option value="nishiyodogawa" class="ward-osaka" th:text="#{ward.osaka.nishiyodogawa}">西淀川区</option>
+                                <option value="yodogawa" class="ward-osaka" th:text="#{ward.osaka.yodogawa}">淀川区</option>
+                                <option value="higashiyodogawa" class="ward-osaka" th:text="#{ward.osaka.higashiyodogawa}">東淀川区</option>
+                                <option value="higashinari" class="ward-osaka" th:text="#{ward.osaka.higashinari}">東成区</option>
+                                <option value="ikuno" class="ward-osaka" th:text="#{ward.osaka.ikuno}">生野区</option>
+                                <option value="asahi" class="ward-osaka" th:text="#{ward.osaka.asahi}">旭区</option>
+                                <option value="joto" class="ward-osaka" th:text="#{ward.osaka.joto}">城東区</option>
+                                <option value="tsurumi" class="ward-osaka" th:text="#{ward.osaka.tsurumi}">鶴見区</option>
+                                <option value="abeno" class="ward-osaka" th:text="#{ward.osaka.abeno}">阿倍野区</option>
+                                <option value="suminoe" class="ward-osaka" th:text="#{ward.osaka.suminoe}">住之江区</option>
+                                <option value="sumiyoshi" class="ward-osaka" th:text="#{ward.osaka.sumiyoshi}">住吉区</option>
+                                <option value="higashisumiyoshi" class="ward-osaka" th:text="#{ward.osaka.higashisumiyoshi}">東住吉区</option>
+                                <option value="hirano" class="ward-osaka" th:text="#{ward.osaka.hirano}">平野区</option>
+                                <option value="nishinari" class="ward-osaka" th:text="#{ward.osaka.nishinari}">西成区</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label th:text="#{resume.label.desiredJob}">희망직종</label>
+                        <input type="text" name="desiredJob" th:placeholder="#{resume.placeholder.desiredJob}" class="custom-input full-width">
+                    </div>
+                    <div class="form-group row">
+                        <label th:text="#{resume.label.desiredSalary}">희망급여</label>
+                        <div class="input-group">
+                            <select name="salaryType" class="custom-select">
+                                <option value="HOURLY" th:text="#{salary.type.hourly}">시급</option>
+                                <option value="DAILY" th:text="#{salary.type.daily}">일급</option>
+                                <option value="MONTHLY" th:text="#{salary.type.monthly}">월급</option>
+                                <option value="YEARLY" th:text="#{salary.type.yearly}">연봉</option>
+                            </select>
+                            <div class="currency-input-wrapper">
+                                <input type="number" name="desiredSalary" th:placeholder="#{resume.placeholder.salary}" class="custom-input has-currency">
+                                <span class="currency-unit" th:text="#{resume.label.yen}">円</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label th:text="#{resume.label.desiredPeriod}">희망근무기간</label>
+                        <div class="input-group">
+                            <select name="desiredPeriod" class="custom-select full-width">
+                                <option value="LESS_THAN_1_MONTH" th:text="#{period.lessThan1Month}">1개월 미만 (단기)</option>
+                                <option value="ONE_TO_THREE_MONTHS" th:text="#{period.1To3Months}">1~3개월</option>
+                                <option value="THREE_TO_SIX_MONTHS" th:text="#{period.3To6Months}">3~6개월</option>
+                                <option value="OVER_6_MONTHS" th:text="#{period.over6Months}">6개월 이상</option>
+                                <option value="LONG_TERM" th:text="#{period.longTerm}">장기 근무 가능</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section">
+                    <h3 class="section-title" th:text="#{resume.section.pr}">자기소개&PR</h3>
+
+                    <div id="certFields">
+                        <div class="form-group row cert-item clonable-item">
+                            <label th:text="#{resume.label.certificate}">자격증</label>
+                            <div class="input-group cert-group">
+                                <input type="text" name="certName" class="custom-input" th:placeholder="#{resume.placeholder.certName}" style="flex:1">
+                                <input type="text" name="certPublisher" class="custom-input" th:placeholder="#{resume.placeholder.certPublisher}" style="flex:1">
+                                <select name="certYear" class="custom-select" style="flex:1">
+                                    <option value="" selected disabled th:text="#{resume.label.certYear}">취득연도</option>
+                                    <option th:each="year : ${#numbers.sequence(2026, 1970, -1)}" th:value="${year}" th:text="${year}"></option>
+                                </select>
+                                <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="center-btn-wrapper line-btn-wrapper">
+                        <button type="button" id="btnAddCert" class="btn-add-outline full-line-btn" th:text="#{resume.btn.addCert}">자격증 추가</button>
+                    </div>
+
+                    <div id="langFields">
+                        <div class="form-group row mt-5 lang-item clonable-item">
+                            <label th:text="#{resume.label.language}">어학 능력</label>
+                            <div class="input-group cert-group">
+                                <input type="text" name="languageName" class="custom-input" th:placeholder="#{resume.placeholder.language}" style="flex:1">
+                                <div class="toggle-group multi-segment" style="flex:2">
+                                    <button type="button" class="toggle-btn active" data-value="ADVANCED" th:text="#{resume.btn.advanced}">상급</button>
+                                    <button type="button" class="toggle-btn" data-value="INTERMEDIATE" th:text="#{resume.btn.intermediate}">중급</button>
+                                    <button type="button" class="toggle-btn" data-value="BEGINNER" th:text="#{resume.btn.beginner}">초급</button>
+                                    <input type="hidden" name="languageLevel" value="ADVANCED">
+                                </div>
+                                <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="center-btn-wrapper line-btn-wrapper">
+                        <button type="button" id="btnAddLang" class="btn-add-outline full-line-btn" th:text="#{resume.btn.addLanguage}">어학능력 추가</button>
+                    </div>
+
+                    <div class="form-group row mt-5">
+                        <label th:text="#{resume.label.openContact}">연락처 공개여부</label>
+                        <div class="toggle-group pill-shape">
+                            <button type="button" class="toggle-btn active" data-value="true" th:text="#{resume.btn.open}">공개</button>
+                            <button type="button" class="toggle-btn" data-value="false" th:text="#{resume.btn.private}">비공개</button>
+                            <input type="hidden" name="contactPublic" value="true">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label th:text="#{resume.label.openResume}">이력서 공개여부</label>
+                        <div class="toggle-group pill-shape">
+                            <button type="button" class="toggle-btn active" data-value="true" th:text="#{resume.btn.open}">공개</button>
+                            <button type="button" class="toggle-btn" data-value="false" th:text="#{resume.btn.private}">비공개</button>
+                            <input type="hidden" name="resumePublic" value="true">
+                        </div>
+                    </div>
+
+                    <div class="form-group row align-top">
+                        <label th:text="#{resume.label.document}" style="padding-top: 12px;">증빙서류</label>
+
+                        <div style="flex: 1;">
+                            <div class="input-group">
+                                <input type="file" id="evidenceFile" name="portfolioFiles" accept="image/*, .pdf, .zip" multiple style="display: none;" />
+                                <input type="text" id="fileNameDisplay" class="custom-input file-display-input" th:placeholder="#{resume.placeholder.noFile}" th:data-multiple-msg="#{resume.text.multipleFiles}" readonly />
+                                <button type="button" class="btn-upload-file" id="btnUpload" th:text="#{resume.btn.uploadFile}">파일 첨부</button>
+                            </div>
+                            <div id="previewContainer" style="display: none; flex-wrap: wrap; gap: 10px; margin-top: 15px;"></div>
+                            <div id="error_evidence" class="error-msg" style="display: none; color: red; font-size: 12px; margin-top: 5px;" th:text="#{error.evidence.empty}">증빙서류를 첨부해주세요.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group row align-top mt-4">
+                        <label th:text="#{resume.label.selfIntro}">자기소개</label>
+                        <textarea name="selfIntroduction" class="custom-textarea large" th:placeholder="#{resume.placeholder.selfIntro}"></textarea>
+                    </div>
+                </section>
+
+                <section class="scout-section">
+                    <h4 class="scout-title" th:text="#{resume.section.scout}">스카우트 동의</h4>
+                    <div class="scout-box">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="scoutAgree" checked class="custom-checkbox">
+                            <span class="checkbox-text" th:text="#{resume.text.scoutAgree}">구인자로부터 스카우트 제의를 받겠습니다.</span>
+                        </label>
+                        <ul class="scout-notice">
+                            <li th:text="#{resume.notice.scout1}">이력서가 인재정보에 공개되며, 구인자로부터 스카우트 제의를 받을 수 있습니다.</li>
+                            <li th:text="#{resume.notice.scout2}">안심번호 서비스를 이용하면 실제 휴대폰번호를 공개하지 않고 이력서를 공개할 수 있습니다.</li>
+                            <li th:text="#{resume.notice.scout3}">희망 업직종으로 바(bar)를 선택한 경우에만 바(bar) 구인자로부터 스카우트 제의를 받을 수 있습니다.</li>
+                            <li th:text="#{resume.notice.scout4}">연락처 비공개를 선택하면 연락처를 제외한 이력서를 공개하여 스카우트 제의만 받을 수 있는 서비스입니다.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <div class="submit-wrapper">
+                    <button type="submit" class="btn-submit-resume" th:text="#{resume.btn.submit}">이력서 등록</button>
+                </div>
+
+            </form>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"></div>
+
+<script th:src="@{/js/SeekerView/Resume.js}"></script>
+
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        /* 컨트롤러에서 다국어 처리되어 넘어온 메시지 바로 출력 */
+        const successMessage = [[${successMessage}]];
+        const errorMessage = [[${errorMessage}]];
+
+        if (successMessage) {
+            alert(successMessage);
+        }
+        if (errorMessage) {
+            alert(errorMessage);
+        }
+    });
+</script>
+
+</body>
+</html>

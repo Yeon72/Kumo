@@ -34,6 +34,7 @@ body {
    1. 헤더 (확장형 - 컴팩트 버전)
    ================================================== */
 .chat-header {
+    position: relative;
     flex: 0 0 auto;
     background-color: #d0e8ff;
     padding: 10px 15px;
@@ -49,14 +50,16 @@ body {
 
 .header-back-btn {
     position: absolute;
+    left: 15px;
     top: 50%;
     transform: translateY(-50%);
-    left: 15px;
-    font-size: 18px;
+    font-size: 20px;
     color: #555;
     cursor: pointer;
+    z-index: 12;
 }
 
+/* 번역 버튼 틀은 원래대로 원상복구 */
 .header-translate-btn {
     position: absolute;
     top: 12px;
@@ -71,12 +74,25 @@ body {
     justify-content: center;
     cursor: pointer;
     z-index: 11;
+    transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out;
+}
+
+/* ★ 추가: 마우스를 올렸을 때 이미지(아이콘) 자체에만 그림자 생성 */
+.header-translate-btn:hover .translate-icon-img {
+    filter: drop-shadow(0px 3px 4px rgba(0, 0, 0, 0.4));
+}
+
+.header-translate-btn:active {
+    transform: scale(0.9);
+    opacity: 0.7;
 }
 
 .translate-icon-img {
     width: 24px;
     height: 24px;
     object-fit: contain;
+    /* 그림자가 부드럽게 생기도록 애니메이션 추가 */
+    transition: filter 0.2s ease-in-out;
 }
 
 .header-center {
@@ -215,21 +231,29 @@ body {
     flex-shrink: 0;
 }
 
+/* 카카오톡 스타일 날짜 변경선 */
 .date-divider {
     text-align: center;
-    margin: 15px 0;
+    margin: 20px 0;
+    /* 위아래 여백을 넉넉하게 줘서 답답하지 않게 */
     position: relative;
     display: flex;
     justify-content: center;
 }
 
 .date-divider-text {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #555;
+    background-color: rgba(0, 0, 0, 0.15);
+    /* 찐 카톡 느낌의 반투명 캡슐 */
+    color: #ffffff;
+    /* 글씨는 깔끔한 흰색 */
     font-size: 12px;
-    padding: 5px 15px;
-    border-radius: 15px;
+    padding: 5px 16px;
+    /* 좌우로 조금 더 길게 */
+    border-radius: 20px;
+    /* 완벽한 타원형 */
     display: inline-block;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    /* 살짝 입체감 추가 */
 }
 
 /* ==================================================
@@ -447,55 +471,384 @@ textarea.input-field::placeholder {
 }
 
 /* [메인 메뉴] 하얀색 박스 (서랍) */
+/* 1. 모달 전체가 열릴 때 배경이 부드럽게 어두워지는 효과 */
+dialog[open] {
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
 .main-menu-box {
     width: 100%;
     background: #ffffff;
-    border-radius: 20px 20px 0 0;
-    padding: 30px 20px 50px 20px;
-    /* 아래 여백을 넉넉히 줌 */
-    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
-    animation: slideUp 0.3s ease-out;
+    border-radius: 24px 24px 0 0;
+    /* 곡선을 더 부드럽게 */
+    padding: 40px 20px 50px 20px;
+    /* 위아래 여백을 넉넉히 줘서 중앙 밸런스 확보 */
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.08);
+    /* 은은한 그림자 */
+    display: flex;
+    justify-content: center;
+    /* 내부 아이템 중앙 정렬 */
+
+    animation: slideUp 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-/* [그리드 레이아웃] 아이콘 4개씩 배치 */
+/* 1. 전체 틀: 여백을 조정하여 균형감 확보 */
 .menu-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    /* 4열 배치 */
-    gap: 20px;
-    text-align: center;
+    gap: 15px;
+    width: 100%;
+    max-width: 420px;
+    /* 너무 퍼지지 않게 최대 너비 제한해서 중앙으로 모아줌 */
 }
 
-/* 개별 메뉴 아이템 */
+/* 2. 개별 아이템: 구조 유지 */
 .menu-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    transition: transform 0.1s;
 }
 
-.menu-item:active {
-    transform: scale(0.95);
-    /* 클릭 시 살짝 눌리는 효과 */
-}
-
-/* 동그란 아이콘 배경 */
+/* 3. 아이콘: 모달 크기에 맞게 '적당히' 확대 (핵심) */
 .menu-icon-circle {
-    width: 55px;
-    height: 55px;
+    width: 60px;
+    /* 기존 55px -> 60px 사이즈 업! */
+    height: 60px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 10px;
-    font-size: 24px;
-    /* 아이콘 크기 */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 12px;
+    /* 아이콘과 글자 사이 간격 쪼금 더 띄움 */
+    font-size: 26px;
+    /* 아이콘 자체 크기 업! */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    /* 버튼에 입체감 살짝 추가 */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 마우스 올렸을 때 살짝 떠오르는 애니메이션 */
+.menu-item:hover .menu-icon-circle {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
 }
 
 /* 메뉴 이름 텍스트 */
 .menu-name {
     font-size: 13px;
+    font-weight: 500;
+    color: #444;
+    /* 텍스트를 너무 까맣지 않은 세련된 먹색으로 */
+    text-align: center;
+}
+
+/* [정석] dialog 기본 스타일 초기화 */
+.std-dialog-clear {
+    border: none;
+    background: transparent;
+    padding: 0;
+    width: 100%;
+    max-width: 480px;
+    /* 모바일 컨테이너 너비와 일치 */
+    margin: auto;
+    outline: none;
+    overflow: visible;
+}
+
+/* 브라우저 제공 배경 어둡게 처리 (기존 overlay 배경색과 일치시킴) */
+.std-dialog-clear::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* ==================================================
+   [v3 추가] 이미지 확대 모달 (전체 화면)
+   ================================================== */
+.image-modal {
+    display: none;
+    /* 평소엔 숨김 */
+    position: fixed;
+    /* 화면 전체 고정 */
+    z-index: 10000;
+    /* 최상단 */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    /* 배경 진하게 */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content-img {
+    max-width: 95%;
+    /* 여백 살짝 남기고 꽉 차게 */
+    max-height: 90%;
+    object-fit: contain;
+    animation: zoomIn 0.2s ease-out;
+}
+
+/* ★ 여기가 문의하신 닫기 버튼 스타일입니다 ★ */
+.close-modal-btn {
+    position: absolute;
+    top: 20px;
+    /* 위쪽 여백 줄임 */
+    right: 20px;
+    /* 오른쪽 여백 줄임 */
+    color: #868e96;
+    /* 흐릿한 회색에서 선명한 흰색으로 */
+    font-size: 45px;
+    /* 크기 키움 */
+    font-weight: 300;
+    /* 너무 두껍지 않게 세련되게 */
+    cursor: pointer;
+    line-height: 1;
+    z-index: 10001;
+    transition: transform 0.2s;
+}
+
+.close-modal-btn:hover {
+    transform: scale(1.2);
+    /* 마우스 올리면 살짝 커짐 */
+    color: #ddd;
+}
+
+/* ==================================================
+   채팅방 하단 입력창(Footer) 아이콘 완벽 음영
+   ================================================== */
+
+/* 1. 플러스(+) 버튼 (폰트 아이콘이라 text-shadow 사용) */
+.btn-plus {
+    transition: text-shadow 0.2s ease, transform 0.1s ease !important;
+}
+
+.btn-plus:hover {
+    text-shadow: 0px 3px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.btn-plus:active {
+    transform: scale(0.9) !important;
+}
+
+/* 2. 사진 첨부(앨범) 버튼 (이미지 태그라 drop-shadow 사용) */
+.btn-img-upload {
+    transition: filter 0.2s ease, transform 0.1s ease !important;
+}
+
+.btn-img-upload:hover {
+    filter: drop-shadow(0px 3px 4px rgba(0, 0, 0, 0.4)) !important;
+    opacity: 1 !important;
+}
+
+.btn-img-upload:active {
+    transform: scale(0.9) !important;
+}
+
+/* 전송(종이비행기) 버튼 (가상 요소 폰트 아이콘이라 text-shadow 사용) */
+.btn-send {
+    transition: text-shadow 0.2s ease, transform 0.1s ease !important;
+}
+
+.btn-send:hover {
+    text-shadow: 0px 3px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.btn-send:active {
+    transform: scale(0.9) !important;
+}
+
+/* 1. 내부 아이콘(알맹이)에 애니메이션 속성 부여 */
+.menu-icon-circle i {
+    font-size: 20px !important;
+    transition: text-shadow 0.2s ease-in-out, transform 0.1s ease-in-out !important;
+}
+
+/* 2. 마우스를 올렸을 때 안쪽 아이콘 자체에만 선명한 그림자 생성 */
+.menu-item:hover .menu-icon-circle i {
+    text-shadow: 0px 3px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 3. 클릭 시 안쪽 아이콘만 쫀득하게 눌리는 효과 */
+.menu-item:active .menu-icon-circle i {
+    transform: scale(0.85) !important;
+}
+
+/* [chat_room.css 추가] 파일 전용 메시지 버블 */
+.file-bubble {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border: 1px solid #d0e8ff;
+    border-radius: 12px;
+    padding: 12px 15px;
+    margin-top: 5px;
+    cursor: pointer;
+    min-width: 200px;
+    max-width: 260px;
+    /* 기존 msg-bubble의 70% 제약 내외로 설정 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s;
+}
+
+/* 내가 보낸 파일일 때 배경색 살짝 조정 */
+.msg-row.me .file-bubble {
+    background-color: #f8fbff;
+    border-color: #a0cfee;
+    border-top-right-radius: 0;
+    /* 기존 말풍선 꼬리 규칙 계승 */
+}
+
+/* 상대방이 보낸 파일 */
+.msg-row.other .file-bubble {
+    border-top-left-radius: 0;
+}
+
+.file-bubble:hover {
+    background-color: #f0f7ff;
+}
+
+.file-icon-box {
+    font-size: 24px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-info-box {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* 파일명이 너무 길면 잘라줌 */
+}
+
+.file-display-name {
+    font-size: 14px;
+    font-weight: bold;
     color: #333;
+    max-width: 180px;
+    /* 박스가 화면을 뚫고 나가지 않게 제어 */
+    word-break: break-all;
+    /* 긴 이름은 가차없이 밑으로 줄바꿈 */
+    white-space: normal;
+    /* 여러 줄 허용 */
+    line-height: 1.4;
+    /* 위아래 글자 간격 쾌적하게 */
+    margin-bottom: 2px;
+}
+
+.file-display-sub {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+}
+
+/* --- 안 읽음 표시 '1' 스타일 (카카오톡 감성) --- */
+.unread-count {
+    color: #ff7f50;
+    /* 쨍한 노란색 */
+    font-size: 11px;
+    font-weight: bold;
+    margin-right: 5px;
+    align-self: flex-end;
+    /* 말풍선 아래쪽에 착 달라붙게 */
+    margin-bottom: 3px;
+}
+
+.msg-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-right: 5px;
+}
+
+/* =========================================
+   추가된 모달(Dialog) 및 이미지 확대 스타일
+========================================= */
+
+/* [정석] dialog 기본 스타일 초기화 (기존 레이아웃 보존) */
+.std-dialog-clear {
+    border: none;
+    background: transparent;
+    padding: 0;
+    width: 100%;
+    max-width: 480px;
+    margin: auto;
+    outline: none;
+    overflow: visible;
+}
+
+.std-dialog-clear::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* --- 이미지 확대 모달 (전체 화면) --- */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.modal-content-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    box-shadow: none;
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    z-index: 10000;
+}
+
+.close-modal-btn:hover {
+    color: #bbb;
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.chat-image {
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.chat-image:active {
+    transform: scale(0.98);
 }

@@ -1,119 +1,103 @@
 @charset "UTF-8";
 
-/* 초기화 및 공통 설정 */
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* 초기화 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
 body {
     font-family: 'Noto Sans KR', sans-serif;
-    background-color: #f9f9f9;
+    background-color: #f8faff;
     color: #333;
-
-    /* ★ 핵심: 화면 전체를 세로 Flex 박스로 만듦 */
     display: flex;
     flex-direction: column;
-    height: 100vh; /* 화면 꽉 채우기 */
-    overflow: hidden; /* 전체 스크롤 방지 */
-    margin-top: 50px;
+    min-height: 100vh;
 }
 
-a { text-decoration: none; color: inherit; }
-ul { list-style: none; }
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}
 
 /* ============================
-   1. 페이지 레이아웃 (사이드바 + 콘텐츠)
+   1. 페이지 레이아웃
    ============================ */
-
 .mypage-container {
-    display: flex;      /* 가로 배치 (사이드바 + 메인) */
-    flex: 1;            /* ★ 남은 높이(헤더, 푸터 제외)를 모두 차지함 */
-    min-height: 0;      /* 내부 스크롤을 위해 필수 */
-    overflow: hidden;   /* 자식 요소 스크롤 제어 */
-    margin-left: 240px;
-}
-
-/* 1. 타이틀을 감싸는 박스: 밑줄과 하단 여백 추가 */
-.content-header {
-    margin-top: 50px;
-    width: 100%;
-    max-width: 800px;
-    /* 🌟 프로필 섹션 너비와 맞추면 더 깔끔합니다 */
-    margin: 0 auto 30px auto;
-    /* 글자와 줄 사이 간격 */
-    border-bottom: 1px solid #eee;
-    /* 🌟 이게 바로 그 '회색 줄'입니다! */
     display: flex;
-    justify-content: flex-start;
+    margin-left: 430px;
+    /* 사이드바 너비 */
+    min-height: 100vh;
 }
 
-/* 2. '내 계정' 글자 스타일 */
-.setting-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: #333;
-    margin: 0;
-    /* 기본 마진 제거 */
-}
-
-/* 🌙 다크모드일 때 밑줄 색상 보정 */
-body.dark-mode .content-header {
-    border-bottom-color: #f4f4f4;
-    /* 다크모드에선 줄을 조금 더 어둡게 */
-}
-
-body.dark-mode .setting-title {
-    color: #fff;
-    /* 다크모드 글자색 */
-}
-
-/* 메인 콘텐츠 영역 */
 .content-area {
-    flex: 1;            /* 사이드바 제외 나머지 너비 차지 */
-    padding: 30px 60px;
-    background-color: #fff;
-    overflow-y: auto;   /* 내용 많으면 여기만 스크롤 */
+    flex: 1;
+    overflow-y: auto;
+    background-color: #f8faff;
+    padding: 0;
+    max-width: 550px;
+    /* 헤더가 있다면 */
+    margin-top: 40px;
+    /* 헤더 높이 */
+    min-height: calc(100vh - 70px);
 }
 
-.content-header h2 {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 30px;
-    color: #111;
+body.dark-mode .content-area {
+    background-color: #121212;
 }
 
-.profile-section {
-    max-width: 800px;
-    margin-left: 230px;
+/* ============================
+   2. settings.css 스타일 이식
+   ============================ */
+.settings-container {
+    padding: 40px 60px;
+    max-width: 100%;
+    /* container는 content-area에 맞춤 */
+    margin: 0;
+}
+
+.content-header {
+    margin-bottom: 50px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 20px;
 }
 
 .settings-title {
     font-size: 22px;
     font-weight: 700;
     color: #333;
+    margin-bottom: 12x;
 }
 
-/* ============================
-   2. 프로필 사진 & 버튼
-   ============================ */
+/* 프로필 사진 섹션 */
 .profile-photo-area {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: max-content;
-    margin-left: 140px;
-    padding-left: 0;
-    margin-bottom: 50px;
+    margin: 0 auto 50px auto !important;
+    gap: 20px;
+    width: fit-content;
+    padding-left: 50px;
 }
 
 .img-wrapper {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     overflow: hidden;
-    margin-bottom: 15px;
+    background-color: #f0f1f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     border: 1px solid #eee;
 }
 
-.img-wrapper img {
+.profile-img-lg {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -130,35 +114,38 @@ body.dark-mode .setting-title {
     font-weight: 500;
     transition: 0.2s;
 }
-.btn-upload-photo:hover { border-color: #42a5f5; }
 
-/* ============================
-   3. 정보 리스트
-   ============================ */
+.btn-upload-photo:hover {
+    border-color: #42a5f5;
+}
+
+/* 정보 리스트 */
 .info-list {
-    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+    padding-left: 80px;
 }
 
 .info-row {
     display: flex;
     align-items: center;
-    margin-bottom: 35px;
 }
 
-.info-row .label {
-    width: 160px; /* 라벨 고정 너비 */
+.label {
+    width: 160px;
     font-size: 14px;
     font-weight: 700;
-    color: #333;
+    color: #333d4b;
     flex-shrink: 0;
 }
 
-.info-row .value {
+.value {
     font-size: 14px;
-    color: #555;
+    color: #3e424e;
 }
 
-/* 토글 스위치 (iOS Style) */
+/* 토글 스위치 */
 .switch {
     position: relative;
     display: inline-block;
@@ -166,14 +153,25 @@ body.dark-mode .setting-title {
     height: 24px;
 }
 
-.switch input { opacity: 0; width: 0; height: 0; }
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
 
 .slider {
     position: absolute;
     cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #ccc;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
     transition: .4s;
+}
+
+.slider.round {
+    border-radius: 34px;
 }
 
 .slider:before {
@@ -185,277 +183,299 @@ body.dark-mode .setting-title {
     bottom: 3px;
     background-color: white;
     transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-input:checked + .slider { background-color: #42a5f5; }
-input:checked + .slider:before { transform: translateX(20px); }
-.slider.round { border-radius: 34px; }
-.slider.round:before { border-radius: 50%; }
+input:checked+.slider {
+    background-color: #2fb6ff;
+}
 
-/* ============================
-   4. 하단 버튼 (탈퇴/수정)
-   ============================ */
+input:checked+.slider:before {
+    transform: translateX(20px);
+}
+
+/* 하단 버튼 */
 .action-buttons {
     display: flex;
-    justify-content: flex-start;
-    align-items: center;
+    justify-content: center;
     gap: 40px;
-    margin-top: 60px;
-    padding-left: 120px;
+    margin-top: 70px;
 }
 
-.btn-delete {
+.btn-quit {
+    color: #ff5252;
     font-size: 13px;
-    color: #ff6b6b;
-    font-weight: 500;
-    cursor: pointer;
+    font-weight: 700;
     background: none;
     border: none;
-    padding: 0;
+    cursor: pointer;
+}
+
+.btn-quit:hover {
+    text-decoration: underline;
 }
 
 .btn-edit {
+    color: #3d3d66;
     font-size: 13px;
-    color: #333;
     font-weight: 700;
-    cursor: pointer;
-    margin-left: 20px;
+    text-decoration: none;
 }
-.btn-edit:hover { color: #42a5f5; }
+
+.btn-edit:hover {
+    color: #95a5ff;
+}
 
 /* ============================
-   5. 모달 및 파일 업로드
+   3. 프로필 모달 (settings 스타일)
    ============================ */
-.modal-overlay {
-    display: none;
+.profile-modal-overlay {
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 10000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
     justify-content: center;
     align-items: center;
+    z-index: 2000;
+    animation: fadeInOverlay 0.3s ease-out;
 }
-.modal-overlay.show { display: flex; }
 
-.modal-window {
-    background-color: #fff;
+.profile-modal-window {
     width: 400px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    background-color: #ffffff;
+    border-radius: 20px;
     overflow: hidden;
-    animation: fadeIn 0.3s ease;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideUpModal 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.modal-header {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
+.profile-modal-header {
+    padding: 20px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #f0f0f0;
 }
-.modal-header h3 { font-size: 18px; font-weight: 700; color: #333; margin: 0; }
-.close-btn { font-size: 24px; cursor: pointer; color: #999; }
-.close-btn:hover { color: #333; }
 
-.modal-body {
-    padding: 30px 20px;
+.profile-modal-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+.close-btn {
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+}
+
+.profile-modal-body {
+    padding: 30px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
 .preview-wrapper {
-    width: 150px; height: 150px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
     overflow: hidden;
-    border: 1px solid #ddd;
+    background-color: #f0f1f6;
+    border: 1px solid #eee;
     margin-bottom: 20px;
 }
-.preview-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-.guide-text { font-size: 13px; color: #888; margin-bottom: 15px; }
 
-/* 커스텀 파일 버튼 */
-.file-input-container {
+.preview-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.guide-text {
+    font-size: 13px;
+    color: #8b95a1;
+    margin-bottom: 25px;
+}
+
+.file-selection-area {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    margin-top: 20px;
-    width: 100%;
+    gap: 10px;
 }
-.hidden-input { display: none; }
 
 .custom-file-btn {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
     padding: 10px 24px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    color: #555;
-    font-size: 14px;
-    font-weight: 500;
+    background-color: #ffffff;
+    border: 1px solid #e5e8eb;
+    border-radius: 12px;
+    color: #4e5968;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
-.custom-file-btn:hover {
-    background-color: #f0f9ff;
-    border-color: #42a5f5;
-    color: #42a5f5;
-    transform: translateY(-1px);
-}
-.custom-file-btn i { color: #42a5f5; font-size: 16px; }
-.file-name { font-size: 13px; color: #888; max-width: 90%; text-align: center; word-break: break-all; }
 
-.modal-footer {
-    padding: 15px 20px;
-    background-color: #f9f9f9;
+.custom-file-btn:hover {
+    background-color: #f9fafb;
+}
+
+.file-name {
+    font-size: 12px;
+    color: #8b95a1;
+    text-align: center;
+}
+
+.profile-modal-footer {
+    padding: 20px 24px;
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+    justify-content: center;
+    gap: 12px;
+    background-color: #f9fafb;
 }
 
 .btn-cancel {
-    padding: 8px 16px;
-    border: 1px solid #ddd;
+    padding: 10px 24px;
     background-color: #fff;
-    border-radius: 6px;
+    border: 1px solid #e5e8eb;
+    border-radius: 10px;
+    color: #4e5968;
+    font-weight: 600;
     cursor: pointer;
-    font-size: 14px;
 }
 
 .btn-save {
-    padding: 8px 16px;
+    padding: 10px 24px;
+    background-color: #4facfe;
     border: none;
-    background-color: #42a5f5;
-    color: white;
-    border-radius: 6px;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 700;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
 }
-.btn-save:hover { background-color: #1e88e5; }
+
+.btn-save:hover {
+    background-color: #1e88e5;
+}
+
+/* 모달 애니메이션 */
+@keyframes fadeInOverlay {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUpModal {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes fadeOutOverlay {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes slideDownModal {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+}
+
+.profile-modal-overlay.closing {
+    animation: fadeOutOverlay 0.25s ease-in forwards;
+}
+
+.profile-modal-overlay.closing .profile-modal-window {
+    animation: slideDownModal 0.2s ease-in forwards;
+}
+
+.swal2-container {
+    z-index: 3000 !important;
+}
 
 /* ============================
-   6. 다크모드 대응 (전역 변수 기반)
+   4. 회원 탈퇴 모달 (기존 유지)
    ============================ */
-body.dark-mode {
-    background-color: var(--bg-main);
-    color: var(--text-main);
-}
-body.dark-mode .content-area {
-    background-color: var(--bg-card);
-    border-color: var(--border-color);
-}
-body.dark-mode .content-header h2,
-body.dark-mode .info-row .label { color: var(--text-main); }
-body.dark-mode .info-row .value { color: var(--text-sub); }
-
-body.dark-mode .btn-upload-photo {
-    background-color: var(--bg-main);
-    border-color: #eeeeee;
-    color: var(--primary-color);
-}
-
-body.dark-mode .btn-upload-photo:hover {
-    border-color: #42a5f5;
-}
-
-body.dark-mode .img-wrapper { border-color: var(--border-color); }
-body.dark-mode .btn-edit { color: var(--text-main); }
-body.dark-mode .btn-edit:hover { color: var(--primary-color); }
-
-body.dark-mode .modal-window { background-color: var(--bg-card); color: var(--text-main); }
-body.dark-mode .modal-header { border-bottom-color: var(--border-color); }
-body.dark-mode .modal-header h3 { color: var(--text-main); }
-body.dark-mode .close-btn { color: var(--text-sub); }
-body.dark-mode .modal-footer { background-color: var(--bg-main); }
-body.dark-mode .btn-cancel { background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-sub); }
-body.dark-mode .guide-text { color: var(--text-sub); }
-body.dark-mode .custom-file-btn {
-    background-color: var(--bg-main);
-    border-color: var(--border-color);
-    color: var(--text-sub);
-}
-body.dark-mode .custom-file-btn:hover {
-    background-color: var(--bg-card);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-}
-body.dark-mode .file-name { color: var(--text-sub); }
-
-/* [레이아웃 보정] 헤더 높이만큼 여백 확보 */
-.mypage-container {
-    margin-top: var(--header-height);
-    height: calc(100vh - var(--header-height));
-}
-
-footer, .non-login-footer {
-    background-color: var(--bg-card) !important;
-    border-top: 1px solid var(--border-color);
-    margin-top: 0 !important;
-}
-body.dark-mode footer, body.dark-mode .non-login-footer {
-    background-color: var(--bg-card) !important;
-    border-top: 1px solid var(--border-color);
-}
-
-
-/* ============================================================
-   KUMO - 회원 탈퇴 모달 스타일
-   ============================================================ */
-/* 모달 배경 (어두운 오버레이) */
 .delete-modal-overlay {
-    display: none; /* 평소엔 숨김 */
+    display: none;
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
-    z-index: 3000; /* 헤더(1000)보다 무조건 높게 */
+    z-index: 3000;
     justify-content: center;
     align-items: center;
-    animation: fadeIn 0.2s ease;
 }
 
-/* 모달 본체 */
 .delete-modal-content {
-    background-color: var(--bg-card);
+    background-color: #fff;
     width: 100%;
     max-width: 450px;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     overflow: hidden;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color, #eee);
 }
 
-/* 모달 헤더 */
 .delete-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 20px 25px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color, #eee);
 }
+
 .delete-modal-header h3 {
-    margin: 0; font-size: 18px; font-weight: 700; color: var(--text-main);
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main, #333);
 }
+
 .btn-close-modal {
-    background: none; border: none; font-size: 20px; color: var(--text-sub); cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-sub, #999);
+    cursor: pointer;
 }
-.btn-close-modal:hover { color: var(--danger-color); }
 
-/* 모달 바디 */
-.delete-modal-body { padding: 25px; }
+.delete-modal-body {
+    padding: 25px;
+}
 
-/* 경고 박스 */
 .warning-box {
     background-color: rgba(255, 107, 107, 0.1);
     border: 1px solid rgba(255, 107, 107, 0.3);
@@ -464,41 +484,27 @@ body.dark-mode footer, body.dark-mode .non-login-footer {
     margin-bottom: 25px;
     text-align: center;
 }
-.warning-box i { font-size: 30px; color: var(--danger-color); margin-bottom: 10px; }
-.warning-title { font-size: 16px; font-weight: 700; color: var(--danger-color); margin-bottom: 10px; }
-.warning-list { text-align: left; margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-main); line-height: 1.6; }
 
-/* 입력창 그룹 */
-.delete-input-group label {
-    display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;
+.warning-box i {
+    font-size: 30px;
+    color: #ff6b6b;
+    margin-bottom: 10px;
 }
 
-/* 모달 푸터 */
-.delete-modal-footer {
-    display: flex; gap: 10px; padding: 20px 25px; background-color: var(--hover-bg); border-top: 1px solid var(--border-color);
-}
-.delete-modal-footer button {
-    flex: 1; height: 48px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+.warning-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ff6b6b;
+    margin-bottom: 10px;
 }
 
-/* 버튼 디자인 */
-.btn-modal-cancel {
-    background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);
+.warning-list {
+    text-align: left;
+    padding-left: 20px;
+    font-size: 13px;
+    line-height: 1.6;
 }
-.btn-modal-cancel:hover { background-color: var(--border-color); }
 
-.btn-modal-danger {
-    background-color: var(--danger-color); border: none; color: #fff;
-}
-/* 비활성화 상태 (비밀번호 입력 전) */
-.btn-modal-danger:disabled {
-    background-color: #ffb3b3; cursor: not-allowed;
-}
-.btn-modal-danger:not(:disabled):hover { filter: brightness(0.9); }
-
-/* ============================================================
-   KUMO - 탈퇴 모달 입력창 상세 스타일
-   ============================================================ */
 .delete-input-group {
     text-align: left;
     margin-top: 20px;
@@ -508,35 +514,175 @@ body.dark-mode footer, body.dark-mode .non-login-footer {
     display: block;
     font-size: 13px;
     font-weight: 600;
-    color: var(--text-main);
+    color: var(--text-main, #333);
     margin-bottom: 8px;
 }
 
-/* 모달 전용 꽉 차는 예쁜 입력창 */
 .custom-modal-input {
     width: 100%;
     padding: 14px 16px;
     border-radius: 10px;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-card);
-    color: var(--text-main);
+    border: 1px solid var(--border-color, #ddd);
+    background-color: var(--bg-card, #fff);
+    color: var(--text-main, #333);
     font-size: 14px;
-    box-sizing: border-box; /* 넓이 삐져나감 방지 */
+    box-sizing: border-box;
     transition: all 0.2s;
 }
 
 .custom-modal-input:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(125, 180, 230, 0.2); /* 파란색 은은한 아웃라인 */
+    border-color: #42a5f5;
+    box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.2);
 }
 
-/* 다크모드 입력창 대응 */
+.error-msg {
+    font-size: 12px;
+    color: #ff6b6b;
+}
+
+.delete-modal-footer {
+    display: flex;
+    gap: 10px;
+    padding: 20px 25px;
+    background-color:#f9f9f9;
+    border-top: 1px solid #eee;
+}
+
+.delete-modal-footer button {
+    flex: 1;
+    height: 48px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-modal-cancel {
+    background-color: var(--bg-card, #fff);
+    border: 1px solid var(--border-color, #ddd);
+    color: var(--text-main, #333);
+}
+
+.btn-modal-danger {
+    background-color: #ff6b6b;
+    border: none;
+    color: #fff;
+}
+
+.btn-modal-danger:disabled {
+    background-color: #ffb3b3;
+    cursor: not-allowed;
+}
+
+/* ============================
+   5. 다크모드
+   ============================ */
+body.dark-mode {
+    background-color: #121212;
+    color: var(--text-main, #fff);
+}
+
+body.dark-mode .content-area {
+    background-color: #121212;
+}
+
+body.dark-mode .content-header {
+    border-bottom-color: #ffffff;
+}
+
+body.dark-mode .settings-title {
+    color: #fff;
+}
+
+body.dark-mode .label {
+    color: #ffffff;
+}
+
+body.dark-mode .value {
+    color: #cbcbcb;
+}
+
+body.dark-mode .btn-edit {
+    color: #e7e7e7;
+}
+
+body.dark-mode .btn-edit:hover {
+    color: #95a5ff;
+}
+
+body.dark-mode .btn-upload-photo {
+    background-color: #121212;
+    color: #7db4e6;
+}
+
+body.dark-mode .profile-modal-window {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+}
+
+body.dark-mode .profile-modal-header {
+    border-bottom-color: #333;
+}
+
+body.dark-mode .profile-modal-header h3 {
+    color: #fff;
+}
+
+body.dark-mode .profile-modal-footer {
+    background-color: #252525;
+}
+
+body.dark-mode .preview-wrapper {
+    background-color: #2d2d2d;
+    border-color: #444;
+}
+
+body.dark-mode .custom-file-btn {
+    background-color: #2d2d2d;
+    border-color: #444;
+    color: #fff;
+}
+
+body.dark-mode .btn-cancel {
+    background-color: #333;
+    border-color: #444;
+    color: #aaa;
+}
+
+body.dark-mode .guide-text {
+    color: var(--text-sub, #aaa);
+}
+
 body.dark-mode .custom-modal-input {
     background-color: #121212;
-    border-color: #333333;
+    border-color: #333;
+    color: #fff;
 }
-body.dark-mode .custom-modal-input:focus {
-    border-color: var(--primary-color);
-    background-color: #1a1a1a;
+
+footer,
+.non-login-footer {
+    background-color:#fff !important;
+    border-top: 1px solid #eee;
+    margin-top: 0 !important;
+}
+
+body.dark-mode footer,
+.non-login-footer {
+    background-color: #121212 !important;
+    border-top: 1px solid #1e1e1e;
+    margin-top: 0 !important;
+}
+
+.age-suffix {
+    margin-left: 10px;
+    /* 🌟 이 숫자를 조절해서 간격을 원하는 만큼 띄우세요! */
+    font-size: 14px;
+    color: #3e424e;
+}
+
+/* 다크모드 대응도 잊지 마세요! */
+body.dark-mode .age-suffix {
+    color: #cbcbcb;
 }

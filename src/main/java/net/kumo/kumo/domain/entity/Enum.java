@@ -30,7 +30,7 @@ public class Enum {
 	}
 
 	public enum MessageType {
-		TEXT, IMAGE, SYSTEM
+		TEXT, IMAGE, SYSTEM, FILE
 	}
 
 	public enum NotificationType {
@@ -55,4 +55,14 @@ public class Enum {
 	public enum SocialProvider {
 		LINE, GOOGLE
 	}
+	
+	public enum DesiredPeriod {
+		LESS_THAN_1_MONTH,
+		ONE_TO_THREE_MONTHS,
+		THREE_TO_SIX_MONTHS,
+		OVER_6_MONTHS,
+		LONG_TERM
+	}
+	
+	
 }

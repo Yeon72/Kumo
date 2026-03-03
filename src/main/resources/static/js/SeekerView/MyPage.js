@@ -82,7 +82,7 @@ function executeDelete() {
 // ==========================================
 // 2. DOMContentLoaded: 화면이 모두 로드된 후 실행 (프로필 사진, 스위치 등)
 // ==========================================
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById('profileModal');
     const btnOpenModal = document.getElementById('btnOpenModal');
     const btnCloseX = document.querySelector('.close-btn');
@@ -95,12 +95,12 @@ document.addEventListener("DOMContentLoaded", function() {
     const fileNameSpan = document.getElementById('fileName');
 
     // [1] 프로필 모달 열기 & 초기화
-    if(btnOpenModal) {
-        btnOpenModal.addEventListener('click', function() {
+    if (btnOpenModal) {
+        btnOpenModal.addEventListener('click', function () {
             modal.classList.add('show');
-            if(currentProfileImg && modalPreview) modalPreview.src = currentProfileImg.src;
+            if (currentProfileImg && modalPreview) modalPreview.src = currentProfileImg.src;
             fileInput.value = '';
-            if(fileNameSpan) {
+            if (fileNameSpan) {
                 fileNameSpan.innerText = msg.fileNone; // "ファイルが選択されていません"
                 fileNameSpan.style.color = "#888";
             }
@@ -108,21 +108,21 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     const closeModal = () => modal.classList.remove('show');
-    if(btnCloseX) btnCloseX.addEventListener('click', closeModal);
-    if(btnCancel) btnCancel.addEventListener('click', closeModal);
+    if (btnCloseX) btnCloseX.addEventListener('click', closeModal);
+    if (btnCancel) btnCancel.addEventListener('click', closeModal);
 
     // [2] 파일 선택 시 (미리보기 & 파일명 표시)
-    if(fileInput) {
-        fileInput.addEventListener('change', function(e) {
+    if (fileInput) {
+        fileInput.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
-                if(fileNameSpan) {
+                if (fileNameSpan) {
                     fileNameSpan.innerText = file.name;
                     fileNameSpan.style.color = "#333";
                 }
                 const reader = new FileReader();
-                reader.onload = function(evt) {
-                    if(modalPreview) modalPreview.src = evt.target.result;
+                reader.onload = function (evt) {
+                    if (modalPreview) modalPreview.src = evt.target.result;
                 };
                 reader.readAsDataURL(file);
             }
@@ -130,8 +130,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // [3] 서버 전송 (저장 버튼)
-    if(btnSave) {
-        btnSave.addEventListener('click', function() {
+    if (btnSave) {
+        btnSave.addEventListener('click', function () {
             if (!fileInput.files[0]) {
                 alert(msg.selectPhoto); // "変更する写真を選択してください。"
                 return;
@@ -144,24 +144,32 @@ document.addEventListener("DOMContentLoaded", function() {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (response.ok) return response.text();
-                throw new Error('FAILED');
-            })
-            .then(newImageUrl => {
-                alert(msg.uploadSuccess); // "プロフィール写真が変更されました。"
-                if(newImageUrl && currentProfileImg) currentProfileImg.src = newImageUrl;
-                closeModal();
-            })
-            .catch(err => alert(msg.error + err.message)); // "エラーが発生しました: ..."
+                .then(response => {
+                    if (response.ok) return response.text();
+                    throw new Error('FAILED');
+                })
+                .then(newImageUrl => {
+                    alert(msg.uploadSuccess); // "プロフィール写真が変更されました。"
+                    if (newImageUrl && currentProfileImg) currentProfileImg.src = newImageUrl;
+                    closeModal();
+                })
+                .catch(err => alert(msg.error + err.message)); // "エラーが発生しました: ..."
         });
     }
 
-    // [4] 소셜 연동 알림 (LINE, Google)
-    document.querySelectorAll('.switch').forEach(toggle => {
+    // [4] 소셜 연동 알림 (LINE, Google) - alert → Swal로 교체
+    document.querySelectorAll('.sns-toggle').forEach(toggle => {
         toggle.addEventListener('click', (e) => {
             e.preventDefault();
-            alert(msg.notService); // "現在準備中のサービスです。"
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            Swal.fire({
+                title: typeof snsMsg !== 'undefined' ? snsMsg.snsTitle : 'Service Notice',
+                text: typeof snsMsg !== 'undefined' ? snsMsg.snsText : '아직 서비스 준비 중입니다.',
+                icon: 'info',
+                confirmButtonColor: '#7db4e6',
+                background: isDark ? '#2b2b2b' : '#fff',
+                color: isDark ? '#fff' : '#333'
+            });
         });
     });
 });
