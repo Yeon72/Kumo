@@ -18,4 +18,6 @@ public interface ApplicationRepository extends JpaRepository<ApplicationEntity, 
 
     // 3. 구인자용: 특정 공고에 지원한 지원자 목록 가져오기 (최신순)
     List<ApplicationEntity> findByTargetSourceAndTargetPostIdOrderByAppliedAtDesc(String targetSource, Long targetPostId);
+
+    List<ApplicationEntity> findByTargetSourceAndTargetPostIdIn(String targetSource, List<Long> targetPostIds);
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import net.kumo.kumo.domain.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,9 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.kumo.kumo.domain.dto.JobManageListDTO;
-import net.kumo.kumo.domain.dto.JobPostingRequestDTO;
-import net.kumo.kumo.domain.dto.JoinRecruiterDTO;
 import net.kumo.kumo.domain.entity.CompanyEntity;
 import net.kumo.kumo.domain.entity.UserEntity;
 import net.kumo.kumo.repository.UserRepository;
@@ -69,23 +67,22 @@ public class RecruiterController {
      */
     @GetMapping("ApplicantInfo")
     public String ApplicantInfo(Model model, Principal principal) {
-        model.addAttribute("currentMenu", "applicants");
+        model.addAttribute("currentMenu", "applicants"); // 사이드바 활성화
+
+        // 1. 로그인 유저 검증
+        if (principal == null) {
+            return "redirect:/login";
+        }
 
         String loginEmail = principal.getName();
         UserEntity user = ur.findByEmail(loginEmail)
                 .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
 
-        // TODO: 머지 후 적용!!!
-        // List<JobApplicantGroupDTO> groupedList =
-        // js.getGroupedApplicantsForRecruiter(user);
-        // model.addAttribute("groupedList", groupedList);
-        // 2. 서비스 호출: 이 구인자가 올린 공고에 지원한 모든 지원자 목록 가져오기
-        // 머지 후 구현 가능!!
-        // List<ApplicationDTO.ApplicantResponse> applicantList =
-        // rs.getApplicantsForRecruiter(user.getUserId());
+        // 2. 🌟 방금 만든 Service 메서드 호출! (실제 DB 데이터 긁어오기)
+        List<JobApplicantGroupDTO> groupedList = jobPostingService.getGroupedApplicantsForRecruiter(user);
 
-        // 3. 화면(Model)에 데이터 전달
-        // model.addAttribute("applicantList", applicantList);
+        // 3. HTML(Thymeleaf)로 데이터 던져주기
+        model.addAttribute("groupedList", groupedList);
 
         return "recruiterView/applicantInfo";
     }

@@ -17,6 +17,6 @@ public class JobApplicantGroupDTO {
     private int applicantCount;    // 해당 공고 총 지원자 수
     private LocalDateTime createdAt; // 최신순 정렬을 위한 등록일
 
-    // TODO: 머지 후 사용!!!
-    // private List<ApplicationDTO.ApplicantResponse> applicants;
+
+    private List<ApplicationDTO.ApplicantResponse> applicants;
 }
