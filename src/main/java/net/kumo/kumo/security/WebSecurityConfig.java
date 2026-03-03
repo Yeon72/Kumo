@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -76,7 +77,13 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 						.logoutUrl("/logout")
 						.logoutSuccessUrl("/")
 						.invalidateHttpSession(true)
-						.deleteCookies("JSESSIONID"));
+						.deleteCookies("JSESSIONID"))
+				
+				
+				// 5. 채팅창 팝업 출력관련 (iframe 허용)
+				.headers((headers) -> headers
+						.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+				); // 🌟 여기에 세미콜론(;) 추가!
 
 		return http.build();
 	}

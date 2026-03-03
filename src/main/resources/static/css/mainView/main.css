@@ -46,6 +46,16 @@ html, body {
     margin: 0 !important;
 }
 
+.map-header-wrapper .nav-menu a,
+.map-header-wrapper .icon-btn i {
+    color: #ffffff;
+    transition: color 0.3s ease;
+}
+
+.map-header-wrapper .nav-menu .lang-item{
+    color: #2d2d2d;
+}
+
 /* 🌙 다크 모드 */
 body.dark-mode .map-header-wrapper {
     background-color: #232323 !important;
@@ -54,7 +64,7 @@ body.dark-mode .map-header-wrapper {
 
 body.dark-mode .map-header-wrapper .nav-menu a,
 body.dark-mode .map-header-wrapper .icon-btn i {
-    color: #ffffff !important;
+    color: #ffffff;
     transition: color 0.3s ease;
 }
 
@@ -89,7 +99,7 @@ body.dark-mode .map-header-wrapper .icon-btn i {
 
 .map-bottom-nav {
     position: absolute;
-    bottom: 90px;
+    bottom: 3%;
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
@@ -313,3 +323,76 @@ body.dark-mode .addr-text { color: #e0e0e0; }
 body.dark-mode .profile-info { background-color: transparent !important; }
 body.dark-mode .profile-info div:first-child { color: #ffffff; }
 body.dark-mode .msg-box { color: #999; }
+
+/* =========================================
+   [채팅 위젯 전용 CSS]
+========================================= */
+.chat-widget {
+    position: fixed;
+    top: 100px; /* 초기 위치 (화면 우측 중앙쯤) */
+    right: 20px;
+    width: 380px;
+    height: 600px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 9999;
+}
+
+/* 숨김 상태 */
+.chat-widget.hidden {
+    display: none;
+}
+
+/* 최소화 상태 */
+.chat-widget.minimized {
+    height: 45px !important;
+}
+
+/* 팝업 헤더 (여기를 잡고 드래그!) */
+.chat-widget-header {
+    background-color: var(--text-main, #222); /* 지도 테마에 맞춤 */
+    color: white;
+    padding: 0 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 45px;
+    box-sizing: border-box;
+    cursor: grab; /* 손바닥 모양 커서 */
+    user-select: none;
+}
+.chat-widget-header:active {
+    cursor: grabbing; /* 꽉 쥔 손바닥 */
+}
+
+.widget-title {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.control-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 10px;
+}
+.control-btn:hover { color: white; }
+.close-btn:hover { color: #ff4d4d; }
+
+/* 내부 화면(iframe) 꽉 차게 */
+.chat-iframe {
+    width: 100%;
+    flex: 1;
+    border: none;
+}
+
+/* 🌙 다크모드 대응 */
+body.dark-mode .chat-widget {
+    border: 1px solid #444;
+}
