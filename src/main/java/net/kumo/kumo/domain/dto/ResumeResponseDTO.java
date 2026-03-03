@@ -17,7 +17,7 @@ public class ResumeResponseDTO {
 
     // 1:N 관계 데이터 (리스트)
     private List<CareerDTO> careers;
-    private List<EducationDTO> educations;
+    private EducationDTO educations;
     private List<CertificateDTO> certificates;
     private List<LanguageDTO> languages;
     private List<DocumentDTO> documents;

@@ -657,10 +657,11 @@ public class JobPostingService {
                 .collect(Collectors.toList());
 
         // 4. 학력 (1:N 리스트)
-        List<SeekerEducationEntity> eduEntities = educationRepository.findByUser_UserId(seekerId);
-        List<ResumeResponseDTO.EducationDTO> eduDTOs = eduEntities.stream()
-                .map(ResumeResponseDTO.EducationDTO::from)
-                .collect(Collectors.toList());
+        SeekerEducationEntity eduEntities = educationRepository.findByUser_UserId(seekerId);
+		ResumeResponseDTO.EducationDTO eduDTO = null;
+		if (eduEntities != null) {
+			eduDTO = ResumeResponseDTO.EducationDTO.from(eduEntities);
+		}
 
         // 5. 자격증 (1:N 리스트)
         List<SeekerCertificateEntity> certEntities = certificateRepository.findByUser_UserId(seekerId);
@@ -693,7 +694,7 @@ public class JobPostingService {
                 .profile(profileDTO)
                 .condition(conditionDTO)
                 .careers(careerDTOs)
-                .educations(eduDTOs)
+                .educations(eduDTO)
                 .certificates(certDTOs)
                 .languages(langDTOs)
                 .documents(docDTOs) // 특별 처리된 문서 DTO 리스트 장착!
