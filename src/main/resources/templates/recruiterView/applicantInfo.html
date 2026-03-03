@@ -82,8 +82,8 @@
                                                 <span th:text="#{app.info.table.name}">지원자 이름</span>
                                                 <i class="bi bi-arrow-down-up sort-icon text-muted"></i>
                                             </th>
-                                            <th th:utext="#{app.info.table.age}">나이<i class="bi bi-arrow-down-up sort-icon"></i></th>
-                                            <th th:utext="#{app.info.table.gender}">성별<i class="bi bi-arrow-down-up sort-icon"></i></th>
+                                            <th>연락처<i class="bi bi-arrow-down-up sort-icon text-muted"></i></th>
+                                            <th>이메일<i class="bi bi-arrow-down-up sort-icon text-muted"></i></th>
                                             <th>
                                                 <span th:text="#{app.info.table.date}">지원 일자</span>
                                                 <i class="bi bi-arrow-down-up sort-icon text-muted"></i>
@@ -105,8 +105,8 @@
                                                     <span class="fw-semibold user-name" th:text="${app.seekerName}">지원자 이름</span>
                                                 </div>
                                             </td>
-                                            <td th:text="${app.seekerAge != null ? app.seekerAge + '세' : '-'}">나이</td>
-                                            <td th:text="${app.seekerGender != null ? app.seekerGender : '-'}">성별</td>
+                                            <td th:text="${app.seekerContact != null ? app.seekerContact : '-'}">연락처</td>
+                                            <td th:text="${app.seekerEmail != null ? app.seekerEmail : '-'}">이메일</td>
                                             <td class="text-muted" th:text="${app.appliedAt}">지원일</td>
                                             <td>
                                                 <span class="badge bg-warning text-dark" th:if="${app.status.name() == 'APPLIED'}">검토중</span>
@@ -116,9 +116,10 @@
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#resumeModal"
                                                         onclick="loadResumeData(this)"
+                                                        th:data-seeker-id="${app.seekerId}"
                                                         th:data-name="${app.seekerName}"
-                                                        th:data-age="${app.seekerAge != null ? app.seekerAge : 0}"
-                                                        th:data-gender="${app.seekerGender != null ? app.seekerGender : '-'}"
+                                                        th:data-contact="${app.seekerContact}"
+                                                        th:data-email="${app.seekerEmail}"
                                                         th:data-job="${jobGroup.jobTitle}">
                                                     열람
                                                 </button>
@@ -144,7 +145,7 @@
 </div>
 
 <div class="modal fade" id="resumeModal" tabindex="-1" aria-labelledby="resumeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-light">
                 <div>
@@ -153,38 +154,19 @@
                     </h4>
                     <p class="mb-0 text-muted mt-1">
                         지원 공고: <span id="modalJob" class="fw-semibold text-dark">공고명</span> |
-                        <span id="modalAge">00</span>세 · <span id="modalGender">성별</span>
+                        <span id="modalContact">연락처</span> · <span id="modalEmail">이메일</span>
                     </p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body resume-modal-body">
-                <div class="resume-section">
-                    <h5><i class="bi bi-person-lines-fill me-2"></i>자기소개 (Self PR)</h5>
-                    <p class="text-secondary" style="line-height: 1.6;">[더미 데이터] 지원자의 자기소개서가 들어갈 자리입니다. 추후 리포지토리가 연결되면 실제 데이터로 교체됩니다.</p>
-                </div>
-                <div class="resume-section">
-                    <h5><i class="bi bi-briefcase-fill me-2"></i>경력 사항</h5>
-                    <div class="border-bottom pb-2 mb-2">
-                        <div class="fw-bold fs-6">KUMO 상사 (도쿄점)</div>
-                        <div class="text-muted small">2023.01 ~ 2024.12 (2년) | 영업 관리</div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="resume-section h-100">
-                            <h5><i class="bi bi-mortarboard-fill me-2"></i>학력</h5>
-                            <div class="spec-item"><span class="label">KUMO 대학교</span> 컴퓨터공학과 (졸업)</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="resume-section h-100">
-                            <h5><i class="bi bi-award-fill me-2"></i>자격 및 어학</h5>
-                            <div class="spec-item"><span class="label">JLPT N1</span> 일본국제교육지원협회 (2024.01)</div>
-                        </div>
-                    </div>
+
+            <div class="modal-body resume-modal-body" id="dynamicResumeBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">이력서 데이터를 불러오는 중입니다...</p>
                 </div>
             </div>
+
             <div class="modal-footer justify-content-between bg-light">
                 <button type="button" class="btn btn-outline-danger px-4" onclick="actionReject()"><i class="bi bi-x-circle me-1"></i> 불합격</button>
                 <div>
@@ -203,17 +185,144 @@
         checkboxes.forEach(cb => { cb.checked = headerCheckbox.checked; });
     }
 
-    // 모달창에 기본 데이터 넘기기
-    function loadResumeData(btn) {
+    // 🌟 모달창 데이터 불러오기 (fetch)
+    async function loadResumeData(btn) {
+        // 1. 헤더 기본 정보 세팅
         document.getElementById('modalName').innerText = btn.getAttribute('data-name');
-        document.getElementById('modalAge').innerText = btn.getAttribute('data-age');
-        document.getElementById('modalGender').innerText = btn.getAttribute('data-gender');
+        document.getElementById('modalContact').innerText = btn.getAttribute('data-contact') || '-';
+        document.getElementById('modalEmail').innerText = btn.getAttribute('data-email') || '-';
         document.getElementById('modalJob').innerText = btn.getAttribute('data-job');
+
+        const seekerId = btn.getAttribute('data-seeker-id');
+        const modalBody = document.getElementById('dynamicResumeBody');
+
+        // 2. 로딩 애니메이션
+        modalBody.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">이력서 데이터를 불러오는 중입니다...</p>
+            </div>
+        `;
+
+        try {
+            // 3. 백엔드 API 호출 (RecruiterController에 만든 @ResponseBody 메서드)
+            const response = await fetch(`/Recruiter/api/resume/${seekerId}`);
+
+            if(!response.ok) throw new Error('데이터 로드 실패');
+
+            const data = await response.json();
+
+            // 4. 모달창 렌더링
+            setTimeout(() => {
+                renderResume(data, modalBody);
+            }, 300);
+
+        } catch (error) {
+            modalBody.innerHTML = `
+                <div class="text-center text-danger py-5">
+                    <i class="bi bi-exclamation-triangle fs-1"></i>
+                    <p class="mt-2">이력서를 불러오지 못했습니다.</p>
+                </div>
+            `;
+        }
+    }
+
+    // 🌟 백엔드에서 받은 7개 테이블 JSON 데이터를 HTML로 그리는 함수
+    function renderResume(data, container) {
+        let html = '';
+
+        // 1. 자기소개 (profile)
+        if (data.profile) {
+            html += `
+            <div class="resume-section">
+                <h5><i class="bi bi-person-lines-fill me-2"></i>자기소개 (<span class="text-primary">${data.profile.careerType || '미입력'}</span>)</h5>
+                <p class="text-secondary mb-0" style="line-height: 1.6; white-space: pre-wrap;">${data.profile.selfPr || '작성된 내용이 없습니다.'}</p>
+            </div>`;
+        }
+
+        // 2. 희망근무조건 (condition)
+        if (data.condition) {
+            html += `
+            <div class="resume-section">
+                <h5><i class="bi bi-check2-square me-2"></i>희망 근무 조건</h5>
+                <div class="spec-item"><span class="label">희망 직무</span> ${data.condition.desiredJob || '미입력'}</div>
+                <div class="spec-item"><span class="label">희망 급여</span> ${data.condition.salaryType || ''} ${data.condition.desiredSalary || '미입력'}</div>
+            </div>`;
+        }
+
+        // 3. 경력 (careers)
+        html += `<div class="resume-section"><h5><i class="bi bi-briefcase-fill me-2"></i>경력 사항</h5>`;
+        if (data.careers && data.careers.length > 0) {
+            data.careers.forEach(c => {
+                html += `
+                <div class="border-bottom pb-2 mb-2 last-no-border">
+                    <div class="fw-bold fs-6">${c.companyName} <span class="text-muted small fw-normal ms-2">(${c.department || '-'})</span></div>
+                    <div class="text-muted small">${c.startDate || ''} ~ ${c.endDate || '재직중'}</div>
+                    <div class="mt-1 text-secondary" style="font-size: 0.9rem; white-space: pre-wrap;">${c.description || ''}</div>
+                </div>`;
+            });
+        } else {
+            html += `<p class="text-muted small">등록된 경력이 없습니다.</p>`;
+        }
+        html += `</div>`;
+
+        html += `<div class="row">`;
+
+        // 4. 학력 (educations)
+        html += `<div class="col-md-6"><div class="resume-section h-100"><h5><i class="bi bi-mortarboard-fill me-2"></i>학력</h5>`;
+        if (data.educations && data.educations.length > 0) {
+            data.educations.forEach(e => {
+                // ENUM 상태값을 한글로 변환
+                let statusKr = e.status;
+                if(e.status === 'GRADUATED') statusKr = '졸업';
+                else if(e.status === 'ATTENDING') statusKr = '재학';
+                else if(e.status === 'EXPECTED') statusKr = '졸업예정';
+                else if(e.status === 'DROPOUT') statusKr = '중퇴';
+
+                html += `<div class="spec-item mb-2"><span class="fw-bold d-block">${e.schoolName}</span> <span class="text-muted small">${e.major || ''} (${statusKr})</span></div>`;
+            });
+        } else {
+            html += `<p class="text-muted small">등록된 학력이 없습니다.</p>`;
+        }
+        html += `</div></div>`;
+
+        // 5. 자격증 & 어학 (certificates & languages)
+        html += `<div class="col-md-6"><div class="resume-section h-100"><h5><i class="bi bi-award-fill me-2"></i>자격 및 어학</h5>`;
+        let certsExist = false;
+
+        if (data.certificates && data.certificates.length > 0) {
+            data.certificates.forEach(c => {
+                html += `<div class="spec-item mb-2"><span class="fw-bold d-block">${c.certName}</span> <span class="text-muted small">${c.issuer || '-'} (${c.acquisitionYear || '-'}년)</span></div>`;
+            });
+            certsExist = true;
+        }
+        if (data.languages && data.languages.length > 0) {
+            data.languages.forEach(l => {
+                html += `<div class="spec-item mb-2"><span class="fw-bold d-block">${l.language}</span> <span class="text-muted small">Level: ${l.level || '-'}</span></div>`;
+            });
+            certsExist = true;
+        }
+        if (!certsExist) {
+            html += `<p class="text-muted small">등록된 자격증이나 어학 정보가 없습니다.</p>`;
+        }
+        html += `</div></div></div>`;
+
+        // 6. 증빙서류 파일 (documents)
+        if (data.documents && data.documents.length > 0) {
+            html += `
+            <div class="resume-section mt-3">
+                <h5><i class="bi bi-file-earmark-pdf-fill me-2"></i>첨부 파일</h5>`;
+            data.documents.forEach(d => {
+                html += `<a href="${d.fileUrl}" class="btn btn-sm btn-light border text-primary me-2 mb-2" target="_blank"><i class="bi bi-download me-1"></i> ${d.fileName}</a>`;
+            });
+            html += `</div>`;
+        }
+
+        container.innerHTML = html;
     }
 
     // 모두 펼치기/접기
     let isAllExpanded = false;
-
     function toggleAllAccordions() {
         const collapses = document.querySelectorAll('.job-accordion .accordion-collapse');
         const btn = document.getElementById('btnToggleAll');
@@ -235,7 +344,7 @@
         }
     }
 
-    // 하단 버튼 액션 모음
+    // 임시 액션
     function actionReject() { alert('불합격 처리 기능은 백엔드 연결 후 활성화됩니다.'); }
     function actionApprove() { alert('합격 처리 기능은 백엔드 연결 후 활성화됩니다.'); }
     function actionSchedule() { alert('캘린더 연동 기능은 추후 개발 예정입니다.'); }

@@ -42,10 +42,6 @@ public class ApplicationDTO {
         private Long targetPostId;
         private String jobTitle; // 서비스(Service) 단에서 DB 조회 후 예쁘게 채워줄 제목
 
-        /**
-         * 💡 [실무 꿀팁] 엔티티를 DTO로 변환하는 똑똑한 편의 메서드
-         * Service 클래스에서 코드를 확 줄여주기 위해 만들어 둡니다.
-         */
         public static ApplicantResponse from(ApplicationEntity entity, String fetchedJobTitle) {
 
             // 이름 조합 로직 (유저 엔티티 구조에 맞게 커스텀. 한자 성+이름이 없다면 닉네임 사용 등)

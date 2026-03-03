@@ -6,24 +6,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import net.kumo.kumo.domain.dto.ApplicationDTO;
-import net.kumo.kumo.domain.dto.JobApplicantGroupDTO;
+import net.kumo.kumo.domain.dto.*;
 import net.kumo.kumo.domain.entity.*;
-import net.kumo.kumo.repository.ApplicationRepository;
+import net.kumo.kumo.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
-import net.kumo.kumo.domain.dto.JobManageListDTO;
-import net.kumo.kumo.domain.dto.JobPostingRequestDTO;
 import net.kumo.kumo.domain.dto.JobApplicantGroupDTO;
 import net.kumo.kumo.domain.dto.ApplicationDTO;
 import net.kumo.kumo.domain.entity.ApplicationEntity;
 import net.kumo.kumo.domain.enums.JobStatus;
-import net.kumo.kumo.repository.CompanyRepository;
-import net.kumo.kumo.repository.OsakaGeocodedRepository;
-import net.kumo.kumo.repository.TokyoGeocodedRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +27,15 @@ public class JobPostingService {
     private final TokyoGeocodedRepository tokyoGeocodedRepository; // 🌟 도쿄 레포지토리 추가
     private final CompanyRepository companyRepository;
     private final ApplicationRepository applicationRepository;
+    private final UserRepository userRepository;
+
+    private final SeekerProfileRepository seekerProfileRepository;
+    private final SeekerDesiredConditionRepository conditionRepository;
+    private final SeekerCareerRepository careerRepository;
+    private final SeekerEducationRepository educationRepository;
+    private final SeekerCertificateRepository certificateRepository;
+    private final SeekerLanguageRepository languageRepository;
+    private final SeekerDocumentRepository documentRepository;
 
     @Transactional
     public void saveJobPosting(JobPostingRequestDTO dto, List<MultipartFile> images, UserEntity user) {
@@ -631,5 +634,69 @@ public class JobPostingService {
         });
 
         return groupedList;
+    }
+
+    // ==========================================
+    // 🌟 [비동기 API] 특정 지원자의 종합 이력서 데이터 조회
+    // ==========================================
+    @Transactional(readOnly = true)
+    public ResumeResponseDTO getApplicantResumeData(Long seekerId) {
+
+        // 1. 프로필 (1:1) - 없으면 빈 객체 반환을 위해 null 처리
+        SeekerProfileEntity profileEntity = seekerProfileRepository.findByUser_UserId(seekerId).orElse(null);
+        ResumeResponseDTO.ProfileDTO profileDTO = ResumeResponseDTO.ProfileDTO.from(profileEntity);
+
+        // 2. 희망 조건 (1:1)
+        SeekerDesiredConditionEntity conditionEntity = conditionRepository.findByUser_UserId(seekerId).orElse(null);
+        ResumeResponseDTO.ConditionDTO conditionDTO = ResumeResponseDTO.ConditionDTO.from(conditionEntity);
+
+        // 3. 경력 (1:N 리스트)
+        List<SeekerCareerEntity> careerEntities = careerRepository.findByUser_UserId(seekerId);
+        List<ResumeResponseDTO.CareerDTO> careerDTOs = careerEntities.stream()
+                .map(ResumeResponseDTO.CareerDTO::from)
+                .collect(Collectors.toList());
+
+        // 4. 학력 (1:N 리스트)
+        List<SeekerEducationEntity> eduEntities = educationRepository.findByUser_UserId(seekerId);
+        List<ResumeResponseDTO.EducationDTO> eduDTOs = eduEntities.stream()
+                .map(ResumeResponseDTO.EducationDTO::from)
+                .collect(Collectors.toList());
+
+        // 5. 자격증 (1:N 리스트)
+        List<SeekerCertificateEntity> certEntities = certificateRepository.findByUser_UserId(seekerId);
+        List<ResumeResponseDTO.CertificateDTO> certDTOs = certEntities.stream()
+                .map(ResumeResponseDTO.CertificateDTO::from)
+                .collect(Collectors.toList());
+
+        // 6. 어학 (1:N 리스트)
+        List<SeekerLanguageEntity> langEntities = languageRepository.findByUser_UserId(seekerId);
+        List<ResumeResponseDTO.LanguageDTO> langDTOs = langEntities.stream()
+                .map(ResumeResponseDTO.LanguageDTO::from)
+                .collect(Collectors.toList());
+
+        // ==========================================
+        // 🌟 7. 문서 (1:N 리스트) - 특별 처리 구역
+        // ==========================================
+        // DB를 새로 조회(findById)할 필요 없이, ID만 가진 가짜 엔티티(프록시)를 생성합니다.
+        // 이렇게 하면 DB 성능 낭비 없이 DocumentRepository에 UserEntity를 넘겨줄 수 있습니다!
+        UserEntity proxyUser = userRepository.getReferenceById(seekerId);
+
+        // 프록시 유저 객체를 그대로 넘겨서 리스트를 조회합니다.
+        List<SeekerDocumentEntity> docEntities = documentRepository.findByUser(proxyUser);
+
+        List<net.kumo.kumo.domain.dto.ResumeResponseDTO.DocumentDTO> docDTOs = docEntities.stream()
+                .map(net.kumo.kumo.domain.dto.ResumeResponseDTO.DocumentDTO::from)
+                .collect(Collectors.toList());
+
+        // 🌟 이 모든 걸 하나의 큰 상자에 담아서 리턴!
+        return net.kumo.kumo.domain.dto.ResumeResponseDTO.builder()
+                .profile(profileDTO)
+                .condition(conditionDTO)
+                .careers(careerDTOs)
+                .educations(eduDTOs)
+                .certificates(certDTOs)
+                .languages(langDTOs)
+                .documents(docDTOs) // 특별 처리된 문서 DTO 리스트 장착!
+                .build();
     }
 }

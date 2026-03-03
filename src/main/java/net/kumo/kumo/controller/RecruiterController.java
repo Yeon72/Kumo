@@ -346,4 +346,22 @@ public class RecruiterController {
             return "fail";
         }
     }
+
+    /**
+     * 🌟 [비동기 전용] 모달창 이력서 상세 데이터 JSON 반환
+     * 주의: 화면(HTML)이 아니라 데이터(JSON)만 반환하므로 반드시 @ResponseBody 필요
+     */
+    @GetMapping("/api/resume/{seekerId}")
+    @ResponseBody
+    public ResponseEntity<ResumeResponseDTO> getApplicantResumeApi(@org.springframework.web.bind.annotation.PathVariable("seekerId") Long seekerId) {
+        try {
+            // 방금 JobPostingService에 만든 메서드 호출!
+            ResumeResponseDTO resumeData = js.getApplicantResumeData(seekerId);
+            return ResponseEntity.ok(resumeData);
+
+        } catch (Exception e) {
+            log.error("이력서 조회 중 에러 발생: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build(); // 에러 시 500 리턴
+        }
+    }
 }
