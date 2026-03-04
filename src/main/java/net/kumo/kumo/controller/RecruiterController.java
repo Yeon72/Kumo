@@ -2,11 +2,10 @@ package net.kumo.kumo.controller;
 
 import java.io.File;
 import java.security.Principal;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import net.kumo.kumo.domain.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,12 +24,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.kumo.kumo.domain.dto.JobApplicantGroupDTO;
 import net.kumo.kumo.domain.dto.JobManageListDTO;
 import net.kumo.kumo.domain.dto.JobPostingRequestDTO;
 import net.kumo.kumo.domain.dto.JoinRecruiterDTO;
-import net.kumo.kumo.domain.dto.ResumeDto;
+import net.kumo.kumo.domain.dto.ResumeResponseDTO;
 import net.kumo.kumo.domain.entity.CompanyEntity;
-import net.kumo.kumo.domain.entity.SeekerProfileEntity;
 import net.kumo.kumo.domain.entity.UserEntity;
 import net.kumo.kumo.repository.SeekerProfileRepository;
 import net.kumo.kumo.repository.UserRepository;
@@ -60,7 +59,7 @@ public class RecruiterController {
     @GetMapping("Main")
     public String Main(Model model, Principal principal) {
         String userEmail = principal.getName();
-        
+
         // 1. 대시보드 통계 데이터 가져오기
         net.kumo.kumo.domain.dto.RecruiterDashboardDTO stats = rs.getDashboardStats(userEmail);
         model.addAttribute("totalApplicants", stats.getTotalApplicants());
@@ -97,10 +96,11 @@ public class RecruiterController {
     }
 
     /**
-     *  초간단 스카우트 제의 발송 (GET 방식)
+     * 초간단 스카우트 제의 발송 (GET 방식)
      */
     @GetMapping("/sendOffer")
-    public String sendOffer(@RequestParam("userId") Long seekerId, @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes rttr) {
+    public String sendOffer(@RequestParam("userId") Long seekerId, @AuthenticationPrincipal UserDetails userDetails,
+            RedirectAttributes rttr) {
         try {
             rs.sendScoutOffer(userDetails.getUsername(), seekerId);
             rttr.addFlashAttribute("successMsg", "제의를 성공적으로 보냈습니다.");
@@ -140,18 +140,47 @@ public class RecruiterController {
      * @return
      */
     @GetMapping("JobManage")
-    public String JobManage(Model model, java.security.Principal principal) {
+    public String JobManage(Model model, java.security.Principal principal,
+            @RequestParam(defaultValue = "date") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
         model.addAttribute("currentMenu", "jobManage");
 
-        // 🌟 1. 로그인한 사용자의 이메일(또는 ID)을 가져옵니다.
-        // (Principal 대신 @AuthenticationPrincipal AuthenticatedUser user 를 쓰셔도 됩니다!)
         String userEmail = principal.getName();
-
-        // 🌟 2. 서비스에서 통합된 최신 공고 리스트를 가져옵니다.
         List<JobManageListDTO> jobList = js.getMyJobPostings(userEmail);
 
-        // 🌟 3. 화면(HTML)으로 리스트를 넘겨줍니다.
+        Comparator<JobManageListDTO> comparator = switch (sortBy) {
+            case "title" -> Comparator.comparing(JobManageListDTO::getTitle,
+                    Comparator.nullsLast(String::compareTo));
+            case "region" -> Comparator.comparing(JobManageListDTO::getRegionType,
+                    Comparator.nullsLast(String::compareTo));
+            case "salary" -> Comparator.comparing(
+                    dto -> {
+                        try {
+                            return Long.parseLong(dto.getWage().replaceAll("[^0-9]", ""));
+                        } catch (Exception e) {
+                            return 0L;
+                        }
+                    },
+                    Comparator.nullsLast(Comparator.naturalOrder()));
+            default -> Comparator.comparing(JobManageListDTO::getCreatedAt,
+                    Comparator.nullsLast(Comparator.naturalOrder()));
+        };
+
+        if ("desc".equals(sortDir))
+            comparator = comparator.reversed();
+        jobList.sort(comparator);
+
+        // ✅ CLOSED는 무조건 맨 아래로 (정렬 방향 상관없이)
+        Comparator<JobManageListDTO> finalComparator = Comparator
+                .comparing((JobManageListDTO dto) -> "CLOSED".equals(dto.getStatus()) ? 1 : 0)
+                .thenComparing(comparator);
+
+        jobList.sort(finalComparator);
+
         model.addAttribute("jobList", jobList);
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDir", sortDir);
 
         return "recruiterView/jobManage";
     }
@@ -250,8 +279,8 @@ public class RecruiterController {
      */
     @GetMapping("/ProfileEdit") // 습관적으로 앞에 슬래시(/)를 붙여주시면 라우팅 꼬임을 방지할 수 있습니다.
     public String ProfileEdit(Model model) {
-    
-		return "recruiterView/profileEdit";
+
+        return "recruiterView/profileEdit";
     }
 
     /**
@@ -398,7 +427,8 @@ public class RecruiterController {
      */
     @GetMapping("/api/resume/{seekerId}")
     @ResponseBody
-    public ResponseEntity<ResumeResponseDTO> getApplicantResumeApi(@org.springframework.web.bind.annotation.PathVariable("seekerId") Long seekerId) {
+    public ResponseEntity<ResumeResponseDTO> getApplicantResumeApi(
+            @org.springframework.web.bind.annotation.PathVariable("seekerId") Long seekerId) {
         try {
             // 방금 JobPostingService에 만든 메서드 호출!
             ResumeResponseDTO resumeData = js.getApplicantResumeData(seekerId);
@@ -414,9 +444,10 @@ public class RecruiterController {
     @PostMapping("/api/application/{appId}/status")
     @ResponseBody
     public ResponseEntity<?> updateAppStatus(@org.springframework.web.bind.annotation.PathVariable Long appId,
-                                             @RequestParam String status) {
+            @RequestParam String status) {
         try {
-            net.kumo.kumo.domain.entity.Enum.ApplicationStatus appStatus = net.kumo.kumo.domain.entity.Enum.ApplicationStatus.valueOf(status);
+            net.kumo.kumo.domain.entity.Enum.ApplicationStatus appStatus = net.kumo.kumo.domain.entity.Enum.ApplicationStatus
+                    .valueOf(status);
             jobPostingService.updateApplicationStatus(appId, appStatus);
             return ResponseEntity.ok("success");
         } catch (Exception e) {
