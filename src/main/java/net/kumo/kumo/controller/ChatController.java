@@ -5,8 +5,10 @@ import net.kumo.kumo.domain.dto.ChatMessageDTO;
 import net.kumo.kumo.domain.dto.ChatRoomListDTO;
 import net.kumo.kumo.domain.entity.ChatRoomEntity;
 import net.kumo.kumo.domain.entity.UserEntity;
+import net.kumo.kumo.repository.ChatRoomRepository;
 import net.kumo.kumo.repository.UserRepository;
 import net.kumo.kumo.service.ChatService;
+import net.kumo.kumo.service.MapService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -27,8 +29,11 @@ import java.util.UUID;
 public class ChatController {
 
     private final ChatService chatService;
+    private final ChatRoomRepository chatRoomRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final UserRepository userRepository;
+
+    private final MapService mapService;
 
     // [이식 포인트] application.properties의 file.upload.chat 값을 가져옵니다.
     @Value("${file.upload.chat}")
@@ -37,7 +42,46 @@ public class ChatController {
     // ======================================================================
     // 1. [화면 연결] 웹 페이지 이동 관련 (HTTP)
     // ======================================================================
+    @GetMapping("/chat/room/{roomId}")
+    public String enterRoom(@PathVariable Long roomId,
+                            @RequestParam("userId") Long userId,
+                            Model model) {
 
+        ChatRoomEntity room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
+
+        // (선택) 이전 채팅 내역 가져오기 로직 유지
+        // List<ChatMessageEntity> history = chatMessageRepository.findByChatRoom_IdOrderByCreatedAtAsc(roomId);
+        // model.addAttribute("chatHistory", history);
+
+        // 상대방 닉네임 설정
+        UserEntity opponent = room.getSeeker().getUserId().equals(userId) ? room.getRecruiter() : room.getSeeker();
+        model.addAttribute("roomName", opponent.getNickname());
+
+        // 🌟 핵심: MapService를 써서 공고 세부정보를 깔끔하게 가져옵니다!
+        try {
+            // "ko" 또는 "ja" 등 언어 설정은 필요에 따라 세션에서 가져와도 됩니다. (임시로 "ko" 적용)
+            net.kumo.kumo.domain.dto.JobDetailDTO jobDetail =
+                    mapService.getJobDetail(room.getTargetPostId(), room.getTargetSource(), "ko");
+
+            // HTML 상단에 뿌려줄 정보 세팅
+            model.addAttribute("jobTitle", jobDetail.getTitle());
+            model.addAttribute("salary", jobDetail.getWage()); // DTO에 맞게 getWage() 사용
+            model.addAttribute("address", jobDetail.getAddress());
+        } catch (Exception e) {
+            // 만약 공고가 삭제되었거나 마감된 경우를 대비한 방어 코드! (앱이 터지지 않게 보호)
+            model.addAttribute("jobTitle", "삭제되거나 마감된 공고입니다.");
+            model.addAttribute("salary", "-");
+            model.addAttribute("address", "-");
+        }
+
+        model.addAttribute("roomId", roomId);
+        model.addAttribute("userId", userId);
+
+        return "chat/chat_room"; // 채팅방 HTML 경로 (본인 프로젝트에 맞게 확인)
+    }
+
+    /*
     @GetMapping("/chat/room/{roomId}")
     public String enterRoom(@PathVariable("roomId") Long roomId,
             @RequestParam(value = "userId", required = false) Long userId,
@@ -69,7 +113,7 @@ public class ChatController {
         model.addAttribute("address", room.getJobPosting().getWorkAddress());
 
         return "chat/chat_room";
-    }
+    } */
 
     // ChatController.java
 
@@ -200,20 +244,32 @@ public class ChatController {
     // ChatController.java 내부
     @GetMapping("/chat/create")
     public String createRoom(
-            @RequestParam("recruiterEmail") String recruiterEmail, // 🌟 이메일로 받음
-            @RequestParam("seekerId") Long seekerId,
-            @RequestParam(value = "jobPostId", required = false) Long jobPostId) {
+            @RequestParam(value = "seekerId", required = false) Long targetSeekerId,
+            @RequestParam(value = "recruiterId", required = false) Long targetRecruiterId,
+            @RequestParam("jobPostId") Long jobPostId,
+            @RequestParam("jobSource") String jobSource, // ⬅️ 추가됨!
+            @org.springframework.security.core.annotation.AuthenticationPrincipal net.kumo.kumo.security.AuthenticatedUser authUser) {
 
-        // 1. 이메일로 진짜 구인자 ID(UserEntity) 찾기
-        UserEntity recruiter = userRepository.findByEmail(recruiterEmail)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        Long recruiterId = recruiter.getUserId();
+        UserEntity currentUser = userRepository.findByEmail(authUser.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("로그인 정보를 찾을 수 없습니다."));
+        Long myId = currentUser.getUserId();
 
-        // 2. 방 개설
-        ChatRoomEntity room = chatService.createOrGetChatRoom(seekerId, recruiterId, jobPostId);
+        Long finalSeekerId;
+        Long finalRecruiterId;
 
-        // 3. 찾은 아이디로 방 입장!
-        return "redirect:/chat/room/" + room.getId() + "?userId=" + recruiterId;
+        // 내가 구인자인지 구직자인지 판별
+        if ("RECRUITER".equals(currentUser.getRole().name())) {
+            finalRecruiterId = myId;
+            finalSeekerId = targetSeekerId;
+        } else {
+            finalSeekerId = myId;
+            finalRecruiterId = targetRecruiterId;
+        }
+
+        // Service에 Source도 같이 넘겨서 방 생성
+        ChatRoomEntity room = chatService.createOrGetChatRoom(finalSeekerId, finalRecruiterId, jobPostId, jobSource);
+
+        return "redirect:/chat/room/" + room.getId() + "?userId=" + myId;
     }
 
     /*

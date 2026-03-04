@@ -120,6 +120,7 @@
                                                         th:data-app-id="${app.appId}"
                                                         th:data-seeker-id="${app.seekerId}"
                                                         th:data-job-id="${jobGroup.jobId}"
+                                                        th:data-source="${app.targetSource}"
                                                         th:data-name="${app.seekerName}"
                                                         th:data-contact="${app.seekerContact}"
                                                         th:data-email="${app.seekerEmail}"
@@ -175,14 +176,16 @@
 
 <script>
     let currentAppId = null;
-    let currentSeekerId = null; // 채팅방 생성용 구직자 ID 변수 추가
-    let currentJobId = null;    // 채팅방 생성용 공고 ID 변수 추가
+    let currentSeekerId = null;
+    let currentJobId = null;
+    let currentJobSource = null; // 🌟 1. 출처 변수 추가
 
     // 모달창 데이터 불러오기
     async function loadResumeData(btn) {
         currentAppId = btn.getAttribute('data-app-id');
-        currentSeekerId = btn.getAttribute('data-seeker-id'); // 버튼에서 값 추출
-        currentJobId = btn.getAttribute('data-job-id');       // 버튼에서 값 추출
+        currentSeekerId = btn.getAttribute('data-seeker-id');
+        currentJobId = btn.getAttribute('data-job-id');
+        currentJobSource = btn.getAttribute('data-source'); // 🌟 2. 버튼에서 출처 값 추출
 
         document.getElementById('modalName').innerText = btn.getAttribute('data-name');
         document.getElementById('modalContact').innerText = btn.getAttribute('data-contact') || '-';
@@ -193,7 +196,6 @@
         modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">이력서 데이터를 불러오는 중입니다...</p></div>`;
 
         try {
-            // 이력서 조회 API 호출 시 currentSeekerId 사용
             const response = await fetch(`/Recruiter/api/resume/${currentSeekerId}`);
             if(!response.ok) throw new Error('데이터 로드 실패');
             const data = await response.json();
@@ -294,16 +296,16 @@
     // 🌟 [핵심 3] 채팅방 생성 후 리다이렉트 처리
     // =========================================================================
     function actionChat() {
-        // 🌟 수정: id 대신 이메일을 가져옵니다.
-        const recruiterEmail = document.getElementById('loginUserEmail').value;
+        // 구인자의 정보(이메일 등)는 백엔드가 시큐리티(AuthenticationPrincipal)로
+        // 직접 알아서 찾으므로 프론트에서 억지로 보낼 필요가 없습니다!
 
-        if (!currentSeekerId || !currentJobId || !recruiterEmail) {
-            Swal.fire({ icon: 'error', title: '오류', text: '정보가 부족합니다.' });
+        if (!currentSeekerId || !currentJobId || !currentJobSource) {
+            Swal.fire({ icon: 'error', title: '오류', text: '채팅방 생성에 필요한 대상 정보나 출처가 없습니다.' });
             return;
         }
 
-        // 백엔드 API로 recruiterEmail을 보냅니다!
-        window.location.href = `/chat/create?seekerId=${currentSeekerId}&recruiterEmail=${recruiterEmail}&jobPostId=${currentJobId}`;
+        // 백엔드 API로 대상 구직자 ID, 공고 ID, 그리고 공고 출처(Source)만 보냅니다.
+        window.location.href = `/chat/create?seekerId=${currentSeekerId}&jobPostId=${currentJobId}&jobSource=${currentJobSource}`;
     }
 </script>
 
