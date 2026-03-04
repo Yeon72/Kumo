@@ -280,7 +280,7 @@ body.dark-mode .form-label {
   border: 1px solid #eef0f2 !important;
 }
 
-.nav-pill-add {
+body.dark-mode .nav-pill-add {
   background-color: #2a2b2e;
 }
 
@@ -698,8 +698,15 @@ body.dark-mode .swal2-cancel {
 /* ===================================================
    18. 공통
    =================================================== */
-html.dark-mode .nav-pill:hover {
-  border-color: #b2d7ff;
+/* 2. 다크 모드 호버 (범인 검거 및 수정) */
+body.dark-mode .nav-pill:hover {
+  /* 🚨 기존에 border: none이나 0이 걸려있을 수 있으니 두께와 스타일을 강제로 지정합니다 */
+  border: 1px solid #7db4e6 !important;
+
+  /* 🌟 사장님이 좋아하시는 '은은한 광채' 추가 */
+  box-shadow: 0 0 10px rgba(125, 180, 230, 0.3);
+  color: #7db4e6 !important;
+  /* 글자색도 같이 바뀌게 하면 더 확실함! */
 }
 
 .kumo-table th {

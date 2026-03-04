@@ -1,0 +1,390 @@
+/* ============================================================
+   KUMO RECRUITER - 인재 상세보기 (talentDetail)
+   ============================================================ */
+
+body {
+    background-color: #f8faff;
+    transition: background-color 0.3s, color 0.3s;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* 1. 메인 컨테이너: 우측 남은 화면 "전체"를 확실하게 장악 */
+.main-container {
+    margin-left: 240px;
+    /* 사이드바 비우기 */
+    width: calc(100% - 240px);
+    /* 남은 공간 100% 확보! */
+    min-height: 100vh;
+    box-sizing: border-box;
+    display: block !important;
+    /* 🚨 불필요한 flex 속성 해제 (기싸움 방지) */
+}
+
+/* 2. 본문 영역: 부모의 100% 너비를 그대로 물려받음 */
+.content-body {
+    width: 100%;
+    padding: 50px 20px;
+    /* 상하 여백 넉넉하게 */
+    box-sizing: border-box;
+    display: block !important;
+    /* 여기도 flex 해제 */
+}
+
+/* 3. 이력서 컨테이너: 내 집(content-body) 안에서 무조건 한가운데로! */
+.resume-view-container {
+    width: 100%;
+    max-width: 720px;
+    /* 사장님이 원하신 슬림핏 유지 */
+    margin: 0 auto 40px auto !important;
+    /* 🚨 핵심: 좌우 마진 auto로 완벽한 정중앙 안착 */
+
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 40px 50px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f0f2f8;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+/* 섹션 공통 */
+.view-section {
+    margin-bottom: 45px;
+}
+
+.view-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1a1f27;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #f0f2f8;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.2px;
+}
+
+.section-title i {
+    color: #7db4e6;
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* 프로필 헤더 */
+.profile-header-img {
+    width: 110px;
+    height: 110px;
+    border-radius: 30px;
+    object-fit: cover;
+    border: 4px solid #f0f2f8;
+    flex-shrink: 0;
+    transition: border-color 0.2s;
+}
+
+.profile-header-name {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1a1f27;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-header-job {
+    font-size: 1rem;
+    color: #8b95a1;
+    margin: 0;
+}
+
+/* 배지 */
+.t-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    margin-left: 8px;
+}
+
+.badge-blue {
+    background: #e8f3ff;
+    color: #7db4e6;
+    border: 1px solid rgba(125, 180, 230, 0.2);
+}
+
+/* 연락처 박스 */
+.contact-box {
+    background: #f8faff;
+    padding: 24px 28px;
+    border-radius: 20px;
+    border: 1px solid #e8f3ff;
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* 정보 그리드 */
+.info-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 15px;
+    margin-bottom: 12px;
+    align-items: baseline;
+}
+
+.info-grid:last-child {
+    margin-bottom: 0;
+}
+
+.info-label {
+    font-weight: 700;
+    color: #8b95a1;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-label i {
+    color: #7db4e6;
+    width: 14px;
+    text-align: center;
+}
+
+.info-value {
+    color: #333d4b;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.masked-text {
+    color: #b0b8c1;
+    font-style: italic;
+    font-size: 13px;
+}
+
+/* 경력 아이템 */
+.career-item {
+    padding: 20px 22px;
+    border-radius: 15px;
+    background: #fcfdfe;
+    border: 1px solid #f0f2f8;
+    margin-bottom: 12px;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.career-item:last-child {
+    margin-bottom: 0;
+}
+
+.career-item:hover {
+    border-color: #c8e0f4;
+}
+
+/* 자기소개 박스 */
+.self-intro-box {
+    background: #fcfdfe;
+    padding: 25px;
+    border-radius: 20px;
+    border: 1px solid #f0f2f8;
+    font-size: 14px;
+    line-height: 1.9;
+    color: #4e5968;
+    white-space: pre-wrap;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* 증빙서류 */
+.doc-preview-img {
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 15px;
+    border: 1px solid #f0f2f8;
+    cursor: zoom-in;
+    transition: all 0.2s;
+}
+
+.doc-preview-img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    border-color: #7db4e6;
+}
+
+/* 하단 액션 바 */
+/* 3. 하단 액션 바 */
+.footer-action-bar {
+    position: sticky;
+    bottom: 30px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 15px 40px;
+    border-radius: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    z-index: 100;
+    transition: background-color 0.3s, border-color 0.3s;
+
+    /* 🚨 핵심: 스티키 요소의 정중앙 고정 공식 */
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: max-content;
+    /* 내용물(버튼들) 크기만큼만 너비 차지 */
+}
+
+.btn-offer-large {
+    background: #7db4e6;
+    color: #ffffff;
+    border: none;
+    padding: 14px 60px;
+    border-radius: 18px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    letter-spacing: -0.2px;
+}
+
+.btn-offer-large:hover {
+    background: #69a3d9;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(125, 180, 230, 0.4);
+}
+
+.btn-back-circle {
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+    border: 1px solid #e5e8eb;
+    background: #ffffff;
+    color: #4e5968;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-back-circle:hover {
+    background-color: #f0f2f8;
+    border-color: #c8cdd4;
+}
+
+/* 다크모드 */
+body.dark-mode {
+    background-color: #1e1f21 !important;
+    color: #e3e5e8;
+}
+
+body.dark-mode .resume-view-container {
+    background-color: #2a2b2e !important;
+    border-color: #37393d;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .section-title {
+    color: #e3e5e8;
+    border-bottom-color: #37393d;
+}
+
+body.dark-mode .profile-header-name {
+    color: #e3e5e8;
+}
+
+body.dark-mode .profile-header-job {
+    color: #91959b;
+}
+
+body.dark-mode .profile-header-img {
+    border-color: #37393d;
+}
+
+body.dark-mode .contact-box {
+    background-color: #232428;
+    border-color: #37393d;
+}
+
+body.dark-mode .info-label {
+    color: #91959b;
+}
+
+body.dark-mode .info-value {
+    color: #c8cdd4;
+}
+
+body.dark-mode .masked-text {
+    color: #5c626b;
+}
+
+body.dark-mode .career-item {
+    background-color: #232428 !important;
+    border-color: #37393d !important;
+    color: #c8cdd4 !important;
+}
+
+body.dark-mode .career-item:hover {
+    border-color: #7db4e6 !important;
+}
+
+body.dark-mode .career-item .text-muted {
+    color: #91959b !important;
+}
+
+body.dark-mode .career-item .fw-bold {
+    color: #e3e5e8 !important;
+}
+
+body.dark-mode .self-intro-box {
+    background-color: #232428 !important;
+    border-color: #37393d !important;
+    color: #b0b3b8;
+}
+
+body.dark-mode .doc-preview-img {
+    border-color: #37393d;
+}
+
+body.dark-mode .doc-preview-img:hover {
+    border-color: #7db4e6;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .badge-blue {
+    background: rgba(125, 180, 230, 0.1);
+    color: #7db4e6;
+    border-color: rgba(125, 180, 230, 0.25);
+}
+
+body.dark-mode .footer-action-bar {
+    background-color: rgba(42, 43, 46, 0.9);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .btn-back-circle {
+    background-color: #37393d;
+    border-color: #3e4044;
+    color: #91959b;
+}
+
+body.dark-mode .btn-back-circle:hover {
+    background-color: #3e4044;
+    color: #e3e5e8;
+}

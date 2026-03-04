@@ -216,36 +216,6 @@
 
 }
 
-
-/* ========================= */
-/* badge */
-/* ========================= */
-
-.badge-count {
-
-  background: #ff6b6b;
-
-  color: white;
-
-  border-radius: 50%;
-
-  padding: 2px 7px;
-
-  font-size: 0.75rem;
-
-  font-weight: 700;
-
-  position: absolute;
-
-  top: -5px;
-
-  right: -5px;
-
-  border: 2px solid #ffffff;
-
-}
-
-
 /* ========================= */
 /* 버튼 */
 /* ========================= */
