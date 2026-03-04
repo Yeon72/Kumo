@@ -1,38 +1,79 @@
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
 .wait-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 100px 20px;
-            text-align: center;
-            min-height: 60vh;
-        }
-        .icon-box {
-            font-size: 80px;
-            color: #7db4e6; /* 쿠모 블루 */
-            margin-bottom: 30px;
-        }
-        .wait-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: #333;
-        }
-        .wait-desc {
-            font-size: 16px;
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 40px;
-        }
-        .btn-home {
-            padding: 12px 30px;
-            background-color: #7db4e6;
-            color: white;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        .btn-home:hover {
-            background-color: #5a9bc4;
-        }
+    flex: 1; /* 남은 공간을 모두 차지하여 푸터를 아래로 밀어냄 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.icon-box {
+    font-size: 80px;
+    color: #7db4e6; /* 쿠모 블루 */
+    margin-bottom: 30px;
+}
+
+.wait-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.wait-desc {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+
+.btn-home {
+    padding: 12px 30px;
+    background-color: #7db4e6;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn-home:hover {
+    background-color: #5a9bc4;
+}
+
+/* ============================
+   다크모드 대응
+   ============================ */
+body.dark-mode {
+    background-color: #121212;
+    color: #eee;
+}
+
+body.dark-mode .wait-title {
+    color: #fff;
+}
+
+body.dark-mode .wait-desc {
+    color: #aaa;
+}
+
+body.dark-mode .icon-box {
+    color: #9ac8f5;
+}
+
+body.dark-mode .btn-home {
+    background-color: #4a90e2;
+}
+
+body.dark-mode .btn-home:hover {
+    background-color: #357abd;
+}

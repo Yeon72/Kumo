@@ -4,6 +4,5 @@ import net.kumo.kumo.domain.entity.LoginHistoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface LoginHistoryRepository extends JpaRepository<LoginHistoryEntity, Long> {
-	// 나중에 어드민용 조회 메서드 추가 가능
-	// List<LoginHistory> findByEmailOrderByAttemptTimeDesc(String email);
+	void deleteByEmail(String email);
 }

@@ -20,4 +20,6 @@ public interface ApplicationRepository extends JpaRepository<ApplicationEntity, 
     List<ApplicationEntity> findByTargetSourceAndTargetPostIdOrderByAppliedAtDesc(String targetSource, Long targetPostId);
 
     List<ApplicationEntity> findByTargetSourceAndTargetPostIdIn(String targetSource, List<Long> targetPostIds);
+	
+	void deleteBySeeker(UserEntity user);
 }

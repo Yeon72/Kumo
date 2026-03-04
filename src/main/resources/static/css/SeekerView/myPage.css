@@ -697,6 +697,67 @@ body.dark-mode .age-suffix {
     color: #cbcbcb;
 }
 
+/* --- 회원 탈퇴 모달 다크모드 추가 --- */
+body.dark-mode .delete-modal-content {
+    background-color: #1e1e1e;
+    border-color: #333;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .delete-modal-header {
+    border-bottom-color: #333;
+}
+
+body.dark-mode .delete-modal-header h3 {
+    color: #fff;
+}
+
+body.dark-mode .btn-close-modal {
+    color: #888;
+}
+
+body.dark-mode .warning-box {
+    background-color: rgba(255, 107, 107, 0.15);
+    border-color: rgba(255, 107, 107, 0.3);
+}
+
+body.dark-mode .warning-title {
+    color: #ff8e8e;
+}
+
+body.dark-mode .warning-list li {
+    color: #ccc;
+}
+
+body.dark-mode .warning-list li strong {
+    color: #ff6b6b;
+}
+
+body.dark-mode .delete-input-group label {
+    color: #bbb;
+}
+
+body.dark-mode .delete-modal-footer {
+    background-color: #252525;
+    border-top-color: #333;
+}
+
+body.dark-mode .btn-modal-cancel {
+    background-color: #333;
+    border-color: #444;
+    color: #aaa;
+}
+
+body.dark-mode .btn-modal-cancel:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+body.dark-mode .btn-modal-danger:disabled {
+    background-color: #4a2b2b;
+    color: #775555;
+}
+
 footer,
 .non-login-footer {
     margin-left: 240px;

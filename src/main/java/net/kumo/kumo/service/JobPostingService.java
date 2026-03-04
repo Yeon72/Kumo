@@ -27,6 +27,8 @@ import net.kumo.kumo.domain.entity.SeekerEducationEntity;
 import net.kumo.kumo.domain.entity.SeekerLanguageEntity;
 import net.kumo.kumo.domain.entity.SeekerProfileEntity;
 import net.kumo.kumo.domain.entity.TokyoGeocodedEntity;
+import net.kumo.kumo.domain.entity.Enum.ApplicationStatus;
+import net.kumo.kumo.domain.entity.Enum.NotificationType;
 import net.kumo.kumo.domain.entity.UserEntity;
 import net.kumo.kumo.domain.enums.JobStatus;
 import net.kumo.kumo.repository.ApplicationRepository;
@@ -59,6 +61,7 @@ public class JobPostingService {
     private final SeekerCertificateRepository certificateRepository;
     private final SeekerLanguageRepository languageRepository;
     private final SeekerDocumentRepository documentRepository;
+    private final NotificationService notificationService; // 🌟 알림 서비스 주입
 
     @Transactional
     public void saveJobPosting(JobPostingRequestDTO dto, List<MultipartFile> images, UserEntity user) {
@@ -547,14 +550,33 @@ public class JobPostingService {
 
     @Transactional
     public void closeJobPosting(Long datanum, String region) {
+        String title = "";
         if ("TOKYO".equalsIgnoreCase(region)) {
             TokyoGeocodedEntity entity = tokyoGeocodedRepository.findByDatanum(datanum)
                     .orElseThrow(() -> new IllegalArgumentException("공고를 찾을 수 없습니다."));
             entity.setStatus(JobStatus.CLOSED); // 🌟 상태를 마감으로 변경!
+            title = entity.getTitle();
         } else {
             OsakaGeocodedEntity entity = osakaGeocodedRepository.findByDatanum(datanum)
                     .orElseThrow(() -> new IllegalArgumentException("공고를 찾을 수 없습니다."));
             entity.setStatus(JobStatus.CLOSED);
+            title = entity.getTitle();
+        }
+
+        // 🌟 [알림 추가] 이 공고에 지원한 모든 지원자에게 마감 알림 발송
+        List<ApplicationEntity> applications = applicationRepository.findByTargetSourceAndTargetPostIdOrderByAppliedAtDesc(region.toUpperCase(), datanum);
+        for (ApplicationEntity app : applications) {
+            // 이미 처리된 지원자(합격/불합격) 외에 대기 중인 지원자들에게 알림
+            if (app.getStatus() == net.kumo.kumo.domain.entity.Enum.ApplicationStatus.APPLIED || 
+                app.getStatus() == net.kumo.kumo.domain.entity.Enum.ApplicationStatus.VIEWED) {
+                
+                notificationService.sendJobClosedNotification(
+                    app.getSeeker(),
+                    title,
+                    datanum,
+                    region.toUpperCase()
+                );
+            }
         }
     }
 
@@ -750,5 +772,20 @@ public class JobPostingService {
         ApplicationEntity application = applicationRepository.findById(appId)
                 .orElseThrow(() -> new IllegalArgumentException("지원서를 찾을 수 없습니다."));
         application.setStatus(status);
+
+        // 🌟 [알림 추가] 합격/불합격 상태 변경 시 구직자에게 알림 발송
+        if (status == net.kumo.kumo.domain.entity.Enum.ApplicationStatus.PASSED || 
+            status == net.kumo.kumo.domain.entity.Enum.ApplicationStatus.FAILED) {
+            
+            // 공고 제목 가져오기
+            String jobTitle = "공고";
+            if ("TOKYO".equalsIgnoreCase(application.getTargetSource())) {
+                jobTitle = tokyoGeocodedRepository.findById(application.getTargetPostId()).map(TokyoGeocodedEntity::getTitle).orElse("공고");
+            } else if ("OSAKA".equalsIgnoreCase(application.getTargetSource())) {
+                jobTitle = osakaGeocodedRepository.findById(application.getTargetPostId()).map(OsakaGeocodedEntity::getTitle).orElse("공고");
+            }
+
+            notificationService.sendAppStatusNotification(application.getSeeker(), status, jobTitle);
+        }
     }
 }
