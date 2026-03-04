@@ -6,6 +6,9 @@
 
     <script th:src="@{/js/recruiter/main.js}"></script>
     <script th:src="@{/js/recruiter/recruiterHeader.js}"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -23,7 +26,6 @@
         .accordion-button.no-applicants::after { display: none !important; }
         .accordion-button.no-applicants { cursor: default !important; background-color: #fafafa; }
 
-        /* 🌟 합격/불합격 처리된 열을 회색으로 흐리게 만드는 CSS */
         .processed-row td {
             background-color: #f8f9fa !important;
             color: #adb5bd !important;
@@ -168,13 +170,69 @@
     </div>
 </div>
 
+<div class="modal fade" id="scheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content schedule-modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title w-100 text-center fw-bold">면접 스케줄 등록</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="scheduleForm">
+                    <div class="row mb-4 align-items-center">
+                        <label class="col-3 modal-label fw-bold">주제</label>
+                        <div class="col-9">
+                            <input type="text" id="scheduleTitle" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="row mb-4 align-items-center">
+                        <label class="col-3 modal-label fw-bold">날짜/시간</label>
+                        <div class="col-9">
+                            <input type="date" id="scheduleDate" class="form-control mb-2" required />
+                            <div class="d-flex align-items-center gap-2">
+                                <select id="startHour" class="form-select form-select-sm w-auto"></select> :
+                                <select id="startMin" class="form-select form-select-sm w-auto"></select>
+                                <span>~</span>
+                                <select id="endHour" class="form-select form-select-sm w-auto"></select> :
+                                <select id="endMin" class="form-select form-select-sm w-auto"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <label class="col-3 modal-label fw-bold mt-2">상세정보</label>
+                        <div class="col-9">
+                            <textarea id="scheduleDescription" class="form-control" rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row mb-5 align-items-center">
+                        <label class="col-3 modal-label fw-bold">색상</label>
+                        <div class="col-9 d-flex gap-3 color-picker-wrapper">
+                            <div class="color-dot" style="background-color: #ff6b6b; width:20px; height:20px; border-radius:50%; cursor:pointer;" data-color="#ff6b6b"></div>
+                            <div class="color-dot active" style="background-color: #ffbb33; width:20px; height:20px; border-radius:50%; cursor:pointer; border: 2px solid #000;" data-color="#ffbb33"></div>
+                            <div class="color-dot" style="background-color: #33ff66; width:20px; height:20px; border-radius:50%; cursor:pointer;" data-color="#33ff66"></div>
+                            <div class="color-dot" style="background-color: #7db4e6; width:20px; height:20px; border-radius:50%; cursor:pointer;" data-color="#7db4e6"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 justify-content-center w-100">
+                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">취소</button>
+                        <button type="button" class="btn btn-primary px-4" onclick="saveScheduleFromApplicant()">스케줄 등록</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // 🌟 현재 열려있는 지원서의 ID 저장용 전역 변수
     let currentAppId = null;
 
-    // 모달창 데이터 불러오기 (fetch)
+    // 모달창 데이터 불러오기
     async function loadResumeData(btn) {
-        currentAppId = btn.getAttribute('data-app-id'); // appId 저장
+        currentAppId = btn.getAttribute('data-app-id');
 
         document.getElementById('modalName').innerText = btn.getAttribute('data-name');
         document.getElementById('modalContact').innerText = btn.getAttribute('data-contact') || '-';
@@ -196,7 +254,7 @@
         }
     }
 
-    // JSON 데이터를 HTML로 그리는 함수 (이전과 동일)
+    // JSON 데이터를 HTML로 그리는 함수
     function renderResume(data, container) {
         let html = '';
         if (data.profile) {
@@ -242,29 +300,28 @@
         container.innerHTML = html;
     }
 
-    // 🌟 합격/불합격 처리 (비동기)
+    // 합격/불합격 처리 (비동기)
     async function updateAppStatus(status) {
         if(!currentAppId) return;
 
-        // 버튼 비활성화 방지 연출 (옵션)
         const btnApprove = document.getElementById('btnApprove');
         const btnReject = document.getElementById('btnReject');
         btnApprove.disabled = true; btnReject.disabled = true;
 
         try {
-            const res = await fetch(`/Recruiter/api/application/${currentAppId}/status?status=${status}`, { method: 'POST' });
+            // 🌟 CSRF 헤더 넣는 부분 삭제하고 심플하게 POST 전송
+            const res = await fetch(`/Recruiter/api/application/${currentAppId}/status?status=${status}`, {
+                method: 'POST'
+            });
 
             if(res.ok) {
-                // 1. 모달 닫기
                 const modalEl = document.getElementById('resumeModal');
                 const modal = bootstrap.Modal.getInstance(modalEl);
                 modal.hide();
 
-                // 2. 화면 동적 조작: 해당 줄(tr) 찾기
                 const row = document.getElementById(`app-row-${currentAppId}`);
                 const tbody = row.parentNode;
 
-                // 3. 상태 뱃지 변경 및 회색 처리
                 const badgeContainer = row.querySelector('.status-cell');
                 if(status === 'PASSED') {
                     badgeContainer.innerHTML = '<span class="badge bg-success">합격</span>';
@@ -272,8 +329,6 @@
                     badgeContainer.innerHTML = '<span class="badge bg-secondary">불합격</span>';
                 }
                 row.classList.add('processed-row');
-
-                // 4. 해당 줄을 테이블의 맨 밑으로 부드럽게 이동
                 tbody.appendChild(row);
 
             } else {
@@ -287,7 +342,123 @@
         }
     }
 
-    function actionSchedule() { alert('캘린더 연동 기능은 추후 개발 예정입니다.'); }
+    // -------------------------------------------------------------------------
+    // 🌟 캘린더 연동 기능 추가 스크립트 🌟
+    // -------------------------------------------------------------------------
+
+    // 페이지 로드 시 시간 드롭다운 및 색상 선택기 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        function fillSelect(id, max) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            for (let i = 0; i <= max; i++) {
+                const opt = document.createElement('option');
+                opt.value = String(i).padStart(2, '0');
+                opt.text = String(i).padStart(2, '0');
+                el.appendChild(opt);
+            }
+        }
+        fillSelect('startHour', 23); fillSelect('startMin', 59);
+        fillSelect('endHour', 23); fillSelect('endMin', 59);
+
+        // 색상 선택 효과
+        document.querySelectorAll('.color-dot').forEach(dot => {
+            dot.addEventListener('click', function() {
+                document.querySelectorAll('.color-dot').forEach(d => {
+                    d.style.border = 'none';
+                    d.classList.remove('active');
+                });
+                this.style.border = '2px solid #000';
+                this.classList.add('active');
+            });
+        });
+    });
+
+    // [면접 제안] 버튼 클릭 시 동작
+    function actionSchedule() {
+        // 1. 이력서 모달에서 정보 가져오기
+        const name = document.getElementById('modalName').innerText;
+        const job = document.getElementById('modalJob').innerText;
+        const contact = document.getElementById('modalContact').innerText;
+        const email = document.getElementById('modalEmail').innerText;
+
+        // 2. 이력서 모달 닫기
+        const resumeModal = bootstrap.Modal.getInstance(document.getElementById('resumeModal'));
+        if(resumeModal) resumeModal.hide();
+
+        // 3. 스케줄 폼 초기화 및 데이터 자동 채우기
+        document.getElementById('scheduleForm').reset();
+
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        document.getElementById('scheduleDate').value = `${yyyy}-${mm}-${dd}`;
+
+        document.getElementById('startHour').value = '14';
+        document.getElementById('startMin').value = '00';
+        document.getElementById('endHour').value = '15';
+        document.getElementById('endMin').value = '00';
+
+        document.getElementById('scheduleTitle').value = `[면접] ${name} - ${job}`;
+        document.getElementById('scheduleDescription').value = `지원자: ${name}\n연락처: ${contact}\n이메일: ${email}`;
+
+        // 4. 스케줄 모달 열기
+        new bootstrap.Modal(document.getElementById('scheduleModal')).show();
+    }
+
+    // [스케줄 등록] 처리 통신
+    async function saveScheduleFromApplicant() {
+        const title = document.getElementById('scheduleTitle').value;
+        const date = document.getElementById('scheduleDate').value;
+        const startH = document.getElementById('startHour').value;
+        const startM = document.getElementById('startMin').value;
+        const endH = document.getElementById('endHour').value;
+        const endM = document.getElementById('endMin').value;
+
+        if (!title || !date) {
+            Swal.fire('알림', '주제와 날짜를 입력해주세요.', 'warning');
+            return;
+        }
+        if (`${startH}:${startM}` >= `${endH}:${endM}`) {
+            Swal.fire('알림', '종료 시간은 시작 시간보다 늦어야 합니다.', 'warning');
+            return;
+        }
+
+        const data = {
+            title: title,
+            description: document.getElementById('scheduleDescription').value,
+            start: `${date}T${startH}:${startM}:00`,
+            end: `${date}T${endH}:${endM}:00`,
+            color: document.querySelector('.color-dot.active').getAttribute('data-color') || "#ffbb33"
+        };
+
+        try {
+            // 🌟 CSRF 토큰 추출 부분 삭제하고 심플하게 요청!
+            const res = await fetch('/api/calendar/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleModal'));
+                modal.hide();
+
+                // 성공 알림 (지원서 상태는 APPLIED 그대로 유지됨)
+                Swal.fire({
+                    toast: true, position: 'top-end', icon: 'success',
+                    title: '면접 일정이 캘린더에 성공적으로 등록되었습니다!',
+                    showConfirmButton: false, timer: 2000
+                });
+            } else {
+                throw new Error('저장 실패');
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire('오류', '일정 등록에 실패했습니다.', 'error');
+        }
+    }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
