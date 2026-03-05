@@ -1,6 +1,7 @@
 package net.kumo.kumo.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.kumo.kumo.domain.dto.ApplicationDTO;
 import net.kumo.kumo.domain.dto.JobDetailDTO;
 import net.kumo.kumo.domain.dto.JobSummaryDTO;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MapService {
 
     private final OsakaGeocodedRepository osakaRepo;
@@ -52,7 +54,8 @@ public class MapService {
     }
 
     // --- 2. 상세 페이지 조회 ---
-    @Transactional(readOnly = true)
+    // 조회수 증가 포함
+    @Transactional
     public JobDetailDTO getJobDetail(Long id, String source, String lang) {
         BaseEntity entity = null;
 
@@ -68,7 +71,13 @@ public class MapService {
         } else {
             throw new IllegalArgumentException("잘못된 접근입니다 (Source 오류).");
         }
-
+        
+        // ==========================================
+        // 🌟 [핵심] 찾은 엔티티의 조회수를 1 증가시킵니다!
+        // ==========================================
+        entity.addViewCount();
+        log.info(String.valueOf(entity.getViewCount()));
+        
         // JobDetailDTO 생성자에 source도 함께 전달
         return new JobDetailDTO(entity, lang, source);
     }

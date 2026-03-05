@@ -124,8 +124,8 @@ public class TokyoGeocodedEntity extends BaseEntity {
 	public void prePersist() {
 		if (this.status == null)
 			this.status = JobStatus.RECRUITING;
-		if (this.viewCount == null)
-			this.viewCount = 0;
+//		if (this.viewCount == null)
+//			this.viewCount = 0;
 	}
 	
 	@Column(name = "salary_type")
@@ -133,7 +133,4 @@ public class TokyoGeocodedEntity extends BaseEntity {
 	
 	@Column(name = "salary_amount")
 	private Integer salaryAmount;
-
-	@Column(name = "view_count", columnDefinition = "INT DEFAULT 0")
-	private Integer viewCount;
 }
