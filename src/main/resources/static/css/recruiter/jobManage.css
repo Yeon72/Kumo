@@ -166,10 +166,13 @@
 }
 
 .status-badge {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  background-color: #eef2ff;
+  color: #6366f1;
+}
+
+body.dark-mode .status-badge {
+  background-color: #312e81 !important;
+  color: #818cf8 !important;
 }
 .status-ing {
   background-color: #edffed;

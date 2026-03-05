@@ -28,6 +28,10 @@ import net.kumo.kumo.domain.entity.Enum.MessageType;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ChatMessageEntity {
 	@Id

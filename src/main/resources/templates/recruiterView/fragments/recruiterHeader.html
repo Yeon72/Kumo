@@ -94,13 +94,17 @@
                 >
               </div>
               <hr />
-              <a th:href="@{/Recruiter/MyPage}" class="profile-item">
-                <i class="fa-regular fa-user"></i>
-                <span th:text="#{profile.mypage}">마이페이지</span>
-              </a>
               <a th:href="@{/Recruiter/Settings}" class="profile-item">
-                <i class="fa-solid fa-gear"></i>
-                <span th:text="#{profile.settings}">설정</span>
+                <i class="fa-regular fa-user"></i>
+                <span th:text="#{profile.mypage}">내 계정</span>
+              </a>
+                            <a th:href="@{/Recruiter/CompanyInfo}" class="profile-item">
+                              <i class="bi bi-building"></i>
+                              <span th:text="#{sidebar.menu.company}">회사 정보</span>
+                            </a>
+              <a th:href="@{/Recruiter/JobPosting}" class="profile-item">
+                <i class="fa-regular fa-file-lines"></i>
+                <span th:text="#{post.title}">공고 등록</span>
               </a>
               <hr />
               <a th:href="@{/logout}" class="profile-item logout">

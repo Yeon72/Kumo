@@ -38,9 +38,8 @@
                                 <h2 th:text="#{main.panel.scout_status}">인재 스카우트</h2>
                                 <p th:text="#{resume.notice.scout1}">조건에 맞는 인재를 찾아보세요.</p>
                             </div>
-                            <div class="talent-total-count">
-                                <i class="fa-solid fa-users"></i>
-                                Total &nbsp;<span class="count-num" th:text="${talents?.size() ?: 0}">0</span>명
+                            <div class="talent-total-count"> 
+                                스카우트 수 &nbsp;<span class="count-num" th:text="${talents?.size() ?: 0}">0</span>명
                             </div>
                         </div>
 

@@ -34,15 +34,12 @@
 }
 
 .img-wrapper {
-  width: 120px;
-  height: 120px;
   border-radius: 50%;
   overflow: hidden;
   background-color: #f0f1f6;
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 1px solid #eee;
 }
 
 .profile-img-lg {
