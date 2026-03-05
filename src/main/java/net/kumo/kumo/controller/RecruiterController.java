@@ -70,6 +70,7 @@ public class RecruiterController {
         // 3. 모델에 데이터 꽂아주기
         model.addAttribute("totalApplicants", stats.getTotalApplicants());
         model.addAttribute("unreadApplicants", unreadCount);
+        model.addAttribute("unreadApplicants", stats.getUnreadApplicants());
         model.addAttribute("todayVisits", stats.getTotalVisits()); // '전체 조회수'로 매핑 (오늘 방문수는 별도 로직 필요하므로 일단 전체로)
         model.addAttribute("chartLabels", stats.getChartLabels());
         model.addAttribute("chartData", stats.getChartData());
