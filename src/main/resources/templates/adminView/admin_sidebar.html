@@ -2,42 +2,52 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <aside class="sidebar" th:fragment="admin_sidebar(currentMenu, lang)">
-    <ul class="nav-menu">
-        <a th:href="@{/admin/dashboard(lang=${lang})}"
-           class="nav-item"
-           th:classappend="${currentMenu == 'dashboard'} ? 'active' : ''">
-            <span class="nav-icon">🏠</span>
-            <span th:text="${lang == 'ja' ? 'ダッシュボード' : 'DashBoard'}">DashBoard</span>
-        </a>
-
-        <a th:href="@{/admin/user(lang=${lang})}"
-           class="nav-item"
-            th:classappend="${currentMenu == 'users'} ? 'active' : ''">
-            <span class="nav-icon">👥</span>
-            <span th:text="${lang == 'ja' ? '会員管理' : 'Users'}">Users</span>
-        </a>
-
-        <a th:href="@{/admin/post(lang=${lang})}"
-           class="nav-item"
-           th:classappend="${currentMenu == 'post'} ? 'active' : ''">
-            <span class="nav-icon">📄</span>
-            <span th:text="${lang == 'ja' ? '求人管理' : 'Post'}">Post</span>
-        </a>
-
-        <li class="nav-item"
-            th:classappend="${currentMenu == 'dataops'} ? 'active' : ''">
-            <span class="nav-icon">🕸️</span>
-            <span th:text="${lang == 'ja' ? 'ログ' : 'Log'}">Log</span>
-        </li>
-    </ul>
-
-    <div class="lang-switch-container">
-        <button class="btn-lang"
-                th:classappend="${lang == 'ko' || lang == null ? 'active' : ''}"
-                onclick="changeLanguage('ko')">KO</button>
-        <button class="btn-lang"
-                th:classappend="${lang == 'ja' ? 'active' : ''}"
-                onclick="changeLanguage('ja')">JP</button>
-    </div>
+	<ul class="nav-menu">
+		<a th:href="@{/admin/dashboard(lang=${lang})}"
+		   class="nav-item"
+		   th:classappend="${currentMenu == 'dashboard'} ? 'active' : ''">
+			<span class="nav-icon">🏠</span>
+			<span th:text="#{admin.menu.dashboard}">DashBoard</span>
+		</a>
+		
+		<a th:href="@{/admin/user(lang=${lang})}"
+		   class="nav-item"
+		   th:classappend="${currentMenu == 'users'} ? 'active' : ''">
+			<span class="nav-icon">👥</span>
+			<span th:text="#{admin.menu.users}">Users</span>
+		</a>
+		
+		<a th:href="@{/admin/post(lang=${lang})}"
+		   class="nav-item"
+		   th:classappend="${currentMenu == 'post'} ? 'active' : ''">
+			<span class="nav-icon">📄</span>
+			<span th:text="#{admin.menu.post}">Post</span>
+		</a>
+		
+		<a th:href="@{/admin/log(lang=${lang})}"
+		   class="nav-item"
+		   th:classappend="${currentMenu == 'log'} ? 'active' : ''">
+			<span class="nav-icon">🕸️</span>
+			<span th:text="#{admin.menu.log}">Log</span>
+		</a>
+	</ul>
+	
+	<div class="lang-switch-container">
+		<button class="btn-lang"
+		        th:classappend="${lang == 'ko' || lang == null ? 'active' : ''}"
+		        onclick="changeAdminLanguage('ko')">KO</button>
+		<button class="btn-lang"
+		        th:classappend="${lang == 'ja' ? 'active' : ''}"
+		        onclick="changeAdminLanguage('ja')">JP</button>
+	</div>
+	
+	<script th:inline="javascript">
+		function changeAdminLanguage(newLang) {
+			// 현재 URL을 가져와서 lang 파라미터만 교체한 뒤 이동합니다.
+			const url = new URL(window.location.href);
+			url.searchParams.set('lang', newLang);
+			window.location.href = url.toString();
+		}
+	</script>
 </aside>
 </html>

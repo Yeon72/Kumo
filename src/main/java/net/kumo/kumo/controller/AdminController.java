@@ -311,4 +311,26 @@ public class AdminController {
             return ResponseEntity.badRequest().body("Fail");
         }
     }
+    
+    // ==========================================
+    // 로그 페이지 (DataOps)
+    // URL: /admin/log
+    // ==========================================
+    @GetMapping("/log")
+    public String logPage(Model model,
+                          @RequestParam(value = "lang", defaultValue = "ko") String lang) {
+        
+        log.info("어드민 로그 페이지 요청");
+        
+        // 현재 메뉴 상태, 언어, 관리자 이름 전달
+        model.addAttribute("currentMenu", "log"); // 사이드바 'active' 떡칠용
+        model.addAttribute("lang", lang);
+        model.addAttribute("adminName", "Administrator"); // 나중에 실제 세션값으로 변경
+        
+        // 추후에 초기 로그 데이터를 DB에서 가져와서 넘길 수 있습니다.
+        // List<LogDTO> logs = adminService.getRecentLogs();
+        // model.addAttribute("logs", logs);
+        
+        return "adminView/admin_log";
+    }
 }

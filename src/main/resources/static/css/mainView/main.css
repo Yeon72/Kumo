@@ -101,6 +101,9 @@ html, body {
     width: 100%;
     height: calc(100vh - 80px); /* 헤더 높이만큼 빼기 */
     margin-top: 80px;           /* 헤더 영역 확보 */
+    /* 아래 내용 전환하면 지도가 전체화면으로 전환됨 */
+    /*height: calc(100vh + 80px); !* 헤더 높이만큼 빼기 *!*/
+    /*margin-bottom: 80px;           !* 헤더 영역 확보 *!*/
     background-color: var(--bg-map-container);
 }
 
