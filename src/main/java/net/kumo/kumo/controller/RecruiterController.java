@@ -33,6 +33,7 @@ import net.kumo.kumo.domain.entity.CompanyEntity;
 import net.kumo.kumo.domain.entity.UserEntity;
 import net.kumo.kumo.repository.SeekerProfileRepository;
 import net.kumo.kumo.repository.UserRepository;
+import net.kumo.kumo.security.AuthenticatedUser;
 import net.kumo.kumo.service.CompanyService;
 import net.kumo.kumo.service.JobPostingService;
 import net.kumo.kumo.service.RecruiterService;
@@ -57,12 +58,18 @@ public class RecruiterController {
      * @return
      */
     @GetMapping("Main")
-    public String Main(Model model, Principal principal) {
+    public String Main(Model model, Principal principal, @AuthenticationPrincipal AuthenticatedUser user) {
         String userEmail = principal.getName();
 
-        // 1. 대시보드 통계 데이터 가져오기
+        // 1. 서비스에서 미확인 지원자 수 계산 (🚨 새로 만든 메서드 호출!)
+        long unreadCount = rs.getUnreadCount(userEmail);
+
+        // 2. 대시보드 통계 데이터 가져오기
         net.kumo.kumo.domain.dto.RecruiterDashboardDTO stats = rs.getDashboardStats(userEmail);
+
+        // 3. 모델에 데이터 꽂아주기
         model.addAttribute("totalApplicants", stats.getTotalApplicants());
+        model.addAttribute("unreadApplicants", unreadCount);
         model.addAttribute("unreadApplicants", stats.getUnreadApplicants());
         model.addAttribute("todayVisits", stats.getTotalVisits()); // '전체 조회수'로 매핑 (오늘 방문수는 별도 로직 필요하므로 일단 전체로)
         model.addAttribute("chartLabels", stats.getChartLabels());
