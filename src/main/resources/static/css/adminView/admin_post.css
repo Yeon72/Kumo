@@ -21,11 +21,24 @@ body {
 }
 
 /* [상단 컨트롤] */
-.top-controls { display: flex; gap: 15px; margin-bottom: 20px; }
-.search-box { flex: 1; position: relative; }
+.top-controls {
+    display: flex;
+    gap: 10px; /* HTML에서 가져온 보정값 우선 적용 */
+    margin-bottom: 20px;
+    align-items: center;
+}
+.search-box {
+    flex: 2; /* HTML에서 가져온 보정값 우선 적용 */
+    position: relative;
+}
 .search-input { width: 100%; padding: 12px 15px 12px 40px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
 .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; }
-.filter-select { padding: 12px 20px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer; min-width: 120px; }
+.filter-select { padding: 12px 20px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer; min-width: 120px; flex: 0 0 auto; }
+.btn-search {
+    height: 42px;
+    padding: 0 20px;
+    white-space: nowrap;
+}
 
 /* [탭 메뉴] */
 .tab-menu { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 20px; }
@@ -37,11 +50,12 @@ body {
 /* [액션 버튼] */
 .action-buttons { margin-bottom: 20px; display: flex; gap: 10px; }
 .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; color: white; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
+
 /* 모달 취소 버튼 등 보조 버튼 스타일 */
-.btn-outline { background-color: white; color: #343a40; border: 1px solid #ddd; height: 42px; padding: 0 20px; border-radius: 8px; cursor: pointer; font-weight: 600;}
+.btn-outline { background-color: white; color: #343a40; border: 1px solid #ddd; height: 42px; padding: 0 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
 .btn-outline:hover { background-color: #f1f3f5; }
 
-/* [추가] 모달 확인 버튼 스타일 (디자인 보정) */
+/* 모달 확인 버튼 스타일 (디자인 보정) */
 .btn-dark {
     background-color: #343a40;
     color: white;
@@ -74,8 +88,6 @@ body {
 
 /* [텍스트/뱃지/버튼 스타일] */
 .title-text { font-size: 14px; font-weight: 600; color: #333; display: block; overflow: hidden; text-overflow: ellipsis; }
-
-/* 제목 아래의 서브 텍스트 */
 .sub-text { font-size: 11px; color: #adb5bd; font-weight: 400; display: block; margin-top: 2px; }
 
 .badge { display: inline-flex; justify-content: center; align-items: center; width: 80px; height: 32px; border-radius: 20px; font-size: 13px; font-weight: 700; color: white; }
@@ -102,7 +114,7 @@ body {
 .pagination-container {
     display: flex;
     justify-content: center;
-    padding: 30px 0; /* 여백 넉넉하게 */
+    padding: 30px 0;
     border-top: 1px solid #f1f3f5;
     margin-top: 20px;
 }
@@ -112,14 +124,14 @@ body {
     list-style: none;
     padding: 0;
     margin: 0;
-    gap: 6px; /* 버튼 사이 간격 */
+    gap: 6px;
 }
 
 .pagination li a {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 32px; /* 버튼 최소 너비 고정 (숫자 1과 10의 크기 차이 방지) */
+    min-width: 32px;
     height: 32px;
     padding: 0 6px;
     border: 1px solid #dee2e6;
@@ -132,35 +144,32 @@ body {
     font-weight: 500;
 }
 
-.pagination li a:hover {
-    background-color: #f1f3f5;
-    border-color: #ced4da;
-    color: #212529;
-}
+.pagination li a:hover { background-color: #f1f3f5; border-color: #ced4da; color: #212529; }
+.pagination li.active a { background-color: #3b5bdb; color: white; border-color: #3b5bdb; font-weight: 700; cursor: default; }
+.pagination li.disabled a { color: #adb5bd; background-color: #f8f9fa; border-color: #e9ecef; pointer-events: none; }
 
-/* 현재 페이지 */
-.pagination li.active a {
-    background-color: #3b5bdb; /* 메인 테마색 */
-    color: white;
-    border-color: #3b5bdb;
-    font-weight: 700;
-    cursor: default;
+/* [모달 공통 CSS] */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4); z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
 }
-
-/* 비활성화 버튼 (회색 처리) */
-.pagination li.disabled a {
-    color: #adb5bd;
-    background-color: #f8f9fa;
-    border-color: #e9ecef;
-    pointer-events: none; /* 클릭 방지 */
+.modal-content {
+    background: white; padding: 30px; border-radius: 12px;
+    width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
+.modal-content h3 { margin-top: 0; margin-bottom: 20px; color: #343a40; font-size: 18px; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #495057; }
+.form-group select { width: 100%; height: 42px; border-radius: 6px; border: 1px solid #ced4da; padding: 0 10px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
 
-/* [신고 내용 확인 모달창 전용 CSS 추가] */
+/* [신고 내용 확인 모달창 전용 CSS] */
 .report-modal-content {
     background: white;
     padding: 30px;
     border-radius: 12px;
-    width: 450px; /* 기존보다 약간 넓게 */
+    width: 450px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 

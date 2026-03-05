@@ -1,71 +1,69 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8" />
     <title th:text="${job.title}">상세 정보</title>
     <link rel="stylesheet" th:href="@{/css/NonLoginFragments/NonLoginFooter.css}">
     <link rel="stylesheet" th:href="@{/css/mapView/job_detail.css}">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script th:src="@{/js/mapView/job_detail.js}"></script>
 </head>
-
 <body>
 
-    <!-- TODO: 다크모드 적용 해야함 현재 헤더 클릭시 다크모드 변환이 안됨 26.2.19 -->
-    <div class="map-header-wrapper">
-        <div th:replace="~{NonLoginFragments/NonLoginHeader :: headerFragment}" sec:authorize="!isAuthenticated()">
-        </div>
+<div class="map-header-wrapper">
+	<div th:replace="~{NonLoginFragments/NonLoginHeader :: headerFragment}"
+	     sec:authorize="!isAuthenticated()"></div>
+	
+	<div th:replace="~{AuthenticatedFragments/AuthenticatedHeader :: headerFragment}"
+	     sec:authorize="isAuthenticated()"></div>
+</div>
 
-        <div th:replace="~{AuthenticatedFragments/AuthenticatedHeader :: headerFragment}"
-            sec:authorize="isAuthenticated()"></div>
+<div class="container">
+    <div class="header-section">
+        <h1 class="job-title" th:text="${job.title}">구인 제목</h1>
+        <div class="job-meta">
+            <span th:text="${job.address} + ' • ' + (${lang == 'ja' ? '住所' : '주소'})">주소</span>
+            <span>•</span>
+            <span>ID: <span th:text="${job.id}">0</span></span>
+        </div>
     </div>
 
-    <div class="container">
-        <div class="header-section">
-            <h1 class="job-title" th:text="${job.title}">구인 제목</h1>
-            <div class="job-meta">
-                <span th:text="${job.address} + ' • ' + (${lang == 'ja' ? '住所' : '주소'})">주소</span>
-                <span>•</span>
-                <span>ID: <span th:text="${job.id}">0</span></span>
-            </div>
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label" th:text="${lang == 'ja' ? '会社名' : '회사 이름'}">회사 이름</span>
+            <span class="info-value" th:text="${job.companyName}">-</span>
         </div>
 
-        <div class="info-grid">
-            <div class="info-item">
-                <span class="info-label" th:text="${lang == 'ja' ? '会社名' : '회사 이름'}">회사 이름</span>
-                <span class="info-value" th:text="${job.companyName}">-</span>
-            </div>
-
-            <div class="info-item text-right">
-                <span class="info-label" th:text="${lang == 'ja' ? '職種' : '업무'}">업무</span>
-                <span class="info-value" th:text="${job.position ?: '-'}">-</span>
-            </div>
-
-            <div class="info-item">
-                <span class="info-label" th:text="${lang == 'ja' ? '給与' : '급여'}">급여</span>
-                <span class="info-value" th:text="${job.wage}">-</span>
-            </div>
-
-            <div class="info-item text-right">
-                <span class="info-label" th:text="${lang == 'ja' ? '仕事内容' : '업무 상세'}">업무 상세</span>
-                <span class="info-value" th:text="${job.jobDescription ?: '-'}">-</span>
-            </div>
-
-            <div class="info-item">
-                <span class="info-label" th:text="${lang == 'ja' ? '連絡先' : '연락처'}">연락처</span>
-                <span class="info-value" th:text="${job.contactPhone}">-</span>
-            </div>
-            <div class="info-item text-right">
-                <span class="info-label" th:text="${lang == 'ja' ? '会社住所' : '회사 주소'}">회사 주소</span>
-                <span class="info-value" th:text="${job.address}">-</span>
-            </div>
+        <div class="info-item text-right">
+            <span class="info-label" th:text="${lang == 'ja' ? '職種' : '업무'}">업무</span>
+            <span class="info-value" th:text="${job.position ?: '-'}">-</span>
         </div>
+
+        <div class="info-item">
+            <span class="info-label" th:text="${lang == 'ja' ? '給与' : '급여'}">급여</span>
+            <span class="info-value" th:text="${job.wage}">-</span>
+        </div>
+
+        <div class="info-item text-right">
+            <span class="info-label" th:text="${lang == 'ja' ? '仕事内容' : '업무 상세'}">업무 상세</span>
+            <span class="info-value" th:text="${job.jobDescription ?: '-'}">-</span>
+        </div>
+
+        <div class="info-item">
+            <span class="info-label" th:text="${lang == 'ja' ? '連絡先' : '연락처'}">연락처</span>
+            <span class="info-value" th:text="${job.contactPhone}">-</span>
+        </div>
+        <div class="info-item text-right">
+            <span class="info-label" th:text="${lang == 'ja' ? '会社住所' : '회사 주소'}">회사 주소</span>
+            <span class="info-value" th:text="${job.address}">-</span>
+        </div>
+    </div>
 
         <div class="map-section" th:if="${job.lat != null}">
             <iframe width="100%" height="100%" frameborder="0" style="border:0"
@@ -74,39 +72,56 @@
             </iframe>
         </div>
 
-        <div class="map-section" th:unless="${job.lat != null}"
-            style="display:flex; align-items:center; justify-content:center; color:#999;"
-            th:text="${lang == 'ja' ? '地図情報がありません。' : '지도 정보가 없는 공고입니다.'}">
-            지도 정보가 없는 공고입니다.
-        </div>
+    <div class="map-section" th:unless="${job.lat != null}"
+         style="display:flex; align-items:center; justify-content:center; color:#999;"
+         th:text="${lang == 'ja' ? '地図情報がありません。' : '지도 정보가 없는 공고입니다.'}">
+        지도 정보가 없는 공고입니다.
+    </div>
 
-        <div class="description-section">
-            <h3 class="section-title" th:text="${lang == 'ja' ? '詳細情報' : '상세정보'}">상세정보</h3>
-            <div class="description-text" th:text="${job.body}">
-                내용이 없습니다.
+    <div class="description-section">
+        <h3 class="section-title" th:text="${lang == 'ja' ? '詳細情報' : '상세정보'}">상세정보</h3>
+        <div class="description-text" th:text="${job.body}">
+            내용이 없습니다.
+        </div>
+    </div>
+
+    <div class="image-gallery" th:if="${job.imgUrls != null}">
+        <th:block th:if="${#strings.contains(job.imgUrls, 'http')}">
+            <div th:with="pureUrl=${job.imgUrls.replaceAll('[\[\]\s\r\n\t]', '')}">
+
+                <th:block th:each="singleUrl : ${pureUrl.split(',')}">
+                    <img th:if="${#strings.length(singleUrl) > 10}"
+                         th:src="${singleUrl}"
+                         class="gallery-img"
+                         alt="상세 이미지"
+                         referrerpolicy="no-referrer"
+                         onerror="this.style.display='none'"
+                         style="display: block; width: 100%; margin-bottom: 15px; border-radius: 8px; min-height: 100px; background-color: #f8f8f8;" />
+                </th:block>
             </div>
-        </div>
-
-        <div class="image-gallery" th:if="${job.imgUrls != null}">
-            <th:block th:each="img : ${#strings.arraySplit(job.imgUrls, ',')}">
-                <img th:src="${img}" class="gallery-img" alt="상세 이미지" />
-            </th:block>
-        </div>
+        </th:block>
     </div>
+</div>
 
-    <div class="fixed-bottom-bar" th:if="${isOwner}">
-        <div class="btn-group-owner">
-            <button class="btn-action btn-edit" th:data-id="${job.id}" th:data-source="${job.source}"
-                onclick="editJob(this)" th:text="${lang == 'ja' ? '修正' : '공고 수정'}">
-                공고 수정
-            </button>
+<div class="fixed-bottom-bar" th:if="${isOwner}">
+    <div class="btn-group-owner">
+        <button class="btn-action btn-edit"
+                th:data-id="${job.id}"
+                th:data-source="${job.source}"
+                onclick="editJob(this)"
+                th:text="${lang == 'ja' ? '修正' : '공고 수정'}">
+            공고 수정
+        </button>
 
-            <button class="btn-action btn-delete" th:data-id="${job.id}" th:data-source="${job.source}"
-                onclick="deleteJob(this)" th:text="${lang == 'ja' ? '削除' : '삭제'}">
-                삭제
-            </button>
-        </div>
+        <button class="btn-action btn-delete"
+                th:data-id="${job.id}"
+                th:data-source="${job.source}"
+                onclick="deleteJob(this)"
+                th:text="${lang == 'ja' ? '削除' : '삭제'}">
+            삭제
+        </button>
     </div>
+</div>
 
     <div class="fixed-bottom-bar" th:if="${isSeeker}">
         <div class="btn-group-seeker">
@@ -237,5 +252,4 @@
     </script>
 
 </body>
-
 </html>

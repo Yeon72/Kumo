@@ -64,10 +64,11 @@ public class TokyoGeocodedEntity extends BaseEntity {
 
 	@Column(name = "wage_jp")
 	private String wageJp;
-	
+
+	// 추가된 notes 필드 (원문)
 	@Column(name = "notes", columnDefinition = "TEXT")
 	private String notes;
-	
+
 	@Column(name = "title_jp", length = 150)
 	private String titleJp;
 
@@ -117,8 +118,7 @@ public class TokyoGeocodedEntity extends BaseEntity {
 	@JoinColumn(name = "user_id")
 	private UserEntity user;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "company_id")
+	@ManyToOne(fetch = FetchType.LAZY)	@JoinColumn(name = "company_id")
 	private CompanyEntity company;
 	
 	@Enumerated(EnumType.STRING)
@@ -133,8 +133,8 @@ public class TokyoGeocodedEntity extends BaseEntity {
 	public void prePersist() {
 		if (this.status == null)
 			this.status = JobStatus.RECRUITING;
-		if (this.viewCount == null)
-			this.viewCount = 0;
+//		if (this.viewCount == null)
+//			this.viewCount = 0;
 	}
 	
 	@Column(name = "salary_type")
@@ -142,7 +142,4 @@ public class TokyoGeocodedEntity extends BaseEntity {
 	
 	@Column(name = "salary_amount")
 	private Integer salaryAmount;
-
-	@Column(name = "view_count", columnDefinition = "INT DEFAULT 0")
-	private Integer viewCount;
 }

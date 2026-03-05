@@ -13,12 +13,7 @@ body {
 
 /* 2. 메인 콘텐츠 영역 */
 .main-content {
-    /* [수정] margin-left 삭제! Flexbox가 알아서 사이드바 옆에 붙여줌 */
-    /* margin-left: 250px;  <-- 이거 지워야 함 */
-
-    /* 남은 공간을 모두 차지 */
     flex: 1;
-
     padding: 40px; /* 내부 여백 */
     box-sizing: border-box;
     width: 100%; /* flex item 내부에서 너비 꽉 채우기 */
@@ -77,13 +72,9 @@ body {
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     border: 1px solid #eee;
-
-    /* [핵심 추가] 두 탭의 높이를 동일하게 고정하고 내부 스크롤 생성 */
-    min-height: 600px; /* 화면 덜컹거림 방지 (원하는 높이로 조절 가능) */
+    min-height: 600px;
     max-height: 600px;
-    overflow-y: auto;  /* 데이터가 이 높이를 넘치면 내부에 스크롤바 생성 */
-
-    /* Flexbox를 사용하여 내부 요소 배치 */
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
@@ -148,3 +139,19 @@ body {
 }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
+
+/* --- [추가] 모달 공통 스타일 (HTML에서 가져옴) --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4); z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+}
+.modal-content {
+    background: white; padding: 30px; border-radius: 12px;
+    width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+.modal-content h3 { margin-top: 0; margin-bottom: 20px; color: #343a40; font-size: 18px; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #495057; }
+.form-group select { width: 100%; height: 42px; border-radius: 6px; border: 1px solid #ced4da; padding: 0 10px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }

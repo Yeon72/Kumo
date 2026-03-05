@@ -29,9 +29,11 @@ public abstract class BaseEntity {
     private String writeTime;
 
     @Lob
+    @Column(name = "img_urls", columnDefinition = "LONGTEXT")
     private String imgUrls;
 
     @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String body;
 
     private String companyName;
@@ -72,4 +74,14 @@ public abstract class BaseEntity {
 
     @Column(name = "user_id", insertable = false, updatable = false)
     private Long userId;
+    
+    @Column(name = "view_count")
+    private Integer viewCount;
+    
+    public void addViewCount() {
+        if (this.viewCount == null) {
+            this.viewCount = 0;
+        }
+        this.viewCount++;
+    }
 }

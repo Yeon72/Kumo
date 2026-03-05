@@ -1,26 +1,11 @@
 package net.kumo.kumo.domain.entity;
 
-import java.time.LocalDateTime;
-
+import jakarta.persistence.*;
+import lombok.*;
+import net.kumo.kumo.domain.enums.JobStatus;
 import org.hibernate.annotations.CreationTimestamp;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import net.kumo.kumo.domain.enums.JobStatus;
+import java.time.LocalDateTime;
 
 
 @Entity
@@ -151,8 +136,8 @@ public class OsakaGeocodedEntity extends BaseEntity {
 	public void prePersist() {
 		if (this.status == null)
 			this.status = JobStatus.RECRUITING;
-		if (this.viewCount == null)
-			this.viewCount = 0;
+//		if (this.viewCount == null)
+//			this.viewCount = 0;
 	}
 	
 	// 수정 시 필요한 급여정보
@@ -161,7 +146,5 @@ public class OsakaGeocodedEntity extends BaseEntity {
 	
 	@Column(name = "salary_amount")
 	private Integer salaryAmount;
-
-	@Column(name = "view_count", columnDefinition = "INT DEFAULT 0")
-	private Integer viewCount;
+	
 }

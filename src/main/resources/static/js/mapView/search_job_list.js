@@ -2,6 +2,13 @@
  * search_job_list.js
  * 기능: 필터 조작, URL 파라미터 파싱, AJAX 검색 요청, 테이블 렌더링
  */
+// =========================================
+// [0] AppState
+// =========================================
+
+const AppState = {
+    scrapedJobIds: new Set()
+}
 
 // =========================================
 // [1] 초기화 (Document Ready)
@@ -24,7 +31,12 @@ $(document).ready(function() {
     }
 
     // 4. 페이지 진입하자마자 AJAX 검색 1회 실행
-    SearchService.fetchList();
+    // 🌟 [추가] 로그인 상태라면 서버에서 내 찜 목록을 가져와 수첩에 적은 뒤 검색 시작
+    if (typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) {
+        SearchService.initSavedJobs(() => SearchService.fetchList());
+    } else {
+        SearchService.fetchList();
+    }
 
     // 5. 이벤트 바인딩
     $('#mainRegion').on('change', function() {
@@ -63,6 +75,23 @@ function updateSubRegions() {
 // [3] AJAX 및 데이터 렌더링 (SearchService)
 // =========================================
 const SearchService = {
+    // 🌟 [NEW] 수첩 채우기! (지도 페이지와 동일한 로직)
+    initSavedJobs: function(callback) {
+        const currentLang = new URLSearchParams(window.location.search).get('lang') || 'kr';
+        $.ajax({
+            url: `/api/scraps?lang=${currentLang}`,
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                AppState.scrapedJobIds.clear();
+                if(data && data.length > 0) {
+                    data.forEach(job => AppState.scrapedJobIds.add(job.id + '_' + job.source));
+                }
+                if (callback) callback();
+            }
+        });
+    },
+
     fetchList: function() {
         const keyword = $('#keywordInput').val().trim();
         const mainRegion = $('#mainRegion').val();
@@ -111,13 +140,26 @@ const SearchService = {
 
         let html = '';
         jobs.forEach(job => {
-            // 로그인 여부에 따라 찜하기 버튼 생성/숨김
-            const saveBtnHtml = isUserLoggedIn
-                ? `<button class="btn-outline">${LIST_MESSAGES.saveBtn}</button>`
-                : '';
-
             // 🌟 [추가] 2. 상세보기 URL에 id, source, lang 파라미터 완벽하게 조립!
             const detailUrl = `/map/jobs/detail?id=${job.id}&source=${job.source}&lang=${currentLang}`;
+
+            // 🌟 [핵심] 이 공고가 내 수첩에 있는지 검사!
+            const jobSignature = job.id + '_' + job.source;
+            const isSaved = AppState.scrapedJobIds.has(jobSignature);
+
+            let btnClass = 'btn-outline';
+            let btnText = LIST_MESSAGES.saveBtn || '찜하기';
+
+            // 수첩에 있으면 노란 버튼으로!
+            if (isSaved) {
+                btnClass = 'btn-saved';
+                btnText = LIST_MESSAGES.unsaveBtn || (currentLang === 'ja' ? '保存解除' : '찜해제');
+            }
+
+            // 🌟 찜버튼 onclick 에 toggleSearchScrap 추가
+            const saveBtnHtml = isUserLoggedIn
+                ? `<button class="${btnClass}" onclick="SearchService.toggleSearchScrap(this, ${job.id}, '${job.source}')">${btnText}</button>`
+                : '';
 
             html += `
             <tr>
@@ -156,5 +198,37 @@ const SearchService = {
         });
 
         $tbody.html(html);
+    },
+
+    // 🌟 [NEW] 리스트에서 찜 버튼을 눌렀을 때 서버 통신 및 버튼 색상 변경
+    toggleSearchScrap: function(btnElement, jobId, source) {
+        const $btn = $(btnElement);
+        const currentLang = new URLSearchParams(window.location.search).get('lang') || 'kr';
+        const jobSignature = jobId + '_' + source;
+
+        $.ajax({
+            url: '/api/scraps',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ targetPostId: jobId, targetSource: source }),
+            success: function(response) {
+                let isSaved = false;
+                if (typeof response === 'boolean') isSaved = response;
+                else if (response && response.isScraped !== undefined) isSaved = response.isScraped;
+                else if (response && response.scraped !== undefined) isSaved = response.scraped;
+                else if (response && response.result !== undefined) isSaved = response.result;
+
+                if (isSaved) {
+                    $btn.removeClass('btn-outline').addClass('btn-saved').text(LIST_MESSAGES.unsaveBtn || (currentLang === 'ja' ? '保存解除' : '찜해제'));
+                    AppState.scrapedJobIds.add(jobSignature);
+                } else {
+                    $btn.removeClass('btn-saved').addClass('btn-outline').text(LIST_MESSAGES.saveBtn || '찜하기');
+                    AppState.scrapedJobIds.delete(jobSignature);
+                }
+            },
+            error: function() {
+                alert("처리 중 오류가 발생했습니다.");
+            }
+        });
     }
 };

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+	<meta charset="UTF-8">
+	<title>KUMO - 지도 검색</title>
+
+
+    <link rel="stylesheet" th:href="@{/css/mainView/main.css}">
+	<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	
+	<script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<script th:src="@{/js/mapStyle/mapStyles.js}"></script>
+	<script th:src="@{/js/geo/osaka.js}"></script>
+	<script th:src="@{/js/geo/tokyo.js}"></script>
+	<script th:src="@{/js/geo/osakaCity.js}"></script>
+	<script th:src="@{/js/mainView/main.js}"></script>
+</head>
+<body>
+<div class="map-header-wrapper">
+    <div th:replace="~{NonLoginFragments/NonLoginHeader :: headerFragment}"
+         sec:authorize="!isAuthenticated()"></div>
+
+    <div th:replace="~{AuthenticatedFragments/AuthenticatedHeader :: headerFragment}"
+         sec:authorize="isAuthenticated()"></div>
+</div>
+
+<div class="map-container">
+	
+	<div id="map"></div>
+	
+	<div class="map-search-floating">
+		<div class="search-bar">
+			<select id="regionSelect" onchange="MapManager.changeRegion(this.value)">
+				<option value="tokyo" th:text="#{map.region.tokyo}">도쿄</option>
+				<option value="osaka" th:text="#{map.region.osaka}">오사카</option>
+			</select>
+			<div class="divider"></div>
+			
+			<i class="fa-solid fa-bars menu-icon"></i>
+			<input type="text" id="keywordInput" th:placeholder="#{map.region.placeholder}"
+			       onkeyup="if(event.key === 'Enter') JobService.searchJobs()">
+			<button onclick="JobService.searchJobs()">
+				<i class="fa-solid fa-magnifying-glass"></i>
+			</button>
+		</div>
+	</div>
+	
+	<div class="map-bottom-nav">
+		<div class="nav-box">
+			<button class="nav-item active" data-tab="nearby">
+				<div class="icon-box"><i class="fa-solid fa-location-dot"></i></div>
+				<span th:text="#{nav.nearby}">주변 일자리</span>
+			</button>
+			
+			<th:block sec:authorize="isAuthenticated()">
+				<button class="nav-item" data-tab="saved">
+					<div class="icon-box"><i class="fa-regular fa-bookmark"></i></div>
+					<span th:text="#{nav.saved}">저장된 공고</span>
+				</button>
+			</th:block>
+			
+			<button class="nav-item" data-tab="recent">
+				<div class="icon-box"><i class="fa-regular fa-clock"></i></div>
+				<span th:text="#{nav.recent}">최근 본 공고</span>
+			</button>
+			
+			<th:block sec:authorize="isAuthenticated()">
+				<button class="nav-item" data-tab="chat">
+					<div class="icon-box">
+						<i class="fa-regular fa-comments"></i>
+						<span class="badge-dot" style="display:none;">N</span>
+					</div>
+					<span th:text="#{nav.chat}">채팅</span>
+				</button>
+			</th:block>
+		</div>
+	</div>
+	
+	<div id="jobDetailCard" class="floating-card">
+		<button type="button" class="btn-close-card">×</button>
+		
+		<div class="card-header-section">
+			<div id="card-company" class="company-name">ABC Company</div>
+		</div>
+
+        <div class="card-image-wrapper">
+            <img id="card-img" src="" alt="Office View"
+                 onerror="this.src='https://placehold.co/300'">
+        </div>
+		
+		<div class="card-body-section">
+			<h3 id="card-title" class="job-title">비서 구합니다</h3>
+			<p class="job-address">주소: <span id="card-address">...</span></p>
+			<p class="job-phone" id="card-phone">010-xxxx-xxxx</p>
+		</div>
+		
+		<div class="card-footer-section">
+			<button class="btn-scrap">찜하기</button>
+			<button id="btn-detail" class="btn-primary-custom">자세히 보기</button>
+		</div>
+	</div>
+</div>
+
+<div class="bottom-sheet" id="bottomSheet">
+	
+	<div class="sheet-handle">
+		<div class="handle-bar"></div>
+	</div>
+	
+	<div class="sheet-content">
+		<h2 id="sheetTitle" style="padding: 0 10px; font-size: 18px;"></h2>
+		
+		<div class="table-wrapper">
+			<table class="job-table">
+				<thead>
+				<tr id="tableHeader">
+					<th>제목</th>
+					<th>상호명</th>
+					<th>근무지</th>
+					<th>급여</th>
+					<th>연락처</th>
+					<th>담당자</th>
+					<th>관리</th>
+				</tr>
+				</thead>
+				<tbody id="listBody">
+				<tr><td colspan="7" class="msg-box">지도를 움직이면 공고를 불러옵니다...</td></tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<!-- 채팅 리스트 iFrame 작업 시작  2026/03/02-->
+<div id="chatWidget" class="chat-widget hidden">
+	<div class="chat-widget-header">
+        <span class="widget-title">
+            <i class="fa-regular fa-comment-dots"></i> KUMO Chat
+        </span>
+		<div class="widget-controls">
+			<button onclick="ChatWidgetManager.toggleMinimize()" class="control-btn" title="최소화"><i class="fa-solid fa-minus"></i></button>
+			<button onclick="ChatWidgetManager.close()" class="control-btn close-btn" title="닫기"><i class="fa-solid fa-xmark"></i></button>
+		</div>
+	</div>
+	
+	<iframe id="chatIframe" th:src="@{/chat/list(userId=1)}" frameborder="0" class="chat-iframe"></iframe>
+</div>
+
+<script th:inline="javascript">
+	
+	// 🌟 [추가] Spring Security를 이용한 로그인 여부 판별
+	const isUserLoggedIn = /*[[${#authorization.expression('isAuthenticated()')}]]*/ false;
+	
+	const MapMessages = {
+		loading: /*[[#{js.map.msg.loading}]]*/ '데이터 로딩 중...',
+		loadFail: /*[[#{js.map.msg.load_fail}]]*/ '로딩 실패',
+		emptyJob: /*[[#{js.map.msg.empty_job}]]*/ '공고 없음',
+		savedFail: /*[[#{js.map.msg.saved_fail}]]*/ '불러오기 실패',
+		fbTitle: /*[[#{js.map.fallback.title}]]*/ '제목 없음',
+		fbCompany: /*[[#{js.map.fallback.company}]]*/ '회사명 미정',
+		fbWage: /*[[#{js.map.fallback.wage}]]*/ '협의',
+		fbManager: /*[[#{js.map.fallback.manager}]]*/ '담당자',
+		fbTime: /*[[#{js.map.fallback.time}]]*/ '방금 전',
+		badgeRecruit: /*[[#{js.map.badge.recruit}]]*/ '구인중',
+		badgeUrgent: /*[[#{js.map.badge.urgent}]]*/ '급구',
+		btnSave: /*[[#{js.map.btn.save}]]*/ '찜',
+		btnSaveCard: /*[[#{js.map.btn.save_card}]]*/ '찜하기',
+		btnDetail: /*[[#{js.map.btn.detail}]]*/ '상세',
+		btnDetailCard: /*[[#{js.map.btn.detail_card}]]*/ '자세히 보기',
+		labelAddress: /*[[#{js.map.label.address}]]*/ '주소: ',
+		titleNearby: /*[[#{js.map.title.nearby}]]*/ '내 주변 구직 정보 📍',
+		titleSaved: /*[[#{js.map.title.saved}]]*/ '즐겨찾기한 구직 정보 ⭐',
+		titleRecent: /*[[#{js.map.title.recent}]]*/ '최근 본 구직 정보 🕒',
+		titleExplore: /*[[#{js.map.title.explore}]]*/ '구직 정보 리스트 📋', // 탐색 모드
+		table: [
+			/*[[#{js.map.table.title}]]*/ '제목',
+			/*[[#{js.map.table.company}]]*/ '상호명',
+			/*[[#{js.map.table.location}]]*/ '근무지',
+			/*[[#{js.map.table.wage}]]*/ '급여',
+			/*[[#{js.map.table.contact}]]*/ '연락처',
+			/*[[#{js.map.table.manager}]]*/ '담당자',
+			/*[[#{js.map.table.manage}]]*/ '관리'
+		]
+	};
+</script>
+
+<script th:src="@{'https://maps.googleapis.com/maps/api/js?key=' + ${googleMapsKey} + '&callback=initMap&loading=async'}"
+        async defer></script>
+</body>
+</html>

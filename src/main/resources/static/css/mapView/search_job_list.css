@@ -1,89 +1,130 @@
+@charset "UTF-8";
+
+/* ============================================================
+   🎨 1. 테마 색상 팔레트 정의 (CSS 변수)
+============================================================ */
 :root {
+    /* ☀️ 라이트 모드 */
     --bg-main: #ffffff;
     --bg-filter: #f4f5f7;
     --bg-table-head: #f9f9f9;
-    --border-color: #e5e5e5;
+    --bg-hover: #f5f7fa;
+
     --text-title: #222222;
     --text-main: #444444;
     --text-muted: #888888;
+
+    --border-color: #e5e5e5;
+
     --primary-blue: #4a90e2;
+    --primary-blue-hover: #357abd;
+
+    --btn-saved-bg: #ffca28;
+    --btn-saved-text: #333333;
 
     --badge-green-bg: #e6f4ea; --badge-green-text: #1e8e3e;
     --badge-orange-bg: #fce8e6; --badge-orange-text: #d93025;
 }
 
 body.dark-mode {
+    /* 🌙 다크 모드 */
     --bg-main: #121212;
     --bg-filter: #1e1e1e;
     --bg-table-head: #1a1a1a;
-    --border-color: #333333;
+    --bg-hover: #2a2a2a;
+
     --text-title: #ffffff;
     --text-main: #e0e0e0;
+    --text-muted: #aaaaaa;
+
+    --border-color: #333333;
+
+    --primary-blue: #4a90e2;
+    --primary-blue-hover: #357abd;
+
+    --btn-saved-bg: #ffca28;
+    --btn-saved-text: #333333;
+
+    --badge-green-bg: #2b3a4a; --badge-green-text: #76a9ff;
+    --badge-orange-bg: #4a3f1a; --badge-orange-text: #ffca28;
 }
 
 /* =========================================
-   공통 요소 부드러운 전환 (스무스 다크모드)
+   🌌 부드러운 전환 (스무스 다크모드)
 ========================================= */
-body,
-.list-header-wrapper,
-.filter-box,
-.filter-select,
-.filter-input,
-.job-list-table th,
-.job-list-table td,
-.job-title-text {
-    /* 배경색, 글자색, 테두리색이 바뀔 때 0.3초 동안 부드럽게(ease) 변하도록 설정! */
+body, .filter-box, .filter-select, .filter-input,
+.job-list-table th, .job-list-table td, .job-title-text, .btn-outline {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background-color: var(--bg-main); color: var(--text-main); }
 
-/* 🌟 헤더 래퍼: 화면 상단에 100% 너비로 완벽하게 고정 */
-.list-header-wrapper {
-    position: fixed; /* sticky 대신 fixed로 확실하게 고정 */
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000; /* 지도 페이지와 동일하게 z-index를 높여줍니다 */
-    background-color: var(--bg-main);
-    border-bottom: 1px solid var(--border-color);
+/* 🌟 컨테이너 여백 확보 (공통 헤더 때문) */
+.list-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 100px 20px 100px;
 }
 
-/* 🌟 헤더 내부 컨텐츠: 1200px 제한을 풀고 100% 꽉 차는 반응형으로! */
 .list-header-wrapper > div,
 .list-header-wrapper header {
-    width: 100% !important;
+    width: 100%;
     position: sticky;
     box-sizing: border-box;
     display: flex;
     justify-content: space-between; /* 양쪽 끝으로 로고와 메뉴를 쫙 벌려줍니다 */
 }
 
-/* 🌟 컨테이너: fixed 헤더에 내용이 가려지지 않도록 상단 패딩(top)을 100px로 증가! */
-.list-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 100px 20px 100px; /* 원래 40px이었던 상단 여백을 100px로 넉넉하게! */
-}
-
+/* 상단 필터 영역 */
 .page-top-section { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
 .page-title { font-size: 32px; font-weight: 900; color: var(--text-title); margin: 0; }
 
-.filter-box { background-color: var(--bg-filter); padding: 20px 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
-.filter-label { font-size: 13px; font-weight: bold; }
+.filter-box { background-color: var(--bg-filter); padding: 20px 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border-color); }
+.filter-label { font-size: 13px; font-weight: bold; color: var(--text-main); }
 .filter-inputs { display: flex; gap: 10px; align-items: center; }
 
 .filter-select, .filter-input { height: 40px; padding: 0 15px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--bg-main); color: var(--text-main); outline: none; }
 .filter-input { width: 250px; }
 
-.btn-search { height: 40px; padding: 0 20px; background-color: #e8f0fe; color: #1967d2; border: 1px solid #d2e3fc; border-radius: 6px; font-weight: bold; cursor: pointer; }
-.btn-search:hover { background-color: #d2e3fc; }
+.btn-search { height: 40px; padding: 0 20px; background-color: var(--badge-blue-bg); color: var(--primary-blue); border: 1px solid var(--border-color); border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.btn-search:hover { background-color: var(--bg-hover); }
 
+/* 테이블 영역 */
 .table-wrapper { width: 100%; overflow-x: auto; }
 .job-list-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
 .job-list-table th, .job-list-table td { padding: 16px 12px; border-bottom: 1px solid var(--border-color); text-align: left; vertical-align: middle; }
 .job-list-table th { background-color: var(--bg-table-head); color: var(--text-muted); font-size: 13px; border-top: 2px solid var(--border-color); }
+.job-list-table tr:hover td { background-color: var(--bg-hover); } /* 행 호버 효과 */
 
+/* 🌟 [마법의 1줄 고정] 회사명, 급여, 연락처, 작성자, 관리 컬럼은 절대 줄바꿈 금지! */
+.job-list-table td:nth-child(2),
+.job-list-table td:nth-child(4),
+.job-list-table td:nth-child(5),
+.job-list-table td:nth-child(6),
+.job-list-table td:nth-child(7) {
+    white-space: nowrap !important;
+    word-break: keep-all;
+}
+
+/* 🌟 2. [비율 수정] 제목(1)과 근무지(3) 공간 배분 */
+.job-list-table td:nth-child(1) { width: 35%; white-space: normal; line-height: 1.4; }
+.job-list-table td:nth-child(3) { width: 25%; white-space: normal; line-height: 1.4; }
+
+/* 🌟 3. [핵심 추가] 상호명(2)이 너무 길면 '...'으로 자르기! */
+.job-list-table td:nth-child(2),
+.job-list-table td:nth-child(5){
+    max-width: 180px; /* 상호명이 이 길이를 넘어가면 자릅니다 */
+    overflow: hidden;
+    text-overflow: ellipsis; /* 글자가 잘리면 ... 으로 표시 */
+}
+
+.job-list-table td:nth-child(4) {
+    max-width: 180px; /* 상호명이 이 길이를 넘어가면 자릅니다 */
+    overflow: hidden;
+    text-overflow: ellipsis; /* 글자가 잘리면 ... 으로 표시 */
+}
+
+/* 테이블 내부 텍스트 */
 .job-title-cell { display: flex; flex-direction: column; gap: 6px; }
 .job-title-text { font-size: 16px; font-weight: 700; color: var(--text-title); }
 .badges { display: flex; gap: 6px; }
@@ -93,7 +134,8 @@ body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background-color: var
 .text-blue { color: var(--primary-blue); }
 .font-weight-bold { font-weight: bold; }
 .text-muted { color: var(--text-muted); font-size: 13px; }
-.wage-box { display: flex; flex-direction: column; }
+/* 🌟 [수정] 급여 부분을 위아래가 아닌 '가로 1줄'로 쫙 펴줍니다 */
+.wage-box { display: flex; flex-direction: row; align-items: baseline; gap: 6px; }
 .wage-type { font-size: 12px; color: var(--primary-blue); font-weight: bold; }
 .wage-amount { font-size: 14px; font-weight: bold; color: var(--text-title); }
 
@@ -102,20 +144,22 @@ body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background-color: var
 .author-info { display: flex; flex-direction: column; }
 .author-name { font-size: 13px; font-weight: bold; color: var(--text-title); }
 
-.action-buttons {
-    display: flex;
-    gap: 8px;
-    flex-wrap: nowrap; /* 🌟 버튼들끼리 밑으로 안 떨어지게 */
+/* 버튼 묶음 */
+.action-buttons { display: flex; gap: 8px; flex-wrap: nowrap; }
+
+.btn-outline, .btn-filled, .btn-saved {
+    padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 6px;
+    cursor: pointer; white-space: nowrap; transition: 0.2s;
 }
 
-.btn-outline, .btn-filled {
-    padding: 8px 14px;
-    font-size: 13px;
-    font-weight: bold;
-    border-radius: 6px;
-    cursor: pointer;
-    white-space: nowrap; /* 🌟 [핵심] 글자가 세로로 꺾이지 않고 무조건 한 줄로 나오게 방지! */
-}
+/* 기본 찜하기 버튼 */
 .btn-outline { background-color: transparent; border: 1px solid var(--primary-blue); color: var(--primary-blue); }
+.btn-outline:hover { background-color: var(--bg-hover); }
+
+/* 🌟 찜 완료 버튼 (노란색) */
+.btn-saved { background-color: var(--btn-saved-bg); border: 1px solid var(--btn-saved-bg); color: var(--btn-saved-text); }
+.btn-saved:hover { filter: brightness(0.9); }
+
+/* 상세보기 버튼 */
 .btn-filled { background-color: var(--primary-blue); border: none; color: white; }
-.text-center { text-align: center; }
+.btn-filled:hover { background-color: var(--primary-blue-hover); }
