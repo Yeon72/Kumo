@@ -31,14 +31,14 @@
 }
 
 body.dark-mode {
-    --bg-main: #1e1e1e;
+    --bg-main: #1e1f21;
     --bg-card: #2d2d2d;
     /* ← 검정 → 회색으로 */
-    --text-main: #e0e0e0;
+    --text-main: #e3e5e8;
     --text-sub: #aaaaaa;
-    --border-color: #2d2d2d;
+    --border-color: #37393d;
     --primary-color: #7db4e6;
-    --hover-bg: #383838;
+    --hover-bg: #2f3033
     /* ← 회색 계열로 */
     --dropdown-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
@@ -339,4 +339,90 @@ body.dark-mode {
 
 .profile-dropdown hr {
     display: none !important;
+}
+
+/* 다크모드 드롭다운 */
+body.dark-mode .notify-dropdown,
+body.dark-mode .lang-dropdown,
+body.dark-mode .profile-dropdown {
+    background-color: #2a2b2e;
+    border-color: #3e3f42;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .profile-info {
+    background-color: #323336;
+    border-bottom-color: #3e3f42;
+}
+
+body.dark-mode .user-name {
+    color: #e3e5e8;
+}
+
+body.dark-mode .user-email {
+    color: #91959b;
+}
+
+body.dark-mode .lang-item,
+body.dark-mode .profile-item {
+    color: #e3e5e8;
+}
+
+body.dark-mode .lang-item:hover,
+body.dark-mode .profile-item:hover {
+    background-color: #323336;
+    color: #7db4e6;
+}
+
+body.dark-mode .profile-item.logout {
+    color: #ff6b6b;
+    border-top-color: #3e3f42;
+}
+
+body.dark-mode .notify-header {
+    background-color: #323336;
+    border-bottom-color: #3e3f42;
+}
+
+body.dark-mode .notify-header span {
+    color: #e3e5e8;
+}
+
+body.dark-mode .notify-body {
+    background-color: #2a2b2e;
+}
+
+body.dark-mode .notify-item {
+    border-bottom-color: #3e3f42;
+}
+
+body.dark-mode .notify-item:hover {
+    background-color: #323336;
+}
+
+body.dark-mode .notify-text {
+    color: #e3e5e8;
+}
+
+body.dark-mode .notify-time {
+    color: #91959b;
+}
+
+body.dark-mode .notify-footer {
+    background-color: #323336;
+    border-top-color: #3e3f42;
+    color: #91959b;
+}
+
+body.dark-mode .notify-footer:hover {
+    background-color: #3e3f42;
+    color: #7db4e6;
+}
+
+body.dark-mode .notify-empty i {
+    color: #3e3f42;
+}
+
+body.dark-mode .notify-empty p {
+    color: #91959b;
 }

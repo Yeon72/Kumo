@@ -127,18 +127,36 @@
   /* 아이콘 색상도 통일 */
 }
 
-/* 🌟 마우스를 올렸을 때(Hover)만 디자인 변화! */
+/* ==============================
+   하단 영역 (로그아웃 버튼) 호버 효과
+   ============================== */
 .logout-btn:hover {
-  background-color: #ff5a5a;
-  /* 배경은 빨간색으로 */
-  color: #ffffff;
-  /* 글자는 흰색으로 */
-  border-left-color: #ff5a5a;
+  background-color: #ff5a5a !important;
+  /* 🚨 !important로 우선순위 굳히기 */
+  color: #ffffff !important;
+  border-left: 4px solid #ff5a5a !important;
+  /* 🚨 왼쪽 띠도 확실한 빨간색으로! */
 }
 
 .logout-btn:hover i {
   color: #ffffff !important;
-  /* 호버 시 아이콘도 흰색으로 */
+}
+
+/* ==============================
+   다크모드 대응 (로그아웃 버튼)
+   ============================= */
+body.dark-mode .logout-btn {
+  color: #ccc;
+  background-color: transparent;
+  border-left: 4px solid transparent;
+}
+
+body.dark-mode .logout-btn:hover {
+  background-color: #ff6b6b !important;
+  /* 다크모드용 살짝 부드러운 빨강 */
+  color: #ffffff !important;
+  border-left: 4px solid #ff6b6b !important;
+  /* 🚨 다크모드 왼쪽 띠도 빨간색으로! */
 }
 
 /* ==============================
@@ -150,10 +168,6 @@ body.dark-mode .logout-btn {
   background-color: transparent;
 }
 
-body.dark-mode .logout-btn:hover {
-  background-color: #ff6b6b;
-  color: #ffffff;
-}
 
 /* ==============================
    다크모드 대응

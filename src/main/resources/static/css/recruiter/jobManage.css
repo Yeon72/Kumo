@@ -542,3 +542,36 @@ body.dark-mode .job-closed-row .job-name {
   opacity: 1 !important;
   color: #ff4d4f !important;
 }
+
+/* 정렬 링크 스타일 초기화 */
+.kumo-table th a {
+  color: inherit;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.kumo-table th a:hover {
+  color: #7db4e6;
+}
+
+.kumo-table th a i {
+  font-size: 11px;
+  color: #bbb;
+}
+
+.kumo-table th a i.fa-sort-up,
+.kumo-table th a i.fa-sort-down {
+  color: #7db4e6;
+}
+
+/* 다크모드 */
+body.dark-mode .kumo-table th a {
+  color: inherit;
+}
+
+body.dark-mode .kumo-table th a:hover {
+  color: #7db4e6;
+}

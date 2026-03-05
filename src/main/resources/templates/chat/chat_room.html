@@ -40,78 +40,79 @@
                 </div>
 
                 <div class="header-salary-row">
-                    給料: <span th:text="${#numbers.formatInteger(salary, 3, 'COMMA')}">0</span>¥
+                    給料: <span th:text="${salary}"></span>
                 </div>
             </div>
         </div>
-
         <div class="msg-area" id="msgArea">
-            <th:block th:each="msg, stat : ${history}">
+            <th:block th:each="msg, stat : ${chatHistory}">
 
-                <th:block th:if="${stat.first or msg.createdDate != history[stat.index - 1].createdDate}">
+                <th:block th:if="${stat.first or msg.createdDate != chatHistory[stat.index - 1].createdDate}">
                     <div class="date-divider" th:if="${msg.createdDate != null}">
                         <span class="date-divider-text" th:text="${msg.createdDate}">2026-02-26</span>
                     </div>
                 </th:block>
 
-                <div th:if="${msg.senderId != userId}" class="msg-row other">
-                    <img th:src="@{/images/dog_profile.jpg}" class="profile-img">
+                <th:block th:with="strSenderId=${#strings.toString(msg.senderId)}, strUserId=${#strings.toString(userId)}">
 
-                    <th:block th:if="${msg.messageType == 'TEXT'}">
-                        <div class="msg-bubble" th:text="${msg.content}">내용</div>
-                    </th:block>
+                    <div th:if="${strSenderId != strUserId}" class="msg-row other">
+                        <img th:src="@{/images/dog_profile.jpg}" class="profile-img">
 
-                    <th:block th:if="${msg.messageType == 'IMAGE'}">
-                        <img th:src="${msg.content}" class="chat-image"
-                            style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
-                            onclick="openImageModal(this.src)">
-                    </th:block>
+                        <th:block th:if="${msg.messageType == 'TEXT' or msg.messageType == 'TALK'}">
+                            <div class="msg-bubble" th:text="${msg.content}">내용</div>
+                        </th:block>
 
-                    <th:block th:if="${msg.messageType == 'FILE'}">
-                        <div class="file-bubble" th:data-url="${msg.content}"
-                            onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
-                            <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
-                            <div class="file-info-box">
-                                <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
-                                <div class="file-display-name"></div>
-                                <div class="file-display-sub">파일 열기</div>
+                        <th:block th:if="${msg.messageType == 'IMAGE'}">
+                            <img th:src="${msg.content}" class="chat-image"
+                                 style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
+                                 onclick="openImageModal(this.src)">
+                        </th:block>
+
+                        <th:block th:if="${msg.messageType == 'FILE'}">
+                            <div class="file-bubble" th:data-url="${msg.content}"
+                                 onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
+                                <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+                                <div class="file-info-box">
+                                    <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
+                                    <div class="file-display-name"></div>
+                                    <div class="file-display-sub">파일 열기</div>
+                                </div>
                             </div>
-                        </div>
-                    </th:block>
+                        </th:block>
 
-                    <span class="msg-time" th:text="${msg.createdAt}"></span>
-                </div>
-
-                <div th:if="${msg.senderId == userId}" class="msg-row me">
-                    <div class="msg-info">
-                        <span class="unread-count" th:if="${msg.isRead == false}">1</span>
                         <span class="msg-time" th:text="${msg.createdAt}"></span>
                     </div>
 
-                    <th:block th:if="${msg.messageType == 'TEXT'}">
-                        <div class="msg-bubble" th:text="${msg.content}">내용</div>
-                    </th:block>
-
-                    <th:block th:if="${msg.messageType == 'IMAGE'}">
-                        <img th:src="${msg.content}" class="chat-image"
-                            style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
-                            onclick="openImageModal(this.src)">
-                    </th:block>
-
-                    <th:block th:if="${msg.messageType == 'FILE'}">
-                        <div class="file-bubble" th:data-url="${msg.content}"
-                            onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
-                            <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
-                            <div class="file-info-box">
-                                <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
-                                <div class="file-display-name"></div>
-                                <div class="file-display-sub">파일 열기</div>
-                            </div>
+                    <div th:if="${strSenderId == strUserId}" class="msg-row me">
+                        <div class="msg-info">
+                            <span class="unread-count" th:if="${msg.isRead == false}">1</span>
+                            <span class="msg-time" th:text="${msg.createdAt}"></span>
                         </div>
-                    </th:block>
-                </div>
 
-            </th:block>
+                        <th:block th:if="${msg.messageType == 'TEXT' or msg.messageType == 'TALK'}">
+                            <div class="msg-bubble" th:text="${msg.content}">내용</div>
+                        </th:block>
+
+                        <th:block th:if="${msg.messageType == 'IMAGE'}">
+                            <img th:src="${msg.content}" class="chat-image"
+                                 style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
+                                 onclick="openImageModal(this.src)">
+                        </th:block>
+
+                        <th:block th:if="${msg.messageType == 'FILE'}">
+                            <div class="file-bubble" th:data-url="${msg.content}"
+                                 onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
+                                <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+                                <div class="file-info-box">
+                                    <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
+                                    <div class="file-display-name"></div>
+                                    <div class="file-display-sub">파일 열기</div>
+                                </div>
+                            </div>
+                        </th:block>
+                    </div>
+
+                </th:block> </th:block>
         </div>
 
         <script>

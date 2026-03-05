@@ -164,3 +164,106 @@
   font-weight: 600;
   margin-left: 5px;
 }
+
+/* ============================================================
+   ☁️ KUMO 공고 수정 하단 3단 버튼 (Light Mode)
+   ============================================================ */
+
+/* 공통 쫀득한 애니메이션 & 쉐입 */
+.kumo-btn-cancel,
+.kumo-btn-close,
+.kumo-btn-edit {
+  padding: 14px 32px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 1.05rem;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 1. 취소 버튼 (가장 덜 튀게) */
+.kumo-btn-cancel {
+  background-color: #f2f4f6;
+  color: #8b95a1;
+}
+
+.kumo-btn-cancel:hover {
+  background-color: #e5e8eb;
+  color: #4e5968;
+  transform: translateY(-2px);
+}
+
+/* 2. 마감하기 버튼 (무게감 있게) */
+.kumo-btn-close {
+  background-color: #333d4b;
+  color: #ffffff;
+}
+
+.kumo-btn-close:hover {
+  background-color: #191f28;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* 3. 공고수정 버튼 (주인공!) */
+.kumo-btn-edit {
+  background-color: #7db4e6;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(125, 180, 230, 0.2);
+}
+
+.kumo-btn-edit:hover {
+  background-color: #92ccff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(125, 180, 230, 0.45);
+}
+
+/* 클릭 시 손맛 */
+.kumo-btn-cancel:active,
+.kumo-btn-close:active,
+.kumo-btn-edit:active {
+  transform: translateY(0) scale(0.96);
+}
+
+/* ============================================================
+   🌙 KUMO 공고 수정 하단 3단 버튼 (Dark Mode)
+   ============================================================ */
+
+/* 1. 취소 버튼 (배경에 스며들게) */
+body.dark-mode .kumo-btn-cancel {
+  background-color: #2a2b2e !important;
+  color: #8e949e !important;
+}
+
+body.dark-mode .kumo-btn-cancel:hover {
+  background-color: #37393d !important;
+  color: #e3e5e8 !important;
+}
+
+/* 2. 마감하기 버튼 (경고의 의미를 담은 부드러운 레드) */
+body.dark-mode .kumo-btn-close {
+  background-color: transparent !important;
+  border: 1.5px solid #ff6b6b !important;
+  color: #ff6b6b !important;
+}
+
+body.dark-mode .kumo-btn-close:hover {
+  background-color: rgba(255, 107, 107, 0.1) !important;
+  box-shadow: 0 0 15px rgba(255, 107, 107, 0.3) !important;
+}
+
+/* 3. 공고수정 버튼 (다크모드에서도 빛나는 메인 컬러) */
+body.dark-mode .kumo-btn-edit {
+  background-color: #7db4e6 !important;
+  color: #1e1f21 !important;
+  /* 글자색을 어둡게 해서 대비 극대화 */
+}
+
+body.dark-mode .kumo-btn-edit:hover {
+  background-color: #92ccff !important;
+  box-shadow: 0 8px 25px rgba(125, 180, 230, 0.4) !important;
+}

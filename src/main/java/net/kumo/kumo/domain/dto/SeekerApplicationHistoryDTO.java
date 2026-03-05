@@ -1,11 +1,11 @@
 package net.kumo.kumo.domain.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -19,6 +19,7 @@ public class SeekerApplicationHistoryDTO {
     private String businessName;
     private String location;
     private String wage;
+    private String wageJp;
     private String contact;
     private String manager;
     private LocalDateTime appliedAt;

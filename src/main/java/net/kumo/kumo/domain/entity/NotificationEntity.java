@@ -23,11 +23,11 @@ public class NotificationEntity {
 	private UserEntity user;
 	
 	@Enumerated(EnumType.STRING)
-	@Column(name = "notify_type", nullable = false)
+	@Column(name = "notify_type", nullable = false, columnDefinition = "VARCHAR(30)")
 	private Enum.NotificationType notifyType;
 	
-	// 메시지 키를 저장 (예: "notification.chat.new")
-	@Column(nullable = false)
+	// 메시지 키를 저장 (동적 생성 시 null 허용)
+	@Column(nullable = true)
 	private String title;
 	
 	@Column(columnDefinition = "TEXT", nullable = false)

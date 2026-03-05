@@ -1,6 +1,7 @@
 package net.kumo.kumo.repository;
 
 import net.kumo.kumo.domain.entity.ReportEntity;
+import net.kumo.kumo.domain.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,4 +37,6 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
      * 외래키(FK)가 없으므로 서비스 단에서 공고 삭제 전 이 메서드를 호출하여 고아 데이터를 지웁니다.
      */
     void deleteByTargetSourceAndTargetPostId(String targetSource, Long targetPostId);
+	
+	void deleteByReporter(UserEntity user);
 }

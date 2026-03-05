@@ -8,12 +8,13 @@
    --text-main, --border-color, --bg-main, --primary-color 등 */
 
 .resume-wrapper {
-    max-width: 850px;
+    max-width: 900px;
+    /* width → max-width 로 변경 */
+    width: 100%;
+    /* 추가 */
     background: transparent;
     margin: 0 auto;
-    /* 🌟 중앙 정렬 */
     padding: 0 40px;
-    /* 🌟 양측 패딩 (모바일 대응) */
 }
 
 /* 🌟 프로필 요약 카드 */
@@ -363,8 +364,8 @@ body.dark-mode .scout-box {
 
 /* 섹션 타이틀 파란색 유지하면서 조금 더 밝게 */
 body.dark-mode .section-title {
-    color: #64b5f6;
-    border-bottom-color: #64b5f6;
+    color: #ccc;
+    border-bottom-color: #ccc;
 }
 
 body.dark-mode .summary-info h3,
@@ -417,8 +418,12 @@ body.dark-mode .toggle-btn.active {
 
 body.dark-mode .btn-add-outline {
     background: transparent;
-    border-color: #4ea1ff;
-    color: #4ea1ff;
+    border-color: #ffffff;
+    color: #7db4e6;
+}
+
+body.dark-mode .btn-add-outline:hover {
+    border-color: #7db4e6;
 }
 
 body.dark-mode .btn-upload-file {
@@ -470,4 +475,12 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;
+}
+
+body.dark-mode .btn-submit-resume {
+    background-color: #7db4e6 !important;
+}
+
+body.dark-mode .btn-submit-resume:hover {
+    background-color: #5986b0 !important;
 }

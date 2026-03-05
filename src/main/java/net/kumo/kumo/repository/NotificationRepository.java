@@ -1,6 +1,7 @@
 package net.kumo.kumo.repository;
 
 import net.kumo.kumo.domain.entity.NotificationEntity;
+import net.kumo.kumo.domain.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -29,6 +30,8 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
 	@Modifying // INSERT, UPDATE, DELETE 쿼리 실행 시 필수
 	@Query("DELETE FROM NotificationEntity n WHERE n.user.userId = :userId")
 	void deleteAllByUserId(@Param("userId") Long userId);
+	
+	void deleteByUser(UserEntity user);
 	
 	// 안 읽은(isRead = false) 알림 개수만 세기
 }

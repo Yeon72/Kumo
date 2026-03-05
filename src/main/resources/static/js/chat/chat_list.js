@@ -1,31 +1,24 @@
 /* --- src/main/resources/static/js/chat_list.js --- */
 
-// 방 입장 함수
-// 방 입장 함수
+// 방 입장 함수 (수정됨)
 function enterRoom(roomId) {
-    // ❌ (삭제) 더 이상 촌스럽게 주소창을 뒤지지 않습니다!
-    // const urlParams = new URLSearchParams(window.location.search);
-    // const userId = urlParams.get('userId');
-
-    // 🟢 (추가) 아까 HTML에 몰래 숨겨둔 '진짜 ID'를 쏙 빼옵니다!
-    const userIdInput = document.getElementById('currentUserId');
-    const userId = userIdInput ? userIdInput.value : null;
+    // 🌟 URL 대신, HTML에서 넘겨준 전역 변수에서 내 아이디를 꺼냅니다!
+    const userId = window.MY_USER_ID;
 
     if (userId) {
-        // ID를 무사히 찾았다면 채팅방으로 돌격!
         location.href = '/chat/room/' + roomId + '?userId=' + userId;
     } else {
-        alert("로그인 정보(userId)가 없습니다! 다시 로그인해주세요.");
+        alert("로그인 정보(userId)를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.");
     }
 }
 
-// DOMContentLoaded 이벤트 (검색바 + 탭 메뉴 + 진짜 이름 검색 로직)
+// DOMContentLoaded 이벤트
 document.addEventListener("DOMContentLoaded", function () {
     const searchIcon = document.getElementById('searchIcon');
     const searchBar = document.getElementById('searchBar');
     const searchInput = document.getElementById('searchInput');
 
-    // 1. 돋보기 아이콘 클릭 시 검색창 열기/닫기
+    // 검색창 토글
     if (searchIcon) {
         searchIcon.onclick = function () {
             searchBar.classList.toggle('active');
@@ -40,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
         };
     }
 
-    // 2. 진짜 '이름 검색' 로직 복구
+    // 이름 검색 로직
     if (searchInput) {
         searchInput.addEventListener('input', function () {
             const keyword = this.value.trim().toLowerCase();
@@ -66,16 +59,31 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // 3. 탭 메뉴 토글 로직
+    // 탭 토글
     const tabBtns = document.querySelectorAll('.tab-btn');
     tabBtns.forEach(btn => {
         btn.addEventListener('click', function () {
-            if (searchInput) searchInput.value = ''; // 탭 누르면 검색어 지우기
+            if (searchInput) searchInput.value = '';
             tabBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
         });
     });
+
+    // 🌟 페이지 최초 로드 시 '안 읽음 뱃지' 초기 렌더링
+    initializeUnreadBadges();
+
+    // 로비 웹소켓 연결
+    connectChatList();
 });
+
+// 🌟 페이지 접속 시 data-unread 상태에 따라 뱃지 그리기
+function initializeUnreadBadges() {
+    const rooms = document.querySelectorAll('.chat-item');
+    rooms.forEach(room => {
+        const isUnread = room.getAttribute('data-unread') === 'true';
+        toggleUnreadBadge(room, isUnread);
+    });
+}
 
 // 필터링 핵심 함수
 function filterRooms(filterType, clickedTab) {
@@ -87,8 +95,7 @@ function filterRooms(filterType, clickedTab) {
     const rooms = document.querySelectorAll('.chat-item');
 
     rooms.forEach(room => {
-        const unreadData = room.getAttribute('data-unread') || 'false';
-        const isUnread = (unreadData.trim() === 'true');
+        const isUnread = room.getAttribute('data-unread') === 'true';
 
         if (filterType === 'all' || !filterType) {
             room.style.display = '';
@@ -108,16 +115,13 @@ function toggleOptionsMenu(event, iconElement) {
             menu.classList.remove('show');
         }
     });
-    const dropdown = iconElement.nextElementSibling;
-    dropdown.classList.toggle('show');
+    iconElement.nextElementSibling.classList.toggle('show');
 }
 
 // 화면 밖 클릭 시 드롭다운 닫기
 document.addEventListener('click', function (event) {
     if (!event.target.matches('.options-icon')) {
-        document.querySelectorAll('.options-dropdown.show').forEach(menu => {
-            menu.classList.remove('show');
-        });
+        document.querySelectorAll('.options-dropdown.show').forEach(m => m.classList.remove('show'));
     }
 });
 
@@ -143,17 +147,10 @@ function togglePinRoom(event, element) {
 
         const myTime = chatItem.querySelector('.chat-time').innerText;
         const otherRooms = Array.from(chatList.querySelectorAll('.chat-item:not(.is-pinned)'));
-        let targetRoom = otherRooms.find(room => {
-            const roomTime = room.querySelector('.chat-time').innerText;
-            return roomTime < myTime;
-        });
+        let targetRoom = otherRooms.find(room => room.querySelector('.chat-time').innerText < myTime);
 
-        if (targetRoom) {
-            chatList.insertBefore(chatItem, targetRoom);
-        } else {
-            chatList.appendChild(chatItem);
-        }
-
+        if (targetRoom) chatList.insertBefore(chatItem, targetRoom);
+        else chatList.appendChild(chatItem);
     } else {
         chatItem.classList.add('is-pinned');
         pinText.innerText = '해제';
@@ -172,15 +169,12 @@ function deleteRoom(event, element) {
             chatItem.style.transition = 'all 0.3s ease';
             chatItem.style.opacity = '0';
             chatItem.style.transform = 'translateX(20px)';
-            setTimeout(() => {
-                chatItem.remove();
-            }, 300);
+            setTimeout(() => chatItem.remove(), 300);
         }
     } else {
         document.querySelectorAll('.options-dropdown.show').forEach(m => m.classList.remove('show'));
     }
-} // ★ 여기서 deleteRoom 함수가 완전히 끝납니다!
-
+}
 
 // ====================================================================
 // ★★★ [LIVE] 채팅 리스트 실시간 동기화 (웹소켓 엔진) ★★★
@@ -188,21 +182,15 @@ function deleteRoom(event, element) {
 
 var stompListClient = null;
 
-// DOMContentLoaded 안에서 호출할 수 있도록 세팅
-document.addEventListener("DOMContentLoaded", function () {
-    connectChatList();
-});
-
 function connectChatList() {
     const urlParams = new URLSearchParams(window.location.search);
     const myUserId = urlParams.get('userId');
 
-    if (!myUserId) return; // 유저 아이디 없으면 연결 안 함
+    if (!myUserId) return;
 
     var socket = new SockJS('/ws-stomp');
     stompListClient = Stomp.over(socket);
 
-    // 콘솔창 더러워지는 것 방지
     stompListClient.debug = null;
 
     stompListClient.connect({}, function (frame) {
@@ -223,65 +211,8 @@ function connectChatList() {
 }
 
 // ==========================================================
-// ★ 완벽 조준 완료된 실시간 목록 갱신 함수 ★
+// ★ [LIVE] 완벽 조준 완료된 실시간 목록 갱신 (중복 함수 제거) ★
 // ==========================================================
-function updateChatListUI(newMsg) {
-    const chatItems = document.querySelectorAll('.chat-item');
-    let targetRoom = null;
-
-    chatItems.forEach(item => {
-        const onclickAttr = item.getAttribute('onclick');
-        if (onclickAttr && onclickAttr.includes(`enterRoom(${newMsg.roomId})`)) {
-            targetRoom = item;
-        }
-    });
-
-    if (targetRoom) {
-        // ★ 범인 검거: .chat-recent-msg 가 아니라 .chat-preview 였습니다!
-        const recentMsgSpan = targetRoom.querySelector('.chat-preview');
-        const timeSpan = targetRoom.querySelector('.chat-time');
-
-        // 1. 메시지 내용 찰칵! 덮어쓰기
-        if (recentMsgSpan) {
-            if (newMsg.messageType === 'IMAGE') recentMsgSpan.innerText = '(사진)';
-            else if (newMsg.messageType === 'FILE') recentMsgSpan.innerText = '(파일)';
-            else recentMsgSpan.innerText = newMsg.content;
-        }
-
-        // 2. 시간 찰칵! 덮어쓰기 (HH:mm 형태로 잘라서 예쁘게 넣기)
-        if (timeSpan && newMsg.createdAt) {
-            let timeStr = newMsg.createdAt;
-            // 만약 서버 시간이 "2026-03-03 15:40" 처럼 길게 온다면 "15:40"만 자르기
-            if (timeStr.includes(' ')) timeStr = timeStr.split(' ')[1].substring(0, 5);
-            else if (timeStr.includes('T')) timeStr = timeStr.split('T')[1].substring(0, 5);
-
-            timeSpan.innerText = timeStr;
-        }
-
-        // 3. 방을 맨 위로 훅! 끌어올리기 (고정핀 방이 아닐 때만)
-        if (!targetRoom.classList.contains('is-pinned')) {
-            const chatListContainer = document.querySelector('.chat-list');
-            const firstUnpinned = chatListContainer.querySelector('.chat-item:not(.is-pinned)');
-
-            // ★ 라이브의 맛: 새 메시지 오면 KUMO 스타일 연노랑 불빛이 1초간 켜집니다!
-            targetRoom.style.transition = 'background-color 0.4s ease';
-            targetRoom.style.backgroundColor = 'rgba(255, 184, 0, 0.15)';
-            setTimeout(() => targetRoom.style.backgroundColor = '', 1000);
-
-            if (firstUnpinned) {
-                chatListContainer.insertBefore(targetRoom, firstUnpinned);
-            } else {
-                chatListContainer.appendChild(targetRoom);
-            }
-        }
-    } else {
-        console.log("목록에 없는 완전히 새로운 방입니다! (페이지 새로고침 필요)");
-    }
-}
-
-// ==========================================================
-// ★ [LIVE] 완벽 조준 완료된 실시간 목록 갱신 (탭 동기화 포함) ★
-// ==========================================
 function updateChatListUI(newMsg) {
     const chatItems = document.querySelectorAll('.chat-item');
     let targetRoom = null;
@@ -297,14 +228,14 @@ function updateChatListUI(newMsg) {
         const recentMsgSpan = targetRoom.querySelector('.chat-preview');
         const timeSpan = targetRoom.querySelector('.chat-time');
 
-        // 1. 메시지 내용 찰칵! 덮어쓰기
+        // 1. 메시지 내용 교체
         if (recentMsgSpan) {
             if (newMsg.messageType === 'IMAGE') recentMsgSpan.innerText = '(사진)';
             else if (newMsg.messageType === 'FILE') recentMsgSpan.innerText = '(파일)';
             else recentMsgSpan.innerText = newMsg.content;
         }
 
-        // 2. 시간 찰칵! 덮어쓰기 (HH:mm 형태로 잘라서 예쁘게 넣기)
+        // 2. 시간 교체
         if (timeSpan && newMsg.createdAt) {
             let timeStr = newMsg.createdAt;
             if (timeStr.includes(' ')) timeStr = timeStr.split(' ')[1].substring(0, 5);
@@ -312,7 +243,7 @@ function updateChatListUI(newMsg) {
             timeSpan.innerText = timeStr;
         }
 
-        // 3. 방을 맨 위로 훅! 끌어올리기 (고정핀 방이 아닐 때만)
+        // 3. 방을 맨 위로 끌어올리기
         if (!targetRoom.classList.contains('is-pinned')) {
             const chatListContainer = document.querySelector('.chat-list');
             const firstUnpinned = chatListContainer.querySelector('.chat-item:not(.is-pinned)');
@@ -321,41 +252,59 @@ function updateChatListUI(newMsg) {
             targetRoom.style.backgroundColor = 'rgba(255, 184, 0, 0.15)';
             setTimeout(() => targetRoom.style.backgroundColor = '', 1000);
 
-            if (firstUnpinned) {
-                chatListContainer.insertBefore(targetRoom, firstUnpinned);
-            } else {
-                chatListContainer.appendChild(targetRoom);
-            }
+            if (firstUnpinned) chatListContainer.insertBefore(targetRoom, firstUnpinned);
+            else chatListContainer.appendChild(targetRoom);
         }
 
-        // ==========================================================
-        // ★ [추가] 4. 안읽음/읽음 데이터 실시간 업데이트 및 탭 즉시 갱신 ★
-        // ==========================================================
+        // 4. 안읽음 상태 평가 및 뱃지 업데이트
         const urlParams = new URLSearchParams(window.location.search);
         const myUserId = urlParams.get('userId');
 
-        // 메시지 발신자가 '나'인지 '상대방'인지 판별해서 데이터 속성 갱신
-        if (String(newMsg.senderId) !== String(myUserId)) {
-            targetRoom.setAttribute('data-unread', 'true'); // 상대방이 보냄 -> 안읽음
-        } else {
-            targetRoom.setAttribute('data-unread', 'false'); // 내가 보냄 -> 읽음
-        }
+        // 만약 내가 보낸 게 아니면 무조건 "안 읽음(true)"
+        const isUnread = (String(newMsg.senderId) !== String(myUserId));
+        targetRoom.setAttribute('data-unread', String(isUnread));
 
-        // 현재 켜져 있는 탭(전체/읽지않음/읽음)에 맞게 방을 즉시 보여주거나 숨기기
+        // 🌟 실시간 뱃지 그리기
+        toggleUnreadBadge(targetRoom, isUnread);
+
+        // 5. 현재 탭(필터)에 맞춰 방 숨김/표시 처리
         const activeTab = document.querySelector('.tab-btn.active');
         if (activeTab) {
             const filterText = activeTab.innerText.trim();
-            const isUnread = targetRoom.getAttribute('data-unread') === 'true';
-
-            if (filterText === '읽지않음' && !isUnread) {
-                targetRoom.style.display = 'none'; // '읽지않음' 탭인데 읽은 상태면 숨김
-            } else if (filterText === '읽음' && isUnread) {
-                targetRoom.style.display = 'none'; // '읽음' 탭인데 안 읽은 새 메시지가 오면 숨김
-            } else {
-                targetRoom.style.display = ''; // 조건에 맞으면 바로 보여줌
-            }
+            if (filterText === '읽지않음' && !isUnread) targetRoom.style.display = 'none';
+            else if (filterText === '읽음' && isUnread) targetRoom.style.display = 'none';
+            else targetRoom.style.display = '';
         }
     } else {
-        console.log("목록에 없는 완전히 새로운 방입니다! (페이지 새로고침 필요)");
+        // 백엔드 연결 후 방 생성 로직이 필요한 부분
+        console.log("목록에 없는 새로운 방입니다. (화면 새로고침 권장)");
+    }
+}
+
+// 🌟 채팅방 요소에 빨간 동그라미(뱃지)를 붙이거나 떼는 함수
+function toggleUnreadBadge(roomElement, isUnread) {
+    const infoDiv = roomElement.querySelector('.chat-info');
+    if (!infoDiv) return;
+
+    let badge = infoDiv.querySelector('.unread-dot');
+
+    if (isUnread) {
+        if (!badge) {
+            // 뱃지가 없으면 생성 (빨간 점)
+            badge = document.createElement('div');
+            badge.className = 'unread-dot';
+            badge.style.width = '10px';
+            badge.style.height = '10px';
+            badge.style.backgroundColor = '#fa5252'; // 빨간색
+            badge.style.borderRadius = '50%';
+            badge.style.position = 'absolute';
+            badge.style.right = '20px';
+            badge.style.top = '30px';
+            infoDiv.appendChild(badge);
+        }
+    } else {
+        if (badge) {
+            badge.remove(); // 읽었으면 삭제
+        }
     }
 }

@@ -78,17 +78,20 @@ aside.sidebar {
 }
 
 /* 🌟 선택된 메뉴 (li.active) 및 호버 상태 */
+
 .sidebar-nav ul li.active a,
 .sidebar-nav ul li a:hover {
-    background-color: #f0f9ff;
-    color: #42a5f5;
-    border-left: 4px solid #42a5f5;
+    background-color: #f0f7ff;
+    /* #f0f9ff → 약간 더 차분하게 */
+    color: #7db4e6;
+    /* #42a5f5 → KUMO 시그니처 블루 */
+    border-left: 4px solid #7db4e6;
     font-weight: 500;
 }
 
 .sidebar-nav ul li.active a i,
 .sidebar-nav ul li a:hover i {
-    color: #42a5f5 !important;
+    color: #7db4e6 !important;
 }
 
 /* 3. 하단 영역 (로그아웃 버튼) */
@@ -138,11 +141,52 @@ aside.sidebar {
     color: #ffffff !important;
 }
 
+/* ============================================================
+   🚨 로그아웃 버튼 호버 시 디자인 (KUMO 소프트 레드)
+   ============================================================ */
+
+/* 라이트 모드: 연한 핑크빛 배경에 빨간 글씨/테두리 */
+.btn-logout:hover {
+    background-color: #fff0f0;
+    /* 꽉 찬 빨강 대신, 아주 연한 핑크톤 배경 */
+    color: #ff5a5a;
+    /* 글자를 빨간색으로 포인트 */
+    border-left-color: #ff5a5a;
+    /* 테두리 빨간색 */
+}
+
+.btn-logout:hover i {
+    color: #ff5a5a !important;
+    /* 아이콘도 빨간색으로 통일 */
+}
+
+/* ============================================================
+   🌙 다크모드 로그아웃 버튼 (Warm-Dark 맞춤)
+   ============================================================ */
+
+body.dark-mode .btn-logout {
+    color: #ccc;
+    background-color: transparent;
+    border-left: 4px solid transparent;
+}
+
+body.dark-mode .btn-logout:hover {
+    background-color: rgba(255, 107, 107, 0.08) !important;
+    /* 투명도 8%의 은은한 붉은빛 맴도는 배경 */
+    color: #ff6b6b !important;
+    /* 다크모드에 맞는 부드러운 빨강 텍스트 */
+    border-left-color: #ff6b6b !important;
+}
+
+body.dark-mode .btn-logout:hover i {
+    color: #ff6b6b !important;
+}
+
 /* 4. 다크모드 대응 (Dark Mode) */
 body.dark-mode aside.sidebar {
-    background-color: #1a1a1a !important;
+    background-color: #1e1f21 !important;
     /* 사장님이 원하신 찐다크 */
-    border-right-color: #333;
+    border-right-color: #37393d;
 }
 
 body.dark-mode .sidebar-nav ul li a {
@@ -155,7 +199,8 @@ body.dark-mode .sidebar-nav ul li a i {
 
 body.dark-mode .sidebar-nav ul li.active a,
 body.dark-mode .sidebar-nav ul li a:hover {
-    background-color: #2a3441;
+    background-color: #2e3035 !important;
+    /* #2a3441 → #2e3035 */
     color: #7db4e6;
     border-left-color: #7db4e6;
 }
@@ -165,12 +210,4 @@ body.dark-mode .sidebar-nav ul li a:hover i {
     color: #7db4e6 !important;
 }
 
-/* 다크모드 로그아웃 버튼 */
-body.dark-mode .btn-logout {
-    color: #ccc;
-}
 
-body.dark-mode .btn-logout:hover {
-    background-color: #ff6b6b;
-    color: #ffffff;
-}

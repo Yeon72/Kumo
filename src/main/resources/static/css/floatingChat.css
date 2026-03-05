@@ -1,0 +1,78 @@
+/* --- src/main/resources/static/css/chat/floatingChat.css --- */
+
+/* 1. 플로팅 컨테이너 (우측 하단 고정) */
+#floatingChatContainer {
+    position: fixed; /* 🌟 페이지 밑바닥이 아닌 화면에 띄우는 핵심 속성! */
+    bottom: 30px;
+    right: 30px;
+    width: 400px;
+    height: 600px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    display: none; /* 평소엔 숨김 */
+    flex-direction: column;
+    z-index: 9999; /* 무조건 최상단으로 끌어올림 */
+    overflow: hidden;
+    transition: height 0.3s ease;
+}
+
+/* 2. 최소화 상태 */
+#floatingChatContainer.minimized {
+    height: 55px !important;
+}
+
+/* 3. 헤더 (드래그 영역) */
+#floatingChatHeader {
+    height: 55px;
+    background: #343a40;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    cursor: move;
+    user-select: none;
+}
+
+#floatingChatHeader .chat-title {
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#floatingChatHeader .chat-controls i {
+    cursor: pointer;
+    margin-left: 15px;
+    font-size: 16px;
+    color: #adb5bd;
+    transition: 0.2s;
+}
+
+#floatingChatHeader .chat-controls i:hover {
+    color: white;
+}
+
+/* 4. iframe (실제 채팅창이 뜨는 액자) */
+#floatingChatFrame {
+    flex: 1;
+    width: 100%;
+    border: none;
+    background: #f8f9fa;
+}
+
+/* 5. 다크모드 대응 */
+body.dark-mode #floatingChatContainer {
+    background: #1e1f21;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    border: 1px solid #37393d;
+}
+body.dark-mode #floatingChatHeader {
+    background: #252629;
+    border-bottom: 1px solid #3e4044;
+}
+body.dark-mode #floatingChatFrame {
+    background: #1e1f21;
+}

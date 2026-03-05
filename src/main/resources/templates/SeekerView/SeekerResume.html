@@ -10,8 +10,6 @@
 
     <style>
         #careerFields .clonable-item:first-child > .btn-delete-item { display: none; }
-        #certFields .clonable-item:first-child .btn-delete-item { display: none; }
-        #langFields .clonable-item:first-child .btn-delete-item { display: none; }
     </style>
 </head>
 <body>
@@ -26,6 +24,38 @@
         <div class="content-header">
             <h2 th:text="#{resume.header.title}">이력서 작성</h2>
         </div>
+
+        <!-- 자격증 숨김 템플릿 (JS 복제용) -->
+        <template id="certTemplate">
+            <div class="form-group row cert-item clonable-item">
+                <label>자격증</label>
+                <div class="input-group cert-group">
+                    <input type="text" name="certName" class="custom-input" placeholder="" style="flex:1">
+                    <input type="text" name="certPublisher" class="custom-input" placeholder="" style="flex:1">
+                    <select name="certYear" class="custom-select" style="flex:1">
+                        <option value="" selected disabled>취득연도</option>
+                    </select>
+                    <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+        </template>
+        
+        <!-- 어학 숨김 템플릿 (JS 복제용) -->
+        <template id="langTemplate">
+            <div class="form-group row mt-5 lang-item clonable-item">
+                <label>어학 능력</label>
+                <div class="input-group cert-group">
+                    <input type="text" name="languageName" class="custom-input" placeholder="" style="flex:1">
+                    <div class="toggle-group multi-segment" style="flex:2">
+                        <button type="button" class="toggle-btn active" data-value="ADVANCED">상급</button>
+                        <button type="button" class="toggle-btn" data-value="INTERMEDIATE">중급</button>
+                        <button type="button" class="toggle-btn" data-value="BEGINNER">초급</button>
+                        <input type="hidden" name="languageLevel" value="ADVANCED">
+                    </div>
+                    <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+        </template>
 
         <div class="resume-wrapper">
             <div class="profile-summary-card">
@@ -271,22 +301,7 @@
                 <section class="form-section">
                     <h3 class="section-title" th:text="#{resume.section.pr}">자기소개&PR</h3>
 
-                    <div id="certFields">
-                        <!-- 데이터가 없을 때 기본 한 세트 표시 -->
-                        <th:block th:if="${resume == null or resume.certName == null or resume.certName.isEmpty()}">
-                            <div class="form-group row cert-item clonable-item">
-                                <label th:text="#{resume.label.certificate}">자격증</label>
-                                <div class="input-group cert-group">
-                                    <input type="text" name="certName" class="custom-input" th:placeholder="#{resume.placeholder.certName}" style="flex:1">
-                                    <input type="text" name="certPublisher" class="custom-input" th:placeholder="#{resume.placeholder.certPublisher}" style="flex:1">
-                                    <select name="certYear" class="custom-select" style="flex:1">
-                                        <option value="" selected disabled th:text="#{resume.label.certYear}">취득연도</option>
-                                        <option th:each="year : ${#numbers.sequence(2026, 1970, -1)}" th:value="${year}" th:text="${year}"></option>
-                                    </select>
-                                    <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
-                                </div>
-                            </div>
-                        </th:block>
+                    <div id="certFields"
 
                         <!-- 데이터가 있을 때 반복문으로 표시 -->
                         <th:block th:if="${resume != null and resume.certName != null and !resume.certName.isEmpty()}">
@@ -309,23 +324,6 @@
                     </div>
 
                     <div id="langFields">
-                        <!-- 데이터가 없을 때 기본 한 세트 표시 -->
-                        <th:block th:if="${resume == null or resume.languageName == null or resume.languageName.isEmpty()}">
-                            <div class="form-group row mt-5 lang-item clonable-item">
-                                <label th:text="#{resume.label.language}">어학 능력</label>
-                                <div class="input-group cert-group">
-                                    <input type="text" name="languageName" class="custom-input" th:placeholder="#{resume.placeholder.language}" style="flex:1">
-                                    <div class="toggle-group multi-segment" style="flex:2">
-                                        <button type="button" class="toggle-btn active" data-value="ADVANCED" th:text="#{resume.btn.advanced}">상급</button>
-                                        <button type="button" class="toggle-btn" data-value="INTERMEDIATE" th:text="#{resume.btn.intermediate}">중급</button>
-                                        <button type="button" class="toggle-btn" data-value="BEGINNER" th:text="#{resume.btn.beginner}">초급</button>
-                                        <input type="hidden" name="languageLevel" value="ADVANCED">
-                                    </div>
-                                    <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
-                                </div>
-                            </div>
-                        </th:block>
-
                         <!-- 데이터가 있을 때 반복문으로 표시 -->
                         <th:block th:if="${resume != null and resume.languageName != null and !resume.languageName.isEmpty()}">
                             <div th:each="lang, stat : ${resume.languageName}" class="form-group row mt-5 lang-item clonable-item">

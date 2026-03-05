@@ -1,0 +1,362 @@
+/* ============================================================
+   KUMO RECRUITER - 인재 찾기 (talentList)
+   ============================================================ */
+
+body {
+    background-color: #f8faff;
+    transition: background-color 0.3s;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* 1. 사이드바(240px) 공간을 정확히 피해서 정중앙 기준 잡기 */
+.main-container {
+    margin-left: 240px;
+    width: calc(100% - 240px);
+    min-height: 100vh;
+    box-sizing: border-box;
+    display: block !important;
+    /* 플렉스 충돌 방지 */
+}
+
+.content-body {
+    width: 100%;
+    padding: 50px 40px;
+    box-sizing: border-box;
+    display: block !important;
+}
+
+/* 2. 리스트 컨테이너: 좁았던 칸을 넓게, 그리고 무조건 가운데로! */
+.talent-list-wrapper {
+    width: 100%;
+    max-width: 1000px;
+    /* 🌟 기존보다 훨씬 넓고 쾌적하게 (1200px까지 늘리셔도 됩니다!) */
+    margin: 0 auto !important;
+    /* 완벽한 중앙 정렬 */
+}
+
+/* 3. 헤더: 양끝 배치(space-between)를 끄고 세로로 쌓기 */
+.talent-list-header {
+    display: flex;
+    flex-direction: column;
+    /* 🌟 핵심: 가로가 아닌 세로로 배치 */
+    align-items: flex-start;
+    /* 왼쪽 정렬 */
+    gap: 16px;
+    /* 텍스트와 Total 뱃지 사이의 간격 */
+    margin-bottom: 30px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #f0f2f8;
+}
+
+/* =========================================
+   ✨ Total 텍스트 + 숫자 배지 스타일
+   ========================================= */
+
+/* 1. 전체 컨테이너 (기존 배경과 테두리를 싹 빼고 텍스트처럼 만듭니다) */
+.talent-total-count {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    /* 글자와 배지 사이 간격 */
+    font-size: 14px;
+    color: #4e5968;
+    font-weight: 700;
+}
+
+/* 2. 사장님이 주신 레퍼런스 스타일을 숫자에 적용! */
+.talent-total-count .count-num {
+    background-color: #e8f3ff;
+    color: #7db4e6;
+    padding: 2px 10px;
+    /* 위아래 패딩을 살짝 줘서 캡처처럼 도톰하게 */
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 15px;
+    margin: 0 2px;
+}
+
+/* =========================================
+   🌙 다크모드 대응
+   ========================================= */
+
+/* 다크모드 텍스트 색상 */
+body.dark-mode .talent-total-count {
+    color: #91959b !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+/* 다크모드 숫자 배지 (사장님이 주신 딥한 네이비 컬러 적용!) */
+body.dark-mode .talent-total-count .count-num {
+    background-color: #2e3540 !important;
+    color: #7db4e6 !important;
+}
+/* 전체 감싸는 외부 카드 */
+.talent-outer-card {
+    background: #ffffff;
+    border-radius: 25px;
+    padding: 36px 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f0f2f8;
+}
+
+/* 헤더 */
+.talent-list-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a1f27;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+}
+
+.talent-list-header p {
+    font-size: 14px;
+    color: #8b95a1;
+    margin: 0;
+}
+
+.talent-total-count i {
+    color: #7db4e6;
+}
+
+.talent-total-count .count-num {
+    font-weight: 800;
+    color: #7db4e6;
+    font-size: 15px;
+}
+
+/* 리스트 */
+.talent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* 인재 카드 */
+.talent-card {
+    background: #f8faff;
+    border-radius: 18px;
+    padding: 22px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #eef0f8;
+    cursor: pointer;
+}
+
+.talent-card:hover {
+    background: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(125, 180, 230, 0.15);
+    border-color: #7db4e6;
+}
+
+.talent-main {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.talent-avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+    object-fit: cover;
+    border: 2px solid #e8edf5;
+    flex-shrink: 0;
+    transition: border-color 0.2s;
+}
+
+.talent-card:hover .talent-avatar {
+    border-color: rgba(125, 180, 230, 0.5);
+}
+
+.talent-info {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.talent-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.name-text {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #1a1f27;
+    letter-spacing: -0.2px;
+}
+
+/* 배지 */
+.career-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.badge-exp {
+    background: #e8f3ff;
+    color: #7db4e6;
+    border: 1px solid rgba(125, 180, 230, 0.25);
+}
+
+.badge-new {
+    background: #f0f1f6;
+    color: #8b95a1;
+    border: 1px solid rgba(139, 149, 161, 0.2);
+}
+
+/* 자기소개 */
+.pr-text {
+    color: #6b7684;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 700px;
+}
+
+/* 버튼 */
+.talent-action {
+    flex-shrink: 0;
+}
+
+.btn-view {
+    background-color: #eef0f8;
+    color: #4e5968;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.talent-card:hover .btn-view {
+    background-color: #7db4e6;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(125, 180, 230, 0.35);
+}
+
+/* 빈 상태 */
+.talent-empty {
+    text-align: center;
+    padding: 80px 0;
+}
+
+.talent-empty i {
+    font-size: 3.5rem;
+    color: #c8cdd4;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.talent-empty p {
+    font-size: 15px;
+    color: #8b95a1;
+    margin: 0;
+}
+
+/* 사이드바 호버 이질감 방지 */
+body:not(.dark-mode) .nav-item[data-menu="none"] {
+    background: transparent !important;
+    color: inherit !important;
+    border: none !important;
+}
+
+/* 다크모드 */
+body.dark-mode {
+    background-color: #1e1f21 !important;
+    color: #e3e5e8;
+}
+
+body.dark-mode .talent-outer-card {
+    background-color: #2a2b2e !important;
+    border-color: #37393d;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+body.dark-mode .talent-list-header {
+    border-bottom-color: #37393d;
+}
+
+body.dark-mode .talent-list-header h2 {
+    color: #e3e5e8;
+}
+
+body.dark-mode .talent-list-header p {
+    color: #91959b;
+}
+
+body.dark-mode .talent-total-count {
+    color: #91959b;
+}
+
+body.dark-mode .talent-card {
+    background-color: #232428 !important;
+    border-color: #37393d;
+}
+
+body.dark-mode .talent-card:hover {
+    background-color: #2a2b2e !important;
+    border-color: #7db4e6;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .talent-avatar {
+    border-color: #37393d;
+}
+
+body.dark-mode .talent-card:hover .talent-avatar {
+    border-color: rgba(125, 180, 230, 0.4);
+}
+
+body.dark-mode .name-text {
+    color: #e3e5e8;
+}
+
+body.dark-mode .pr-text {
+    color: #91959b;
+}
+
+body.dark-mode .badge-exp {
+    background: rgba(125, 180, 230, 0.1);
+    color: #7db4e6;
+    border-color: rgba(125, 180, 230, 0.25);
+}
+
+body.dark-mode .badge-new {
+    background: rgba(139, 149, 161, 0.1);
+    color: #91959b;
+    border-color: rgba(139, 149, 161, 0.2);
+}
+
+body.dark-mode .btn-view {
+    background-color: #37393d;
+    color: #91959b;
+}
+
+body.dark-mode .talent-card:hover .btn-view {
+    background-color: #7db4e6;
+    color: #ffffff;
+}
+
+body.dark-mode .talent-empty i {
+    color: #37393d;
+}
+
+body.dark-mode .talent-empty p {
+    color: #91959b;
+}

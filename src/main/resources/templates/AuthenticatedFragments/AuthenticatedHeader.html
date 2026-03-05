@@ -96,6 +96,60 @@
             </ul>
         </nav>
     </header>
+    <script th:inline="javascript">
+        /* <![CDATA[ */
+        (function () {
+            if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                const root = document.documentElement;
+                root.classList.add('dark-mode');
+
+                document.write(
+                    '<style id="anti-flicker-css">' +
+                    '  *:not(.no-prevent-transition) { transition: none !important; }' +
+                    '  html, body { background-color: #1e1f21 !important; color: #e3e5e8 !important; margin: 0; padding: 0; }' +
+
+                    '  body > *:not(header):not(.authenticated-header):not(.custom-header):not(script):not(style) { ' +
+                    '    opacity: 0 !important; visibility: hidden !important; ' +
+                    '  }' +
+
+                    '  .authenticated-header, .custom-header, .non-login-header {' +
+                    '    background-color: #1e1f21 !important;' +
+                    '    border-bottom: 1px solid #37393d !important;' +
+                    '    display: flex !important;' +
+                    '    opacity: 1 !important; visibility: visible !important;' +
+                    '  }' +
+
+                    '  .authenticated-header *, .custom-header *, .non-login-header * {' +
+                    '    color: #e3e5e8 !important;' +
+                    '    border-color: #37393d !important;' +
+                    '  }' +
+
+                    '  .sidebar-container, aside.sidebar {' +
+                    '    background-color: #1e1f21 !important;' +
+                    '    border-right: 1px solid #37393d !important;' +
+                    '  }' +
+                    '</style>'
+                );
+
+                window.addEventListener('DOMContentLoaded', function () {
+                    setTimeout(function () {
+                        const flickerStyle = document.getElementById('anti-flicker-css');
+                        if (flickerStyle) flickerStyle.remove();
+
+                                // ✅ 추가: 숨겨진 요소들 명시적으로 다시 보이게
+                        document.querySelectorAll('body > *').forEach(el => {
+                            el.style.opacity = '';
+                            el.style.visibility = '';
+                        });
+                    }, 0);
+                });
+            }
+        })();
+        /* ]]> */
+    </script>
 
     <!-- 🌟 인라인 스크립트를 제거하고 외부 파일로 통일 -->
     <script th:src="@{/js/AuthenticatedHeader/AuthenticatedHeader.js}"></script>

@@ -6,12 +6,10 @@ import net.kumo.kumo.domain.dto.ChatRoomListDTO;
 import net.kumo.kumo.domain.entity.ChatMessageEntity;
 import net.kumo.kumo.domain.entity.ChatRoomEntity;
 import net.kumo.kumo.domain.entity.Enum.MessageType;
-import net.kumo.kumo.domain.entity.JobPostingEntity;
 import net.kumo.kumo.domain.entity.UserEntity;
-import net.kumo.kumo.repository.UserRepository;
 import net.kumo.kumo.repository.ChatMessageRepository;
 import net.kumo.kumo.repository.ChatRoomRepository;
-import net.kumo.kumo.repository.JobPostingRepository; // ★ 1. 임포트 완벽 복구
+import net.kumo.kumo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,131 +23,136 @@ import java.util.stream.Collectors;
 @Transactional
 public class ChatService {
 
-        private final ChatRoomRepository chatRoomRepository;
-        private final ChatMessageRepository chatMessageRepository;
-        private final UserRepository userRepository;
-        private final JobPostingRepository jobPostingRepository; // ★ 2. 주석 해제 완벽 복구
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final UserRepository userRepository;
 
-        // ==========================================================
-        // ★ 봉인 해제 + 구인공고 조립 완료된 방 생성 로직 ★
-        // ==========================================================
-        @Transactional
-        public ChatRoomEntity createOrGetChatRoom(Long seekerId, Long recruiterId, Long jobPostId) {
+    // ======================================================================
+    // 🌟 1. 방 생성 및 조회 (오사카/도쿄 분리 완벽 대응)
+    // ======================================================================
+    public ChatRoomEntity createOrGetChatRoom(Long seekerId, Long recruiterId, Long targetPostId, String targetSource) {
 
-                Optional<ChatRoomEntity> existingRoom = chatRoomRepository.findBySeeker_UserIdAndRecruiter_UserId(
-                                seekerId,
-                                recruiterId);
+        Optional<ChatRoomEntity> existingRoom = chatRoomRepository
+                .findBySeeker_UserIdAndRecruiter_UserIdAndTargetPostIdAndTargetSource(
+                        seekerId, recruiterId, targetPostId, targetSource);
 
-                if (existingRoom.isPresent()) {
-                        return existingRoom.get();
-                } // ★ 3. 꼬였던 중괄호 복구 완료
-
-                UserEntity seeker = userRepository.findById(seekerId)
-                                .orElseThrow(() -> new IllegalArgumentException("구직자를 찾을 수 없습니다."));
-
-                UserEntity recruiter = userRepository.findById(recruiterId)
-                                .orElseThrow(() -> new IllegalArgumentException("구인자를 찾을 수 없습니다."));
-
-                JobPostingEntity jobPosting = null;
-                if (jobPostId != null) { // ★ 4. 날아갔던 if문 조건식 복구 완료
-                        jobPosting = jobPostingRepository.findById(jobPostId)
-                                        .orElseThrow(() -> new IllegalArgumentException("구인공고를 찾을 수 없습니다."));
-                }
-
-                ChatRoomEntity newRoom = ChatRoomEntity.builder()
-                                .seeker(seeker)
-                                .recruiter(recruiter)
-                                .jobPosting(jobPosting)
-                                .build();
-
-                return chatRoomRepository.save(newRoom);
+        if (existingRoom.isPresent()) {
+            return existingRoom.get();
         }
 
-        // ==========================================================
-        // ★ 5. 지워졌던 기존 통신용/조회용 필수 메서드들 전면 복구 ★
-        // ==========================================================
+        UserEntity seeker = userRepository.findById(seekerId)
+                .orElseThrow(() -> new IllegalArgumentException("구직자를 찾을 수 없습니다."));
 
-        public ChatMessageDTO saveMessage(ChatMessageDTO dto) {
-                ChatRoomEntity room = getChatRoom(dto.getRoomId());
-                UserEntity sender = userRepository.findById(dto.getSenderId())
-                                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        UserEntity recruiter = userRepository.findById(recruiterId)
+                .orElseThrow(() -> new IllegalArgumentException("구인자를 찾을 수 없습니다."));
 
-                ChatMessageEntity entity = ChatMessageEntity.builder()
-                                .room(room)
-                                .sender(sender)
-                                .content(dto.getContent())
-                                .messageType(MessageType.valueOf(dto.getMessageType()))
-                                .isRead(false)
-                                .build();
+        ChatRoomEntity newRoom = ChatRoomEntity.builder()
+                .seeker(seeker)
+                .recruiter(recruiter)
+                .targetPostId(targetPostId)
+                .targetSource(targetSource)
+                .build();
 
-                ChatMessageEntity saved = chatMessageRepository.save(entity);
-                return convertToDTO(saved);
-        }
+        return chatRoomRepository.save(newRoom);
+    }
 
-        public List<ChatMessageDTO> getMessageHistory(Long roomId, Long userId) {
-                chatMessageRepository.markMessagesAsRead(roomId, userId);
-                return chatMessageRepository.findByRoom_IdOrderByCreatedAtAsc(roomId)
-                                .stream()
-                                .map(this::convertToDTO)
-                                .collect(Collectors.toList());
-        }
+    // ======================================================================
+    // 🌟 2. 단일 채팅방 정보 가져오기
+    // ======================================================================
+    @Transactional(readOnly = true)
+    public ChatRoomEntity getChatRoom(Long roomId) {
+        return chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("방이 없습니다."));
+    }
 
-        public ChatRoomEntity getChatRoom(Long roomId) {
-                return chatRoomRepository.findById(roomId)
-                                .orElseThrow(() -> new IllegalArgumentException("방이 없습니다."));
-        }
+    // ======================================================================
+    // 🌟 3. 메시지 저장 (DTO 기반)
+    // ======================================================================
+    public ChatMessageDTO saveMessage(ChatMessageDTO dto) {
+        ChatRoomEntity room = getChatRoom(dto.getRoomId());
 
-        private ChatMessageDTO convertToDTO(ChatMessageEntity entity) {
-                return ChatMessageDTO.builder()
-                                .roomId(entity.getRoom().getId())
-                                .senderId(entity.getSender() != null ? entity.getSender().getUserId() : null)
-                                .senderNickname(entity.getSender() != null ? entity.getSender().getNickname()
-                                                : "알 수 없음")
-                                .content(entity.getContent())
-                                .messageType(entity.getMessageType().name())
-                                .createdAt(entity.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm")))
-                                .createdDate(entity.getCreatedAt().format(
-                                                java.time.format.DateTimeFormatter.ofPattern("yyyy년 M월 d일 EEEE",
-                                                                java.util.Locale.KOREAN)))
-                                .isRead(entity.getIsRead())
-                                .build();
-        }
+        UserEntity sender = userRepository.findById(dto.getSenderId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        @Transactional(readOnly = true)
-        public List<ChatRoomListDTO> getChatRoomsForUser(Long userId) {
-                List<ChatRoomEntity> rooms = chatRoomRepository.findBySeekerUserIdOrRecruiterUserId(userId, userId);
+        ChatMessageEntity entity = ChatMessageEntity.builder()
+                .room(room)
+                .sender(sender)
+                .content(dto.getContent())
+                .messageType(MessageType.valueOf(dto.getMessageType()))
+                .isRead(false)
+                .build();
 
-                return rooms.stream().map(room -> {
-                        UserEntity opponent = room.getSeeker().getUserId().equals(userId) ? room.getRecruiter()
-                                        : room.getSeeker();
-                        ChatMessageEntity lastMsg = chatMessageRepository.findFirstByRoomOrderByCreatedAtDesc(room);
-                        boolean hasUnreadFlag = chatMessageRepository
-                                        .existsByRoomAndSender_UserIdNotAndIsReadFalse(room, userId);
+        ChatMessageEntity saved = chatMessageRepository.save(entity);
+        return convertToDTO(saved);
+    }
 
-                        return ChatRoomListDTO.builder()
-                                        .roomId(room.getId())
-                                        .opponentNickname(opponent.getNickname())
-                                        .lastMessage(lastMsg != null ? lastMsg.getContent() : "대화 내용이 없습니다.")
-                                        .lastTime(
-                                                        lastMsg != null ? lastMsg.getCreatedAt().format(
-                                                                        DateTimeFormatter.ofPattern("HH:mm")) : "")
-                                        .hasUnread(hasUnreadFlag)
-                                        .build();
-                }).collect(Collectors.toList());
-        }
+    // ======================================================================
+    // 🌟 4. 대화 기록 가져오기 및 읽음 처리
+    // ======================================================================
+    public List<ChatMessageDTO> getMessageHistory(Long roomId, Long userId) {
+        chatMessageRepository.markMessagesAsRead(roomId, userId);
 
-        @Transactional
-        public void processLiveReadSignal(Long roomId, Long readerId) {
-                chatMessageRepository.markMessagesAsRead(roomId, readerId);
-        }
+        return chatMessageRepository.findByRoom_IdOrderByCreatedAtAsc(roomId)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
-        // ★ 안 읽은 메시지 총 개수 조회 서비스
-        @Transactional(readOnly = true)
-        public long getUnreadMessageCount(Long userId) {
-                if (userId == null) {
-                        return 0;
-                }
-                // 아까 ChatRoomRepository에 만든 쿼리를 여기서 부릅니다!
-                return chatRoomRepository.countUnreadMessages(userId);
-        }
+    // ======================================================================
+    // 🌟 5. 내 채팅방 목록 가져오기 (리포지토리 변경점 반영)
+    // ======================================================================
+    @Transactional(readOnly = true)
+    public List<ChatRoomListDTO> getChatRoomsForUser(Long userId) {
+
+        // ★ 에러 나던 부분 수정: 위에서 새로 만든 쿼리 메서드 사용
+        List<ChatRoomEntity> rooms = chatRoomRepository.findChatRoomsByUserId(userId);
+
+        return rooms.stream().map(room -> {
+            UserEntity opponent = room.getSeeker().getUserId().equals(userId) ? room.getRecruiter() : room.getSeeker();
+
+            // 주의: 이 메서드가 ChatMessageRepository에 있어야 합니다.
+            ChatMessageEntity lastMsg = chatMessageRepository.findFirstByRoomOrderByCreatedAtDesc(room);
+
+            // 주의: 이 메서드도 ChatMessageRepository에 있어야 합니다.
+            boolean hasUnreadFlag = chatMessageRepository.existsByRoomAndSender_UserIdNotAndIsReadFalse(room, userId);
+
+            return ChatRoomListDTO.builder()
+                    .roomId(room.getId())
+                    .opponentNickname(opponent.getNickname())
+                    .lastMessage(lastMsg != null ? lastMsg.getContent() : "대화 내용이 없습니다.")
+                    .lastTime(lastMsg != null ? lastMsg.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm")) : "")
+                    .hasUnread(hasUnreadFlag)
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    // ======================================================================
+    // 🌟 6. 실시간 웹소켓 읽음 처리
+    // ======================================================================
+    public void processLiveReadSignal(Long roomId, Long readerId) {
+        chatMessageRepository.markMessagesAsRead(roomId, readerId);
+    }
+
+    // 읽지 않은 메시지 개수 구함
+    @Transactional(readOnly = true)
+    public int getUnreadMessageCount(Long userId) {
+        return chatMessageRepository.countUnreadMessagesForUser(userId);
+    }
+
+    // ======================================================================
+    // 🌟 7. Entity -> DTO 변환 헬퍼 메서드
+    // ======================================================================
+    private ChatMessageDTO convertToDTO(ChatMessageEntity entity) {
+        return ChatMessageDTO.builder()
+                .roomId(entity.getRoom().getId())
+                .senderId(entity.getSender() != null ? entity.getSender().getUserId() : null)
+                .senderNickname(entity.getSender() != null ? entity.getSender().getNickname() : "알 수 없음")
+                .content(entity.getContent())
+                .messageType(entity.getMessageType().name())
+                .createdAt(entity.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm")))
+                .createdDate(entity.getCreatedAt().format(
+                        java.time.format.DateTimeFormatter.ofPattern("yyyy년 M월 d일 EEEE", java.util.Locale.KOREAN)))
+                .isRead(entity.getIsRead())
+                .build();
+    }
 }

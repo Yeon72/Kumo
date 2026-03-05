@@ -34,15 +34,12 @@
 }
 
 .img-wrapper {
-  width: 120px;
-  height: 120px;
   border-radius: 50%;
   overflow: hidden;
   background-color: #f0f1f6;
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 1px solid #eee;
 }
 
 .profile-img-lg {
@@ -73,7 +70,7 @@
 }
 
 body.dark-mode .btn-upload-photo {
-  background-color: #121212;
+  background-color: #1e1f21;
   border-color: #eeeeee;
   color: #7db4e6;
 }
@@ -128,12 +125,18 @@ html.dark-mode .value {
   margin-left: 10px;
 }
 
-/* iOS 스타일 토글 스위치 (Seeker 코드 이식) */
+/* ============================================================
+   ☁️ KUMO 시그니처 토글 스위치 (Premium 리뉴얼)
+   ============================================================ */
+
+/* 1. 컨테이너: 클릭하기 딱 좋은 황금 비율 */
 .switch {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 24px;
+  width: 48px;
+  /* 44px에서 살짝 키워 조작감을 높였습니다 */
+  height: 26px;
+  /* 24px에서 살짝 키워 안정감을 줬습니다 */
 }
 
 .switch input {
@@ -142,6 +145,7 @@ html.dark-mode .value {
   height: 0;
 }
 
+/* 2. 슬라이더 바닥 (라이트 모드: 보들보들한 느낌) */
 .slider {
   position: absolute;
   cursor: pointer;
@@ -149,33 +153,73 @@ html.dark-mode .value {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #e0e0e0;
-  transition: .4s;
-}
-
-.slider.round {
+  background-color: #e9ecef;
+  /* 단순 회색보다 맑은 연회색 */
+  border: 1.5px solid #dee2e6;
+  /* 미세한 테두리가 고급스러움의 차이! */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 쫀득한 움직임 */
   border-radius: 34px;
 }
 
+/* 3. 동그란 손잡이 (Thumb: 조약돌 스타일) */
 .slider:before {
   position: absolute;
   content: "";
   height: 18px;
   width: 18px;
-  left: 3px;
-  bottom: 3px;
+  left: 3.5px;
+  bottom: 2.5px;
   background-color: white;
-  transition: .4s;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  /* 손잡이가 입체적으로 보임 */
 }
 
+/* 4. 켜졌을 때 (Active - KUMO Sky Blue) */
 input:checked+.slider {
-  background-color: #2fb6ff;
+  background-color: #7db4e6;
+  /* 사장님의 대표 하늘색 적용! */
+  border-color: #7db4e6;
 }
 
 input:checked+.slider:before {
-  transform: translateX(20px);
+  transform: translateX(21px);
+  /* 이동 거리를 부드럽게 재조정 */
+  box-shadow: 0 2px 8px rgba(125, 180, 230, 0.4);
+  /* 하늘색 광채 효과 */
+}
+
+
+/* ============================================================
+   🌙 다크 모드 (Warm-Dark 전용: 파란 기 없는 따뜻함)
+   ============================================================ */
+
+/* 배경과 조화를 이루는 따뜻한 차콜 톤 */
+body.dark-mode .slider {
+  background-color: #3a3735;
+  /* 푸른 기를 쏙 뺀 웜 차콜 */
+  border-color: #4a4745;
+}
+
+body.dark-mode .slider:before {
+  background-color: #eceae7;
+  /* 손잡이도 따뜻한 크림 화이트로 */
+}
+
+/* 다크 모드에서 켜졌을 때 (네온 조명 효과) */
+body.dark-mode input:checked+.slider {
+  background-color: rgba(125, 180, 230, 0.2);
+  /* 은은한 하늘색 배경 */
+  border-color: #7db4e6;
+}
+
+body.dark-mode input:checked+.slider:before {
+  background-color: #7db4e6;
+  /* 켜지면 손잡이가 하늘색 보석처럼 빛남 */
+  box-shadow: 0 0 12px rgba(125, 180, 230, 0.6);
+  /* 따뜻한 어둠 속의 발광 효과 */
 }
 
 /* 하단 액션 버튼 */
@@ -629,4 +673,71 @@ html.dark-mode .btn-cancel {
 .btn-modal-danger:disabled {
   background-color: #ffb3b3;
   cursor: not-allowed;
+}
+
+/* --- 회원 탈퇴 모달 다크모드 추가 --- */
+body.dark-mode .delete-modal-content {
+  background-color: #1e1e1e;
+  border-color: #333;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .delete-modal-header {
+  border-bottom-color: #333;
+}
+
+body.dark-mode .delete-modal-header h3 {
+  color: #fff;
+}
+
+body.dark-mode .btn-close-modal {
+  color: #888;
+}
+
+body.dark-mode .warning-box {
+  background-color: rgba(255, 107, 107, 0.15);
+  border-color: rgba(255, 107, 107, 0.3);
+}
+
+body.dark-mode .warning-title {
+  color: #ff8e8e;
+}
+
+body.dark-mode .warning-list li {
+  color: #ccc;
+}
+
+body.dark-mode .warning-list li strong {
+  color: #ff6b6b;
+}
+
+body.dark-mode .delete-input-group label {
+  color: #bbb;
+}
+
+body.dark-mode .delete-modal-footer {
+  background-color: #252525;
+  border-top-color: #333;
+}
+
+body.dark-mode .btn-modal-cancel {
+  background-color: #333;
+  border-color: #444;
+  color: #aaa;
+}
+
+body.dark-mode .btn-modal-cancel:hover {
+  background-color: #444;
+  color: #fff;
+}
+
+body.dark-mode .btn-modal-danger:disabled {
+  background-color: #4a2b2b;
+  color: #775555;
+}
+
+body.dark-mode .custom-modal-input {
+  background-color: #121212;
+  border-color: #333;
+  color: #fff;
 }

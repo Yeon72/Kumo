@@ -16,7 +16,7 @@ function openGlobalChatList() {
     chatContainer.classList.remove('minimized');
 }
 
-// 2. 🔴 빨간 뱃지 숫자 업데이트 함수 (현우님 로직 이식)
+// 2. 🔴 빨간 뱃지 숫자 업데이트 함수
 function updateSidebarBadge() {
     fetch('/api/chat/unread-count')
         .then(res => {
@@ -38,7 +38,7 @@ function updateSidebarBadge() {
 }
 
 // 3. 🚀 페이지 로드 시 실행 및 주기적 갱신
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
     updateSidebarBadge();
     // 10초마다 자동으로 숫자를 체크합니다.
     setInterval(updateSidebarBadge, 10000);
