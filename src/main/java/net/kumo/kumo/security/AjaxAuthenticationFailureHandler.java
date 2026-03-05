@@ -53,40 +53,48 @@ public class AjaxAuthenticationFailureHandler implements AuthenticationFailureHa
 		String failReasonLog = "";
 		
 		if (email != null) {
-			Optional<UserEntity> userOptional = userRepository.findByEmail(email);
-			
-			if (userOptional.isPresent()) {
-				// [CASE A] 존재하는 아이디 -> 비밀번호 틀림
-				UserEntity user = userOptional.get();
-				user.increaseFailCount();
-				userRepository.save(user);
-				
-				failCount = user.getLoginFailCount();
-				
-				// 2. 실패 사유 구체화 (DB 저장용)
-				if (failCount >= 5) {
-					showCaptcha = true;
-					failReasonLog = "비밀번호 5회 이상 오류 (캡차 요구)";
-					errorMessage = messageSource.getMessage("login.fail.captcha", null, locale);
-					
-					// [콘솔 로그] 강력 경고
-					log.warn("[보안 경고] 5회 이상 실패 계정 감지 | IP: {} | Email: {}", clientIp, email);
-				} else {
-					failReasonLog = "비밀번호 불일치 (" + failCount + "회)";
-					errorMessage = messageSource.getMessage("login.fail.mismatch", null, locale);
-					
-					// [콘솔 로그] 일반 경고
-					log.warn("[로그인 실패] 비밀번호 불일치 | IP: {} | Email: {} | 횟수: {}", clientIp, email, failCount);
-				}
-				
+			// [추가] 리캡차 검증 실패 케이스 처리
+			if ("CAPTCHA_FAILED".equals(exception.getMessage())) {
+				showCaptcha = true;
+				failReasonLog = "리캡차 인증 실패";
+				errorMessage = messageSource.getMessage("login.fail.captcha", null, locale);
+				log.warn("[보안 경고] 리캡차 미인증 또는 검증 실패 | Email: {}", email);
 			} else {
-				// [CASE B] 없는 아이디
-				failReasonLog = "존재하지 않는 계정 시도";
+				Optional<UserEntity> userOptional = userRepository.findByEmail(email);
 				
-				// [콘솔 로그]
-				log.warn("[로그인 실패] 존재하지 않는 계정 | IP: {} | 입력한 Email: {}", clientIp, email);
-				
-				errorMessage = messageSource.getMessage("login.fail.mismatch", null, locale);
+				if (userOptional.isPresent()) {
+					// [CASE A] 존재하는 아이디 -> 비밀번호 틀림
+					UserEntity user = userOptional.get();
+					user.increaseFailCount();
+					userRepository.save(user);
+					
+					failCount = user.getLoginFailCount();
+					
+					// 2. 실패 사유 구체화 (DB 저장용)
+					if (failCount >= 5) {
+						showCaptcha = true;
+						failReasonLog = "비밀번호 5회 이상 오류 (캡차 요구)";
+						errorMessage = messageSource.getMessage("login.fail.captcha", null, locale);
+						
+						// [콘솔 로그] 강력 경고
+						log.warn("[보안 경고] 5회 이상 실패 계정 감지 | IP: {} | Email: {}", clientIp, email);
+					} else {
+						failReasonLog = "비밀번호 불일치 (" + failCount + "회)";
+						errorMessage = messageSource.getMessage("login.fail.mismatch", null, locale);
+						
+						// [콘솔 로그] 일반 경고
+						log.warn("[로그인 실패] 비밀번호 불일치 | IP: {} | Email: {} | 횟수: {}", clientIp, email, failCount);
+					}
+					
+				} else {
+					// [CASE B] 없는 아이디
+					failReasonLog = "존재하지 않는 계정 시도";
+					
+					// [콘솔 로그]
+					log.warn("[로그인 실패] 존재하지 않는 계정 | IP: {} | 입력한 Email: {}", clientIp, email);
+					
+					errorMessage = messageSource.getMessage("login.fail.mismatch", null, locale);
+				}
 			}
 		} else {
 			// 이메일 파라미터 누락

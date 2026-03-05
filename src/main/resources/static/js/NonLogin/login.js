@@ -27,7 +27,25 @@ document.addEventListener("DOMContentLoaded", function() {
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
+            // 🌟 [보안 로직 추가] 캡차 영역이 보이고 있다면, 인증 여부 확인 필수!
+            const captchaArea = document.getElementById('captchaArea');
+            if (captchaArea && captchaArea.style.display !== 'none') {
+                const recaptchaResponse = grecaptcha.getResponse();
+                if (recaptchaResponse.length === 0) {
+                    const errorMsg = (typeof loginMessages !== 'undefined' && loginMessages.captcha_error) 
+                        ? loginMessages.captcha_error 
+                        : "로봇이 아니라는 것을 증명하기 위해 리캡차를 체크해 주세요.";
+                    alert(errorMsg);
+                    return false; // 제출 중단
+                }
+            }
+
             const formData = new URLSearchParams(new FormData(loginForm));
+            // 리캡차 토큰도 함께 전송 (필요 시)
+            const recaptchaToken = grecaptcha.getResponse();
+            if (recaptchaToken) {
+                formData.append('g-recaptcha-response', recaptchaToken);
+            }
 
             $.ajax({
                 url: loginForm.getAttribute('action'),
