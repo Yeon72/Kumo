@@ -207,4 +207,22 @@ public class ChatController {
         chatService.processLiveReadSignal(readSignal.getRoomId(), readSignal.getSenderId());
         messagingTemplate.convertAndSend("/sub/chat/room/" + readSignal.getRoomId(), readSignal);
     }
+
+    // 읽지 않은 메시지 개수 반환
+    @GetMapping("/api/chat/unread-count")
+    @ResponseBody // 화면 이동이 아니라 숫자 데이터만 반환하도록 설정
+    public ResponseEntity<Integer> getUnreadCount(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal net.kumo.kumo.security.AuthenticatedUser authUser) {
+
+        if (authUser == null) {
+            return ResponseEntity.status(401).build(); // 로그인 안됨
+        }
+
+        UserEntity currentUser = userRepository.findByEmail(authUser.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+
+        int unreadCount = chatService.getUnreadMessageCount(currentUser.getUserId());
+
+        return ResponseEntity.ok(unreadCount); // 안 읽은 개수 리턴
+    }
 }

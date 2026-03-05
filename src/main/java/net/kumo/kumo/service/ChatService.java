@@ -133,6 +133,12 @@ public class ChatService {
         chatMessageRepository.markMessagesAsRead(roomId, readerId);
     }
 
+    // 읽지 않은 메시지 개수 구함
+    @Transactional(readOnly = true)
+    public int getUnreadMessageCount(Long userId) {
+        return chatMessageRepository.countUnreadMessagesForUser(userId);
+    }
+
     // ======================================================================
     // 🌟 7. Entity -> DTO 변환 헬퍼 메서드
     // ======================================================================
