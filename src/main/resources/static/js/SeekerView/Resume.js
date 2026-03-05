@@ -47,42 +47,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 2. 공통 폼 복사 함수 (Clone 마법)
-    // ==========================================
-    function cloneField(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
+// 2. 공통 폼 복사 함수 (Clone 마법)
+// ==========================================
+// 자격증/어학 템플릿 (아이템이 없을 때 사용)
+const TEMPLATES = {
+    certFields: `
+        <div class="form-group row cert-item clonable-item">
+            <label>자격증</label>
+            <div class="input-group cert-group">
+                <input type="text" name="certName" class="custom-input" style="flex:1">
+                <input type="text" name="certPublisher" class="custom-input" style="flex:1">
+                <select name="certYear" class="custom-select" style="flex:1">
+                    <option value="" selected disabled>취득연도</option>
+                    ${Array.from({length: 57}, (_, i) => 2026 - i).map(y => `<option value="${y}">${y}</option>`).join('')}
+                </select>
+                <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>`,
+    langFields: `
+        <div class="form-group row mt-5 lang-item clonable-item">
+            <label>어학 능력</label>
+            <div class="input-group cert-group">
+                <input type="text" name="languageName" class="custom-input" style="flex:1">
+                <div class="toggle-group multi-segment" style="flex:2">
+                    <button type="button" class="toggle-btn active" data-value="ADVANCED">상급</button>
+                    <button type="button" class="toggle-btn" data-value="INTERMEDIATE">중급</button>
+                    <button type="button" class="toggle-btn" data-value="BEGINNER">초급</button>
+                    <input type="hidden" name="languageLevel" value="ADVANCED">
+                </div>
+                <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>`
+};
 
-        const firstItem = container.querySelector('.clonable-item');
-        if (!firstItem) return;
+function cloneField(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
 
-        const clone = firstItem.cloneNode(true);
+    const firstItem = container.querySelector('.clonable-item');
 
-        // 텍스트 입력창 초기화
-        clone.querySelectorAll('input[type="text"], textarea').forEach(input => {
-            input.value = '';
-        });
-
-        // 셀렉트박스 초기화
-        clone.querySelectorAll('select').forEach(select => {
-            select.selectedIndex = 0;
-        });
-
-        // 토글 버튼 그룹 초기화
-        clone.querySelectorAll('.toggle-group').forEach(group => {
-            group.querySelectorAll('.toggle-btn').forEach((btn, index) => {
-                if (index === 0) btn.classList.add('active');
-                else btn.classList.remove('active');
-            });
-            const hiddenInput = group.querySelector('input[type="hidden"]');
-            const firstBtn = group.querySelector('.toggle-btn');
-            if (hiddenInput && firstBtn) {
-                hiddenInput.value = firstBtn.getAttribute('data-value');
-            }
-        });
-
-        container.appendChild(clone);
+    // 🌟 아이템이 없으면 템플릿으로 생성, 있으면 기존처럼 복제
+    if (!firstItem) {
+        if (TEMPLATES[containerId]) {
+            container.insertAdjacentHTML('beforeend', TEMPLATES[containerId]);
+        }
+        return;
     }
+
+    const clone = firstItem.cloneNode(true);
+    clone.querySelectorAll('input[type="text"], textarea').forEach(input => input.value = '');
+    clone.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+    clone.querySelectorAll('.toggle-group').forEach(group => {
+        group.querySelectorAll('.toggle-btn').forEach((btn, index) => {
+            if (index === 0) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        const hiddenInput = group.querySelector('input[type="hidden"]');
+        const firstBtn = group.querySelector('.toggle-btn');
+        if (hiddenInput && firstBtn) hiddenInput.value = firstBtn.getAttribute('data-value');
+    });
+    container.appendChild(clone);
+}
 
     // ==========================================
     // 3. 추가 버튼 클릭 이벤트
@@ -96,17 +121,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     document.addEventListener('click', function(e) {
 
-        // A. X 버튼 클릭 시 삭제 (경력, 자격증, 어학 등)
-        const deleteBtn = e.target.closest('.btn-delete-item');
-        if (deleteBtn) {
-            const itemToRemove = deleteBtn.closest('.clonable-item');
-            const container = itemToRemove.parentElement;
-            // 원본 1개는 무조건 남기기
-            if (container.querySelectorAll('.clonable-item').length > 1) {
-                itemToRemove.remove();
-            }
-            return;
-        }
+// A. X 버튼 클릭 시 삭제
+const deleteBtn = e.target.closest('.btn-delete-item');
+if (deleteBtn) {
+    const itemToRemove = deleteBtn.closest('.clonable-item');
+    const container = itemToRemove.parentElement;
+    // 🌟 경력사항만 1개 보호, 자격증/어학은 전부 삭제 가능
+    if (container.id === 'careerFields' && container.querySelectorAll('.clonable-item').length <= 1) return;
+    itemToRemove.remove();
+    return;
+}
 
         // B. 토글 버튼 클릭 시 동작 (경력/신입, 어학 상/중/초, 공개/비공개 등 모든 토글)
         if (e.target.classList.contains('toggle-btn')) {

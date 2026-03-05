@@ -1,11 +1,15 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+
 <head>
     <meta charset="UTF-8" />
-    <title>KUMO RECRUITER - 지원자 관리</title>
+    <title th:text="#{app.info.page.title}">KUMO RECRUITER - 지원자 관리</title>
 
     <script th:src="@{/js/recruiter/main.js}"></script>
     <script th:src="@{/js/recruiter/recruiterHeader.js}"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -14,46 +18,41 @@
     <link rel="stylesheet" th:href="@{/css/recruiter/sidebar.css}" />
     <link rel="stylesheet" th:href="@{/css/recruiter/rightSidebar.css}" />
     <link rel="stylesheet" th:href="@{/css/recruiter/main.css}" />
+    <link rel="stylesheet" th:href="@{/css/recruiter/dark-theme.css}" />
     <link rel="stylesheet" th:href="@{/css/recruiter/applicantInfo.css}" />
     <link rel="stylesheet" th:href="@{/css/recruiter/calendar.css}" />
-    <link rel="stylesheet" th:href="@{/css/recruiter/dark-theme.css}" />
+
     <script th:src="@{/js/recruiter/rightSidebar.js}"></script>
-
-    <style>
-        .accordion-button.no-applicants::after { display: none !important; }
-        .accordion-button.no-applicants { cursor: default !important; background-color: #fafafa; }
-
-        /* 🌟 합격/불합격 처리된 열을 회색으로 흐리게 만드는 CSS */
-        .processed-row td {
-            background-color: #f8f9fa !important;
-            color: #adb5bd !important;
-        }
-        .processed-row .user-profile { opacity: 0.6; }
-        .processed-row .text-dark { color: #adb5bd !important; }
-    </style>
+    <script defer th:src="@{/js/recruiter/applicantInfo.js}"></script>
 </head>
+
 <body>
 <header th:replace="~{recruiterView/fragments/recruiterHeader :: headerFragment}"></header>
+
+<input type="hidden" id="loginUserEmail" th:value="${#authentication.principal.email}">
 
 <div class="dashboard-wrapper">
     <div th:replace="~{recruiterView/fragments/sidebar :: sidebarFragment}"></div>
 
     <div class="main-container">
         <main class="content-body">
-            <div class="applicant-card" style="background: transparent; box-shadow: none; padding: 0;">
+            <div class="applicant-card">
 
                 <div class="d-flex justify-content-between align-items-center mb-4 px-2">
-                    <div class="header-title-area d-flex align-items-center">
+                    <div class="header-title-area">
                         <h2 class="table-title mb-0 fw-bold" th:text="#{app.info.title}">내 공고 및 지원자 관리</h2>
-                    </div>
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="text-muted fw-semibold">총 진행 중인 공고:
-                            <span class="text-primary" th:text="${groupedList != null ? groupedList.size() : 0} + '건'">0건</span>
-                        </span>
+                        <div class="total-count-row">
+                            <span th:text="#{app.info.total.label}">총 진행 중인 공고</span>
+                            <span class="total-count-badge"
+                                th:text="${groupedList != null ? groupedList.?[status.toString() == 'RECRUITING'].size() : 0}">
+                                0
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="accordion job-accordion" id="jobListAccordion" th:if="${groupedList != null and !groupedList.isEmpty()}">
+                <div class="accordion job-accordion" id="jobListAccordion"
+                     th:if="${groupedList != null and !groupedList.isEmpty()}">
 
                     <div class="accordion-item" th:each="jobGroup, stat : ${groupedList}">
                         <h2 class="accordion-header" th:id="'heading' + ${stat.index}">
@@ -64,31 +63,35 @@
                                     aria-expanded="false">
                                 <div class="d-flex justify-content-between align-items-center w-100 pe-3">
                                     <div class="d-flex align-items-center gap-3">
-                                        <span class="badge bg-primary" th:if="${jobGroup.status == 'RECRUITING'}">진행중</span>
-                                        <span class="badge bg-secondary" th:if="${jobGroup.status != 'RECRUITING'}">마감</span>
-                                        <span class="fs-5" th:text="${jobGroup.jobTitle}">공고 제목</span>
+                                            <span class="badge bg-primary" th:if="${jobGroup.status == 'RECRUITING'}"
+                                                  th:text="#{app.info.status.recruiting}">진행중</span>
+                                        <span class="badge bg-secondary" th:if="${jobGroup.status != 'RECRUITING'}"
+                                              th:text="#{app.info.status.closed}">마감</span>
+                                        <span class="title-font" th:text="${jobGroup.jobTitle}">공고 제목</span>
                                     </div>
                                     <div class="text-muted font-sm">
-                                        <i class="bi bi-people-fill me-1"></i> 지원자 <strong class="text-dark" th:text="${jobGroup.applicantCount}">0</strong>명
+                                        <i class="bi bi-people-fill me-1"></i>
+                                        <span th:text="#{app.info.applicant.label}">지원자</span>
+                                        <strong class="text-dark" th:text="${jobGroup.applicantCount}">0</strong>
+                                        <span th:text="#{app.info.applicant.unit}">명</span>
                                     </div>
                                 </div>
                             </button>
                         </h2>
 
-                        <div th:if="${not #lists.isEmpty(jobGroup.applicants)}" th:id="'collapse' + ${stat.index}" class="accordion-collapse collapse" th:aria-labelledby="'heading' + ${stat.index}">
+                        <div th:if="${not #lists.isEmpty(jobGroup.applicants)}" th:id="'collapse' + ${stat.index}"
+                             class="accordion-collapse collapse" th:aria-labelledby="'heading' + ${stat.index}">
                             <div class="accordion-body">
                                 <div class="table-responsive mini-table">
                                     <table class="table table-hover mb-0">
                                         <thead>
                                         <tr>
-                                            <th>
-                                                <span th:text="#{app.info.table.name}">지원자 이름</span>
-                                            </th>
-                                            <th>연락처</th>
-                                            <th>이메일</th>
-                                            <th>지원 일자</th>
-                                            <th>상태</th>
-                                            <th class="text-center">이력서</th>
+                                            <th><span th:text="#{app.info.table.name}">지원자 이름</span></th>
+                                            <th th:text="#{app.info.table.contact}">연락처</th>
+                                            <th th:text="#{app.info.table.email}">이메일</th>
+                                            <th th:text="#{app.info.table.date}">지원 일자</th>
+                                            <th th:text="#{app.info.table.status}">상태</th>
+                                            <th class="text-center" th:text="#{app.info.table.resume}">이력서</th>
                                         </tr>
                                         </thead>
                                         <tbody>
@@ -98,29 +101,39 @@
 
                                             <td>
                                                 <div class="user-profile">
-                                                    <span class="avatar-sm bg-peach me-2">😊</span>
-                                                    <span class="fw-semibold user-name" th:text="${app.seekerName}">지원자 이름</span>
+                                                            <span class="fw-semibold user-name"
+                                                                  th:text="${app.seekerName}">지원자 이름</span>
                                                 </div>
                                             </td>
-                                            <td th:text="${app.seekerContact != null ? app.seekerContact : '-'}">연락처</td>
-                                            <td th:text="${app.seekerEmail != null ? app.seekerEmail : '-'}">이메일</td>
+                                            <td
+                                                    th:text="${app.seekerContact != null ? app.seekerContact : '-'}">
+                                                연락처</td>
+                                            <td th:text="${app.seekerEmail != null ? app.seekerEmail : '-'}">이메일
+                                            </td>
                                             <td class="text-muted" th:text="${app.appliedAt}">지원일</td>
                                             <td class="status-cell">
-                                                <span class="badge bg-warning text-dark" th:if="${app.status.name() == 'APPLIED'}">검토중</span>
-                                                <span class="badge bg-success" th:if="${app.status.name() == 'PASSED'}">합격</span>
-                                                <span class="badge bg-secondary" th:if="${app.status.name() == 'FAILED'}">불합격</span>
+                                                <span class="badge bg-warning"
+                                                      th:if="${app.status.name() == 'APPLIED'}"
+                                                      th:text="#{app.info.badge.applied}">검토중</span>
+                                                <span class="badge bg-success"
+                                                      th:if="${app.status.name() == 'PASSED'}"
+                                                      th:text="#{app.info.badge.passed}">합격</span>
+                                                <span class="badge bg-secondary"
+                                                      th:if="${app.status.name() == 'FAILED'}"
+                                                      th:text="#{app.info.badge.failed}">불합격</span>
                                             </td>
                                             <td class="text-center">
-                                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#resumeModal"
-                                                        onclick="loadResumeData(this)"
-                                                        th:data-app-id="${app.appId}"
+                                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                        data-bs-toggle="modal" data-bs-target="#resumeModal"
+                                                        onclick="loadResumeData(this)" th:data-app-id="${app.appId}"
                                                         th:data-seeker-id="${app.seekerId}"
+                                                        th:data-job-id="${jobGroup.jobId}"
+                                                        th:data-source="${app.targetSource}"
                                                         th:data-name="${app.seekerName}"
                                                         th:data-contact="${app.seekerContact}"
                                                         th:data-email="${app.seekerEmail}"
-                                                        th:data-job="${jobGroup.jobTitle}">
-                                                    열람
-                                                </button>
+                                                        th:data-job="${jobGroup.jobTitle}"
+                                                        th:text="#{app.info.btn.view}">열람</button>
                                             </td>
                                         </tr>
                                         </tbody>
@@ -132,7 +145,7 @@
                 </div>
 
                 <div th:if="${groupedList == null or groupedList.isEmpty()}" class="text-center py-5">
-                    <h5 class="text-muted">등록된 공고가 없습니다.</h5>
+                    <h5 class="text-muted" th:text="#{app.info.empty}">등록된 공고가 없습니다.</h5>
                 </div>
 
             </div>
@@ -145,153 +158,85 @@
 <div class="modal fade" id="resumeModal" tabindex="-1" aria-labelledby="resumeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header bg-light">
+            <div class="modal-header">
                 <div>
-                    <h4 class="modal-title fw-bold" id="resumeModalLabel"><span id="modalName">지원자 이름</span>의 이력서</h4>
-                    <p class="mb-0 text-muted mt-1">지원 공고: <span id="modalJob" class="fw-semibold text-dark">공고명</span> | <span id="modalContact">연락처</span> · <span id="modalEmail">이메일</span></p>
+                    <h4 class="modal-title fw-bold" id="resumeModalLabel">
+                        <span id="modalName">-</span>
+                        <span th:text="#{app.info.modal.title.suffix}">의 이력서</span>
+                    </h4>
+                    <p class="mb-0 text-muted mt-1">
+                        <span th:text="#{app.info.modal.job.label}">지원 공고</span>:
+                        <span id="modalJob" class="fw-semibold text-dark">-</span> |
+                        <span id="modalContact">-</span> · <span id="modalEmail">-</span>
+                    </p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body resume-modal-body" id="dynamicResumeBody">
                 <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">불러오는 중...</p>
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted" th:text="#{app.info.modal.loading}">불러오는 중...</p>
                 </div>
             </div>
-            <div class="modal-footer justify-content-between bg-light">
-                <button type="button" class="btn btn-outline-secondary px-4" id="btnReject" onclick="updateAppStatus('FAILED')"><i class="bi bi-x-circle me-1"></i> 불합격 처리</button>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-outline-secondary px-4" id="btnReject"
+                        onclick="updateAppStatus('FAILED')">
+                    <i class="bi bi-x-circle me-1"></i>
+                    <span th:text="#{app.info.btn.reject}">불합격 처리</span>
+                </button>
                 <div>
-                    <button type="button" class="btn btn-primary px-4 me-2" onclick="actionSchedule()"><i class="bi bi-calendar-check me-1"></i> 면접 제안</button>
-                    <button type="button" class="btn btn-success px-4" id="btnApprove" onclick="updateAppStatus('PASSED')"><i class="bi bi-check-circle me-1"></i> 합격 처리</button>
+                    <button type="button" class="btn btn-primary px-4 me-2" onclick="actionChat()">
+                        <i class="bi bi-chat-dots me-1"></i>
+                        <span th:text="#{app.info.btn.chat}">1:1 채팅 제안</span>
+                    </button>
+                    <button type="button" class="btn btn-success px-4" id="btnApprove"
+                            onclick="updateAppStatus('PASSED')">
+                        <i class="bi bi-check-circle me-1"></i>
+                        <span th:text="#{app.info.btn.approve}">합격 처리</span>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-    // 🌟 현재 열려있는 지원서의 ID 저장용 전역 변수
-    let currentAppId = null;
-
-    // 모달창 데이터 불러오기 (fetch)
-    async function loadResumeData(btn) {
-        currentAppId = btn.getAttribute('data-app-id'); // appId 저장
-
-        document.getElementById('modalName').innerText = btn.getAttribute('data-name');
-        document.getElementById('modalContact').innerText = btn.getAttribute('data-contact') || '-';
-        document.getElementById('modalEmail').innerText = btn.getAttribute('data-email') || '-';
-        document.getElementById('modalJob').innerText = btn.getAttribute('data-job');
-
-        const seekerId = btn.getAttribute('data-seeker-id');
-        const modalBody = document.getElementById('dynamicResumeBody');
-
-        modalBody.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">이력서 데이터를 불러오는 중입니다...</p></div>`;
-
-        try {
-            const response = await fetch(`/Recruiter/api/resume/${seekerId}`);
-            if(!response.ok) throw new Error('데이터 로드 실패');
-            const data = await response.json();
-            setTimeout(() => { renderResume(data, modalBody); }, 300);
-        } catch (error) {
-            modalBody.innerHTML = `<div class="text-center text-danger py-5"><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-2">이력서를 불러오지 못했습니다.</p></div>`;
-        }
-    }
-
-    // JSON 데이터를 HTML로 그리는 함수 (이전과 동일)
-    function renderResume(data, container) {
-        let html = '';
-        if (data.profile) {
-            html += `<div class="resume-section"><h5><i class="bi bi-person-lines-fill me-2"></i>자기소개 (<span class="text-primary">${data.profile.careerType || '미입력'}</span>)</h5><p class="text-secondary mb-0" style="line-height: 1.6; white-space: pre-wrap;">${data.profile.selfPr || '작성된 내용이 없습니다.'}</p></div>`;
-        }
-        if (data.condition) {
-            html += `<div class="resume-section"><h5><i class="bi bi-check2-square me-2"></i>희망 근무 조건</h5><div class="spec-item"><span class="label">희망 직무</span> ${data.condition.desiredJob || '미입력'}</div><div class="spec-item"><span class="label">희망 급여</span> ${data.condition.salaryType || ''} ${data.condition.desiredSalary || '미입력'}</div></div>`;
-        }
-        html += `<div class="resume-section"><h5><i class="bi bi-briefcase-fill me-2"></i>경력 사항</h5>`;
-        if (data.careers && data.careers.length > 0) {
-            data.careers.forEach(c => {
-                html += `<div class="border-bottom pb-2 mb-2 last-no-border"><div class="fw-bold fs-6">${c.companyName} <span class="text-muted small fw-normal ms-2">(${c.department || '-'})</span></div><div class="text-muted small">${c.startDate || ''} ~ ${c.endDate || '재직중'}</div><div class="mt-1 text-secondary" style="font-size: 0.9rem; white-space: pre-wrap;">${c.description || ''}</div></div>`;
-            });
-        } else { html += `<p class="text-muted small">등록된 경력이 없습니다.</p>`; }
-        html += `</div><div class="row">`;
-
-        html += `<div class="col-md-6"><div class="resume-section h-100"><h5><i class="bi bi-mortarboard-fill me-2"></i>최종 학력</h5>`;
-        if (data.education) {
-            let e = data.education;
-            let statusKr = e.status === 'GRADUATED' ? '졸업' : (e.status === 'ATTENDING' ? '재학' : (e.status === 'EXPECTED' ? '졸업예정' : '중퇴'));
-            html += `<div class="spec-item mb-2"><span class="fw-bold d-block">${e.schoolName}</span> <span class="text-muted small">${e.major || ''} (${statusKr})</span></div>`;
-        } else { html += `<p class="text-muted small">등록된 학력이 없습니다.</p>`; }
-        html += `</div></div>`;
-
-        html += `<div class="col-md-6"><div class="resume-section h-100"><h5><i class="bi bi-award-fill me-2"></i>자격 및 어학</h5>`;
-        let certsExist = false;
-        if (data.certificates && data.certificates.length > 0) {
-            data.certificates.forEach(c => { html += `<div class="spec-item mb-2"><span class="fw-bold d-block">${c.certName}</span> <span class="text-muted small">${c.issuer || '-'} (${c.acquisitionYear || '-'}년)</span></div>`; });
-            certsExist = true;
-        }
-        if (data.languages && data.languages.length > 0) {
-            data.languages.forEach(l => { html += `<div class="spec-item mb-2"><span class="fw-bold d-block">${l.language}</span> <span class="text-muted small">Level: ${l.level || '-'}</span></div>`; });
-            certsExist = true;
-        }
-        if (!certsExist) { html += `<p class="text-muted small">등록된 자격증이나 어학 정보가 없습니다.</p>`; }
-        html += `</div></div></div>`;
-
-        if (data.documents && data.documents.length > 0) {
-            html += `<div class="resume-section mt-3"><h5><i class="bi bi-file-earmark-pdf-fill me-2"></i>첨부 파일</h5>`;
-            data.documents.forEach(d => { html += `<a href="${d.fileUrl}" class="btn btn-sm btn-light border text-primary me-2 mb-2" target="_blank"><i class="bi bi-download me-1"></i> ${d.fileName}</a>`; });
-            html += `</div>`;
-        }
-        container.innerHTML = html;
-    }
-
-    // 🌟 합격/불합격 처리 (비동기)
-    async function updateAppStatus(status) {
-        if(!currentAppId) return;
-
-        // 버튼 비활성화 방지 연출 (옵션)
-        const btnApprove = document.getElementById('btnApprove');
-        const btnReject = document.getElementById('btnReject');
-        btnApprove.disabled = true; btnReject.disabled = true;
-
-        try {
-            const res = await fetch(`/Recruiter/api/application/${currentAppId}/status?status=${status}`, { method: 'POST' });
-
-            if(res.ok) {
-                // 1. 모달 닫기
-                const modalEl = document.getElementById('resumeModal');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                modal.hide();
-
-                // 2. 화면 동적 조작: 해당 줄(tr) 찾기
-                const row = document.getElementById(`app-row-${currentAppId}`);
-                const tbody = row.parentNode;
-
-                // 3. 상태 뱃지 변경 및 회색 처리
-                const badgeContainer = row.querySelector('.status-cell');
-                if(status === 'PASSED') {
-                    badgeContainer.innerHTML = '<span class="badge bg-success">합격</span>';
-                } else {
-                    badgeContainer.innerHTML = '<span class="badge bg-secondary">불합격</span>';
-                }
-                row.classList.add('processed-row');
-
-                // 4. 해당 줄을 테이블의 맨 밑으로 부드럽게 이동
-                tbody.appendChild(row);
-
-            } else {
-                alert("상태 업데이트에 실패했습니다.");
-            }
-        } catch(e) {
-            console.error(e);
-            alert("서버 통신 중 오류가 발생했습니다.");
-        } finally {
-            btnApprove.disabled = false; btnReject.disabled = false;
-        }
-    }
-
-    function actionSchedule() { alert('캘린더 연동 기능은 추후 개발 예정입니다.'); }
+<script th:inline="javascript">
+    /* <![CDATA[ */
+    const appMsg = {
+        loadFail:       /*[[#{app.info.msg.load_fail}]]*/ '이력서를 불러오지 못했습니다.',
+        updateFail:     /*[[#{app.info.msg.update_fail}]]*/ '상태 업데이트에 실패했습니다.',
+        serverError:    /*[[#{app.info.msg.server_error}]]*/ '서버 통신 중 오류가 발생했습니다.',
+        chatError:      /*[[#{app.info.msg.chat_error}]]*/ '채팅방 생성에 필요한 정보가 없습니다.',
+        errorTitle:     /*[[#{app.info.msg.error_title}]]*/ '오류',
+        loading:        /*[[#{app.info.modal.loading}]]*/ '이력서 데이터를 불러오는 중입니다...',
+        noCareer:       /*[[#{app.info.resume.no_career}]]*/ '등록된 경력이 없습니다.',
+        noEducation:    /*[[#{app.info.resume.no_education}]]*/ '등록된 학력이 없습니다.',
+        noCert:         /*[[#{app.info.resume.no_cert}]]*/ '등록된 자격증이나 어학 정보가 없습니다.',
+        labelIntro:     /*[[#{app.info.resume.label.intro}]]*/ '자기소개',
+        labelCondition: /*[[#{app.info.resume.label.condition}]]*/ '희망 근무 조건',
+        labelJob:       /*[[#{app.info.resume.label.job}]]*/ '희망 직무',
+        labelSalary:    /*[[#{app.info.resume.label.salary}]]*/ '희망 급여',
+        labelCareer:    /*[[#{app.info.resume.label.career}]]*/ '경력 사항',
+        labelEducation: /*[[#{app.info.resume.label.education}]]*/ '최종 학력',
+        labelCert:      /*[[#{app.info.resume.label.cert}]]*/ '자격 및 어학',
+        labelFile:      /*[[#{app.info.resume.label.file}]]*/ '첨부 파일',
+        badgePassed:    /*[[#{app.info.badge.passed}]]*/ '합격',
+        badgeFailed:    /*[[#{app.info.badge.failed}]]*/ '불합격',
+        employed:       /*[[#{app.info.resume.employed}]]*/ '재직중',
+        graduated:      /*[[#{app.info.resume.graduated}]]*/ '졸업',
+        attending:      /*[[#{app.info.resume.attending}]]*/ '재학',
+        expected:       /*[[#{app.info.resume.expected}]]*/ '졸업예정',
+        dropout:        /*[[#{app.info.resume.dropout}]]*/ '중퇴',
+        notEntered:     /*[[#{app.info.resume.not_entered}]]*/ '미입력'
+    };
+    /* ]]> */
 </script>
+
+<div th:replace="~{fragments/floatingChat :: floatingChatFragment}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.10/index.global.min.js"></script>
 <script th:src="@{/js/recruiter/global-calendar.js}"></script>
 </body>
+
 </html>

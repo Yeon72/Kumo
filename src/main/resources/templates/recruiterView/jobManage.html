@@ -42,13 +42,40 @@
           <table class="kumo-table">
             <thead>
               <tr>
-                <th th:utext="#{job.manage.table.title}">공고 제목 <i class="bi bi-arrow-down-up sort-icon"></i></th>
-                <th th:text="#{job.manage.table.region}">지역</th>
-                <th th:utext="#{job.manage.table.wage}">급료 <i class="bi bi-arrow-down-up sort-icon"></i></th>
-                <th th:utext="#{job.manage.table.reg_date}">등록 날짜 <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                <th>
+                  <a
+                    th:href="@{/Recruiter/JobManage(sortBy='title', sortDir=${sortBy == 'title' && sortDir == 'asc' ? 'desc' : 'asc'})}">
+                    <span th:text="#{job.manage.table.title}">제목</span>
+                    <i th:classappend="${sortBy == 'title'} ? (${sortDir == 'asc'} ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                      class="fa-solid"></i>
+                  </a>
+                </th>
+                <th>
+                  <a
+                    th:href="@{/Recruiter/JobManage(sortBy='region', sortDir=${sortBy == 'region' && sortDir == 'asc' ? 'desc' : 'asc'})}">
+                    <span th:text="#{job.manage.table.region}">지역</span>
+                    <i th:classappend="${sortBy == 'region'} ? (${sortDir == 'asc'} ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                      class="fa-solid"></i>
+                  </a>
+                </th>
+                <th>
+                  <a
+                    th:href="@{/Recruiter/JobManage(sortBy='salary', sortDir=${sortBy == 'salary' && sortDir == 'asc' ? 'desc' : 'asc'})}">
+                    <span th:text="#{job.manage.table.wage}">급료</span>
+                    <i th:classappend="${sortBy == 'salary'} ? (${sortDir == 'asc'} ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                      class="fa-solid"></i>
+                  </a>
+                </th>
+                <th>
+                  <a
+                    th:href="@{/Recruiter/JobManage(sortBy='date', sortDir=${sortBy == 'date' && sortDir == 'asc' ? 'desc' : 'asc'})}">
+                    <span th:text="#{job.manage.table.reg_date}">등록날짜</span>
+                    <i th:classappend="${sortBy == 'date'} ? (${sortDir == 'asc'} ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                      class="fa-solid"></i>
+                  </a>
+                </th>
                 <th th:text="#{job.manage.table.status}">상태</th>
                 <th th:text="#{job.manage.table.manage}">관리</th>
-                </tr>
               </tr>
             </thead>
             <tbody>
@@ -131,11 +158,11 @@
       </main>
     </div>
     <div th:replace="~{recruiterView/fragments/rightSidebar :: rightSidebarFragment}"></div>
-
   </div>
 
+  <div th:replace="~{fragments/floatingChat :: floatingChatFragment}"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script th:src="@{/js/recruiter/rightSidebar.js}"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.10/index.global.min.js"></script>
   <script th:src="@{/js/recruiter/global-calendar.js}"></script>
   <script th:inline="javascript">

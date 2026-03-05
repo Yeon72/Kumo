@@ -4,28 +4,28 @@
   </div>
 
   <div class="side-panel schedule-section">
-    <div class="panel-header" id="selected-date-title" th:text="#{main.panel.today_schedule}">
-      상세 일정
-    </div>
+    <div class="panel-header" id="selected-date-title" th:text="#{main.panel.today_schedule}">상세 일정</div>
     <div id="event-list-container" class="event-scroll-area">
       <div class="empty-state">
-        <p class="mb-0 text-center" th:utext="#{main.sidebar.no_schedule_guide}">
-          날짜를 클릭하여<br />일정을 확인하세요.
-        </p>
+        <p class="mb-0 text-center" th:utext="#{main.sidebar.no_schedule_guide}">날짜를 클릭하여<br />일정을 확인하세요.</p>
       </div>
     </div>
   </div>
 
   <div class="side-action-buttons">
     <a th:href="@{/Recruiter/JobPosting}" class="links text-decoration-none">
-      <button class="btn btn-common-action btn-sky-blue w-100" type="button" th:text="#{main.welcome.btn.post}">
-        공고 등록
-      </button>
+      <button class="btn btn-common-action btn-sky-blue w-100" type="button" th:text="#{main.welcome.btn.post}">공고
+        등록</button>
     </a>
-    <button class="btn btn-common-action btn-light-blue w-100 position-relative" type="button">
+
+    <button class="btn btn-common-action btn-light-blue w-100 chat-badge-wrapper" type="button"
+      onclick="openGlobalChatList()" style="position: relative;">
       <i class="bi bi-chat-dots-fill me-2"></i>
       <span th:text="#{main.sidebar.chat}">채팅</span>
-      <span class="badge-count">3</span>
+
+      <span class="unread-badge" id="side-unread-badge" style="display: none;"></span>
     </button>
   </div>
+
+  <script th:src="@{/js/recruiter/rightSidebar.js}"></script>
 </aside>

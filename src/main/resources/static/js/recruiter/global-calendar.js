@@ -95,6 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // 점 색상을 이벤트 색과 연동
       eventDidMount: function (info) {
+        
     info.el.style.background = "none";
     info.el.style.border = "none";
     info.el.style.boxShadow = "none";
@@ -111,6 +112,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return; // 이후 dot 스타일 적용 안 함
         }
     }
+        if (dayEl && dayEl.classList.contains("fc-day-other")) {
+          info.el.closest(".fc-daygrid-event-harness").style.display = "none";
+          return;
+        }
 
     const dot = info.el.querySelector(".fc-daygrid-event-dot");
     if (dot) {

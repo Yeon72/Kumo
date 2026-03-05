@@ -1,6 +1,7 @@
 package net.kumo.kumo.service;
 
-import net.kumo.kumo.domain.entity.Enum;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -8,10 +9,24 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.kumo.kumo.domain.dto.JoinRecruiterDTO;
 import net.kumo.kumo.domain.dto.ResumeDto;
-import net.kumo.kumo.domain.entity.*;
-import net.kumo.kumo.repository.*;
+import net.kumo.kumo.domain.entity.ApplicationEntity;
+import net.kumo.kumo.domain.entity.Enum;
 import net.kumo.kumo.domain.entity.Enum.NotificationType;
-import java.util.List;
+import net.kumo.kumo.domain.entity.NotificationEntity;
+import net.kumo.kumo.domain.entity.OsakaGeocodedEntity;
+import net.kumo.kumo.domain.entity.ProfileImageEntity;
+import net.kumo.kumo.domain.entity.ScoutOfferEntity;
+import net.kumo.kumo.domain.entity.SeekerProfileEntity;
+import net.kumo.kumo.domain.entity.TokyoGeocodedEntity;
+import net.kumo.kumo.domain.entity.UserEntity;
+import net.kumo.kumo.repository.ApplicationRepository;
+import net.kumo.kumo.repository.NotificationRepository;
+import net.kumo.kumo.repository.OsakaGeocodedRepository;
+import net.kumo.kumo.repository.ScheduleRepository;
+import net.kumo.kumo.repository.ScoutOfferRepository;
+import net.kumo.kumo.repository.SeekerProfileRepository;
+import net.kumo.kumo.repository.TokyoGeocodedRepository;
+import net.kumo.kumo.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -95,7 +110,8 @@ public class RecruiterService {
                 .orElseThrow(() -> new RuntimeException("구직자 정보를 찾을 수 없습니다."));
 
         // 이미 대기 중인 제안이 있는지 확인 (중복 제안 방지)
-        if (scoutOfferRepo.existsByRecruiterAndSeekerAndStatus(recruiter, seeker, ScoutOfferEntity.ScoutStatus.PENDING)) {
+        if (scoutOfferRepo.existsByRecruiterAndSeekerAndStatus(recruiter, seeker,
+                ScoutOfferEntity.ScoutStatus.PENDING)) {
             throw new RuntimeException("이미 제안을 보낸 인재입니다.");
         }
 
@@ -110,7 +126,7 @@ public class RecruiterService {
         // 2. 구직자에게 알림 생성
         NotificationEntity noti = NotificationEntity.builder()
                 .user(seeker)
-				.notifyType(NotificationType.SCOUT_OFFER)
+                .notifyType(NotificationType.SCOUT_OFFER)
                 .title("noti.scout.title")
                 .content(recruiter.getNickname()) // 🌟 사장님 닉네임만 저장 (번역 시 인자로 사용)
                 .targetUrl("/Seeker/scout")
@@ -139,7 +155,7 @@ public class RecruiterService {
                 .orElseThrow(() -> new RuntimeException("인재 정보를 찾을 수 없습니다."));
         return seekerService.getResume(user.getEmail());
     }
-    
+
     public UserEntity getCurrentUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
@@ -212,8 +228,30 @@ public class RecruiterService {
         log.info("👉 DB 저장 직전 Entity 상태: 위도={}, 경도={}", user.getLatitude(), user.getLongitude());
     }
 
-    public void deleteSchedule(Long id) {
-        scheduleRepository.deleteById(id);
+    public long getUnreadCount(String email) {
+        long totalUnread = 0;
+
+        // 1. 도쿄 공고 ID들만 숫자 리스트로 추출
+        List<TokyoGeocodedEntity> tokyoEntities = tokyoGeocodedRepository.findByUser_Email(email);
+        if (tokyoEntities != null && !tokyoEntities.isEmpty()) {
+            // 🌟 엔티티 봉지에서 ID(Long)만 꺼내서 리스트로 만듭니다.
+            List<Long> tokyoIds = tokyoEntities.stream()
+                    .map(TokyoGeocodedEntity::getDatanum) // 사장님 엔티티의 ID 필드명 확인!
+                    .toList();
+            totalUnread += applicationRepository.countUnreadBySourceAndPostIds("TOKYO", tokyoIds);
+        }
+
+        // 2. 오사카 공고 ID들만 숫자 리스트로 추출
+        List<OsakaGeocodedEntity> osakaEntities = osakaGeocodedRepository.findByUser_Email(email);
+        if (osakaEntities != null && !osakaEntities.isEmpty()) {
+            // 🌟 여기도 똑같이 ID만 추출!
+            List<Long> osakaIds = osakaEntities.stream()
+                    .map(OsakaGeocodedEntity::getDatanum) // 필드명이 다르면 수정해주세요.
+                    .toList();
+            totalUnread += applicationRepository.countUnreadBySourceAndPostIds("OSAKA", osakaIds);
+        }
+
+        return totalUnread;
     }
 
 }

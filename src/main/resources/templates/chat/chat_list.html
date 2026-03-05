@@ -13,6 +13,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script th:inline="javascript">
+        // 컨트롤러가 모델에 담아준 userId를 자바스크립트 변수로 변환
+        window.MY_USER_ID = [[${userId}]];
+    </script>
 </head>
 
 <body>
@@ -21,7 +25,8 @@
         <div class="chat-header"
             style="position: relative; display: flex; justify-content: space-between; align-items: center;">
 
-            <i class="fa-solid fa-map-location-dot header-icon" id="mapIcon" style="cursor: pointer;"></i>
+            <i class="fa-solid fa-map-location-dot header-icon" id="mapIcon" style="cursor: pointer;"
+                onclick="window.top.location.href='/map/main'"></i>
 
             <img th:src="@{/images/chatLogo.png}" class="header-logo" alt="KUMO"
                 style="position: absolute; left: 50%; transform: translateX(-50%);">
@@ -84,6 +89,8 @@
         </div>
 
     </div>
+
+    <input type="hidden" id="currentUserId" th:value="${userId}" />
 
     <script th:src="@{/js/chat/chat_list.js(v='1.0')}"></script>
 

@@ -8,26 +8,26 @@ import net.kumo.kumo.domain.entity.*;
 @NoArgsConstructor
 public class JobDetailDTO {
     private Long id;
-    private String source;         // 출처 (OSAKA, TOKYO 등)
+    private String source; // 출처 (OSAKA, TOKYO 등)
     private String title;
     private String companyName;
     private String address;
     private String wage;
     private String contactPhone;
 
-    private String position;       // 업무
+    private String position; // 업무
     private String jobDescription; // 업무 상세 요약
-    private String body;           // 상세 정보 (본문 전체)
+    private String body; // 상세 정보 (본문 전체)
 
-    private String imgUrls;        // 이미지
-    private Double lat;            // 지도용 위도
-    private Double lng;            // 지도용 경도
+    private String imgUrls; // 이미지
+    private Double lat; // 지도용 위도
+    private Double lng; // 지도용 경도
+
+    // ★ [추가] 사장님(구인자)의 고유 ID를 담을 그릇!
+    private Long userId;
 
     /**
      * 엔티티와 언어 설정(lang)을 받아 DTO를 생성합니다.
-     * @param entity DB에서 조회한 엔티티
-     * @param lang 언어 코드 ("ja": 일본어, "ko": 한국어)
-     * @param source 데이터 출처 ("OSAKA", "TOKYO")
      */
     public JobDetailDTO(BaseEntity entity, String lang, String source) {
         // 1. 공통 데이터 매핑 (언어 무관)
@@ -35,21 +35,18 @@ public class JobDetailDTO {
         this.source = source;
         this.contactPhone = entity.getContactPhone();
         this.imgUrls = entity.getImgUrls();
-        this.address = entity.getAddress(); // 주소는 기본 컬럼 사용 (필요 시 주소도 분기 가능)
+        this.address = entity.getAddress();
 
         // 2. 언어 감지 ("ja"인 경우에만 true)
         boolean isJp = "ja".equalsIgnoreCase(lang);
 
-        // 3. 언어별 데이터 매핑 (Helper 메소드 resolveText 사용)
-        // 일본어 설정(isJp)이고, 일본어 데이터가 있으면 -> 일본어 반환
-        // 그 외(한국어 설정이거나, 일본어 데이터가 없으면) -> 한국어(기본값) 반환
+        // 3. 언어별 데이터 매핑
         this.title = resolveText(isJp, entity.getTitleJp(), entity.getTitle());
         this.companyName = resolveText(isJp, entity.getCompanyNameJp(), entity.getCompanyName());
         this.wage = resolveText(isJp, entity.getWageJp(), entity.getWage());
         this.position = resolveText(isJp, entity.getPositionJp(), entity.getPosition());
 
         // 4. 상세 내용 (Body) 처리 로직
-        // 우선순위: JobDescription(상세) > Notes(비고) > Body(원문)
         String desc = resolveText(isJp, entity.getJobDescriptionJp(), entity.getJobDescription());
         String notes = resolveText(isJp, entity.getNotesJp(), entity.getNotes());
 
@@ -58,19 +55,28 @@ public class JobDetailDTO {
         } else if (hasText(notes)) {
             this.body = notes;
         } else {
-            this.body = entity.getBody(); // 최후의 수단 (HTML 원문 등)
+            this.body = entity.getBody(); // 최후의 수단
         }
 
-        // 화면 표기용 jobDescription 필드에도 동일하게 할당
         this.jobDescription = this.body;
 
-        // 5. 좌표 데이터 추출 (Geocoded 엔티티인 경우에만)
+        // 5. ★ [수정됨] 좌표 데이터 추출 및 사장님 ID(userId) 안전하게 추출!
         if (entity instanceof OsakaGeocodedEntity) {
-            this.lat = ((OsakaGeocodedEntity) entity).getLat();
-            this.lng = ((OsakaGeocodedEntity) entity).getLng();
+            OsakaGeocodedEntity osaka = (OsakaGeocodedEntity) entity;
+            this.lat = osaka.getLat();
+            this.lng = osaka.getLng();
+            // 자식 주머니에서 사장님 번호 꺼내기
+            if (osaka.getUser() != null) {
+                this.userId = osaka.getUser().getUserId();
+            }
         } else if (entity instanceof TokyoGeocodedEntity) {
-            this.lat = ((TokyoGeocodedEntity) entity).getLat();
-            this.lng = ((TokyoGeocodedEntity) entity).getLng();
+            TokyoGeocodedEntity tokyo = (TokyoGeocodedEntity) entity;
+            this.lat = tokyo.getLat();
+            this.lng = tokyo.getLng();
+            // 자식 주머니에서 사장님 번호 꺼내기
+            if (tokyo.getUser() != null) {
+                this.userId = tokyo.getUser().getUserId();
+            }
         } else {
             // NoGeocoded 테이블은 좌표 없음
             this.lat = null;

@@ -13,8 +13,10 @@ body {
     color: #333;
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-y: auto;
+        scrollbar-gutter: stable;
+            /* ← 이거 추가! */
 }
 
 a {
@@ -32,33 +34,23 @@ ul {
 .mypage-container {
     display: flex;
     margin-left: 240px;
-    /* 사이드바 너비 */
     flex: 1;
-        /* body의 남은 공간 채우기 */
     min-height: calc(100vh - 60px);
     justify-content: center;
-        /* ← 중앙정렬 */
 }
 
 .content-area {
     flex: 1;
-    overflow-y: auto;
-    overflow-x: auto;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 20px;
+    overflow-y: visible;
+    overflow-x: visible;
     background-color: #f8faff;
-    padding: 0;
-    max-width: 700px;
-    /* 헤더가 있다면 */
     margin-top: 40px;
-    /* 헤더 높이 */
+    margin-bottom: 80px;
     min-height: 0;
-        scrollbar-width: none;
-            /* Firefox */
-            -ms-overflow-style: none;
-            /* IE */
-}
-
-body.dark-mode .content-area {
-    background-color: #121212;
+    max-width: 700px;
 }
 
 /* ============================
@@ -67,7 +59,6 @@ body.dark-mode .content-area {
 .settings-container {
     padding: 40px 60px;
     max-width: 100%;
-    /* container는 content-area에 맞춤 */
     margin: 0;
 }
 
@@ -81,7 +72,6 @@ body.dark-mode .content-area {
     font-size: 22px;
     font-weight: 700;
     color: #333;
-    margin-bottom: 12x;
 }
 
 /* 프로필 사진 섹션 */
@@ -155,12 +145,18 @@ body.dark-mode .content-area {
     color: #3e424e;
 }
 
-/* 토글 스위치 */
+/* ============================================================
+   ☁️ KUMO 시그니처 토글 스위치 (Premium 리뉴얼)
+   ============================================================ */
+
+/* 1. 컨테이너: 클릭하기 딱 좋은 황금 비율 */
 .switch {
     position: relative;
     display: inline-block;
-    width: 44px;
-    height: 24px;
+    width: 48px;
+    /* 44px에서 살짝 키워 조작감을 높였습니다 */
+    height: 26px;
+    /* 24px에서 살짝 키워 안정감을 줬습니다 */
 }
 
 .switch input {
@@ -169,6 +165,7 @@ body.dark-mode .content-area {
     height: 0;
 }
 
+/* 2. 슬라이더 바닥 (라이트 모드: 보들보들한 느낌) */
 .slider {
     position: absolute;
     cursor: pointer;
@@ -176,33 +173,73 @@ body.dark-mode .content-area {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #e0e0e0;
-    transition: .4s;
-}
-
-.slider.round {
+    background-color: #e9ecef;
+    /* 단순 회색보다 맑은 연회색 */
+    border: 1.5px solid #dee2e6;
+    /* 미세한 테두리가 고급스러움의 차이! */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* 쫀득한 움직임 */
     border-radius: 34px;
 }
 
+/* 3. 동그란 손잡이 (Thumb: 조약돌 스타일) */
 .slider:before {
     position: absolute;
     content: "";
     height: 18px;
     width: 18px;
-    left: 3px;
-    bottom: 3px;
+    left: 3.5px;
+    bottom: 2.5px;
     background-color: white;
-    transition: .4s;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    /* 손잡이가 입체적으로 보임 */
 }
 
+/* 4. 켜졌을 때 (Active - KUMO Sky Blue) */
 input:checked+.slider {
-    background-color: #2fb6ff;
+    background-color: #7db4e6;
+    /* 사장님의 대표 하늘색 적용! */
+    border-color: #7db4e6;
 }
 
 input:checked+.slider:before {
-    transform: translateX(20px);
+    transform: translateX(21px);
+    /* 이동 거리를 부드럽게 재조정 */
+    box-shadow: 0 2px 8px rgba(125, 180, 230, 0.4);
+    /* 하늘색 광채 효과 */
+}
+
+
+/* ============================================================
+   🌙 다크 모드 (Warm-Dark 전용: 파란 기 없는 따뜻함)
+   ============================================================ */
+
+/* 배경과 조화를 이루는 따뜻한 차콜 톤 */
+body.dark-mode .slider {
+    background-color: #3a3735;
+    /* 푸른 기를 쏙 뺀 웜 차콜 */
+    border-color: #4a4745;
+}
+
+body.dark-mode .slider:before {
+    background-color: #eceae7;
+    /* 손잡이도 따뜻한 크림 화이트로 */
+}
+
+/* 다크 모드에서 켜졌을 때 (네온 조명 효과) */
+body.dark-mode input:checked+.slider {
+    background-color: rgba(125, 180, 230, 0.2);
+    /* 은은한 하늘색 배경 */
+    border-color: #7db4e6;
+}
+
+body.dark-mode input:checked+.slider:before {
+    background-color: #7db4e6;
+    /* 켜지면 손잡이가 하늘색 보석처럼 빛남 */
+    box-shadow: 0 0 12px rgba(125, 180, 230, 0.6);
+    /* 따뜻한 어둠 속의 발광 효과 */
 }
 
 /* 하단 버튼 */
@@ -238,7 +275,7 @@ input:checked+.slider:before {
 }
 
 /* ============================
-   3. 프로필 모달 (settings 스타일)
+   3. 프로필 모달
    ============================ */
 .profile-modal-overlay {
     position: fixed;
@@ -376,7 +413,6 @@ input:checked+.slider:before {
     background-color: #1e88e5;
 }
 
-/* 모달 애니메이션 */
 @keyframes fadeInOverlay {
     from {
         opacity: 0;
@@ -434,7 +470,7 @@ input:checked+.slider:before {
 }
 
 /* ============================
-   4. 회원 탈퇴 모달 (기존 유지)
+   4. 회원 탈퇴 모달
    ============================ */
 .delete-modal-overlay {
     display: none;
@@ -555,7 +591,7 @@ input:checked+.slider:before {
     display: flex;
     gap: 10px;
     padding: 20px 25px;
-    background-color:#f9f9f9;
+    background-color: #f9f9f9;
     border-top: 1px solid #eee;
 }
 
@@ -587,35 +623,49 @@ input:checked+.slider:before {
 }
 
 /* ============================
-   5. 다크모드
+   5. 다크모드 CSS 변수
    ============================ */
 body.dark-mode {
-    background-color: #121212;
-    color: var(--text-main, #fff);
+    --bg-main: #1e1f21;
+    --bg-card: #2a2b2e;
+    --text-main: #e3e5e8;
+    --text-sub: #91959b;
+    --border-color: #37393d;
+    --primary-color: #7db4e6;
+    --hover-bg: #2f3033;
+    --dropdown-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================
+   5. 다크모드 스타일
+   ============================ */
+body.dark-mode {
+    background-color: #1e1f21;
+    color: #e3e5e8;
 }
 
 body.dark-mode .content-area {
-    background-color: #121212;
+    background-color: #1e1f21;
 }
 
 body.dark-mode .content-header {
-    border-bottom-color: #ffffff;
+    border-bottom-color: #37393d;
 }
 
 body.dark-mode .settings-title {
-    color: #fff;
+    color: #e3e5e8;
 }
 
 body.dark-mode .label {
-    color: #ffffff;
+    color: #e3e5e8;
 }
 
 body.dark-mode .value {
-    color: #cbcbcb;
+    color: #b0b3b8;
 }
 
 body.dark-mode .btn-edit {
-    color: #e7e7e7;
+    color: #c8cace;
 }
 
 body.dark-mode .btn-edit:hover {
@@ -623,65 +673,95 @@ body.dark-mode .btn-edit:hover {
 }
 
 body.dark-mode .btn-upload-photo {
-    background-color: #121212;
+    background-color: #1e1f21;
+    border-color: #eeeeee;
     color: #7db4e6;
 }
 
+body.dark-mode .btn-upload-photo:hover {
+    border-color: #42a5f5;
+}
+
 body.dark-mode .profile-modal-window {
-    background-color: #1e1e1e;
-    border: 1px solid #333;
+    background-color: #2a2b2e;
+    border: 1px solid #37393d;
 }
 
 body.dark-mode .profile-modal-header {
-    border-bottom-color: #333;
+    border-bottom-color: #37393d;
 }
 
 body.dark-mode .profile-modal-header h3 {
-    color: #fff;
+    color: #e3e5e8;
 }
 
 body.dark-mode .profile-modal-footer {
-    background-color: #252525;
+    background-color: #252729;
 }
 
 body.dark-mode .preview-wrapper {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background-color: #32353a;
+    border-color: #37393d;
 }
 
 body.dark-mode .custom-file-btn {
-    background-color: #2d2d2d;
-    border-color: #444;
-    color: #fff;
+    background-color: #32353a;
+    border-color: #37393d;
+    color: #e3e5e8;
 }
 
 body.dark-mode .btn-cancel {
-    background-color: #333;
-    border-color: #444;
-    color: #aaa;
+    background-color: #32353a;
+    border-color: #37393d;
+    color: #91959b;
 }
 
 body.dark-mode .guide-text {
-    color: var(--text-sub, #aaa);
+    color: #91959b;
 }
 
 body.dark-mode .custom-modal-input {
-    background-color: #121212;
-    border-color: #333;
-    color: #fff;
+    background-color: #252729;
+    border-color: #37393d;
+    color: #e3e5e8;
 }
 
+body.dark-mode .delete-modal-content {
+    background-color: #2a2b2e;
+    border-color: #37393d;
+}
+
+body.dark-mode .delete-modal-header {
+    border-bottom-color: #37393d;
+}
+
+body.dark-mode .delete-modal-header h3 {
+    color: #e3e5e8;
+}
+
+body.dark-mode .delete-modal-footer {
+    background-color: #252729;
+    border-top-color: #37393d;
+}
+
+body.dark-mode .btn-modal-cancel {
+    background-color: #32353a;
+    border-color: #37393d;
+    color: #91959b;
+}
+
+/* 푸터 */
 footer,
 .non-login-footer {
-    background-color:#fff !important;
+    background-color: #fff !important;
     border-top: 1px solid #eee;
     margin-top: 0 !important;
 }
 
 body.dark-mode footer,
-.non-login-footer {
-    background-color: #121212 !important;
-    border-top: 1px solid #1e1e1e;
+body.dark-mode .non-login-footer {
+    background-color: #1e1f21 !important;
+    border-top: 1px solid #37393d;
     margin-top: 0 !important;
 }
 
@@ -689,12 +769,73 @@ body.dark-mode footer,
     margin-left: 10px;
     /* 🌟 이 숫자를 조절해서 간격을 원하는 만큼 띄우세요! */
     font-size: 14px;
-    color: #3e424e;
+    color: #b0b3b8;
 }
 
 /* 다크모드 대응도 잊지 마세요! */
 body.dark-mode .age-suffix {
     color: #cbcbcb;
+}
+
+/* --- 회원 탈퇴 모달 다크모드 추가 --- */
+body.dark-mode .delete-modal-content {
+    background-color: #1e1e1e;
+    border-color: #333;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .delete-modal-header {
+    border-bottom-color: #333;
+}
+
+body.dark-mode .delete-modal-header h3 {
+    color: #fff;
+}
+
+body.dark-mode .btn-close-modal {
+    color: #888;
+}
+
+body.dark-mode .warning-box {
+    background-color: rgba(255, 107, 107, 0.15);
+    border-color: rgba(255, 107, 107, 0.3);
+}
+
+body.dark-mode .warning-title {
+    color: #ff8e8e;
+}
+
+body.dark-mode .warning-list li {
+    color: #ccc;
+}
+
+body.dark-mode .warning-list li strong {
+    color: #ff6b6b;
+}
+
+body.dark-mode .delete-input-group label {
+    color: #bbb;
+}
+
+body.dark-mode .delete-modal-footer {
+    background-color: #252525;
+    border-top-color: #333;
+}
+
+body.dark-mode .btn-modal-cancel {
+    background-color: #333;
+    border-color: #444;
+    color: #aaa;
+}
+
+body.dark-mode .btn-modal-cancel:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+body.dark-mode .btn-modal-danger:disabled {
+    background-color: #4a2b2b;
+    color: #775555;
 }
 
 footer,
@@ -719,5 +860,54 @@ footer,
 
 .content-area::-webkit-scrollbar {
     display: none;
-    /* Chrome, Safari */
+}
+
+/* ============================================================
+   ✨ KUMO 시그니처 커스텀 스크롤바 (전역 적용)
+   ============================================================ */
+
+/* 1. 스크롤바 전체 너비 설정 (아주 얇게) */
+::-webkit-scrollbar {
+    width: 8px;
+    /* 세로 스크롤바 두께 */
+    height: 8px;
+    /* 가로 스크롤바 두께 */
+}
+
+/* 2. 스크롤바 트랙 (바닥) */
+::-webkit-scrollbar-track {
+    background: transparent;
+    /* 배경을 투명하게 해서 평소엔 안 보이게 */
+}
+
+/* 3. 스크롤바 핸들 (움직이는 막대) */
+::-webkit-scrollbar-thumb {
+    background-color: rgba(125, 180, 230, 0.3);
+    /* 쿠모 하늘색에 투명도 30% */
+    border-radius: 10px;
+    /* 조약돌처럼 둥글게 */
+    border: 2px solid transparent;
+    /* 트랙과 약간 띄워진 느낌 */
+    background-clip: padding-box;
+}
+
+/* 4. 마우스를 올렸을 때만 더 선명하게 */
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(125, 180, 230, 0.7);
+    /* 좀 더 진한 하늘색으로 변신 */
+}
+
+/* 🌙 다크모드 대응 */
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1);
+    /* 다크모드에선 은은한 화이트 */
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(125, 180, 230, 0.5);
+    /* 다크모드 호버 시 하늘색 광채 */
+}
+
+footer strong {
+    color: #8fa1b3;
 }

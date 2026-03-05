@@ -576,52 +576,51 @@ dialog[open] {
    ================================================== */
 .image-modal {
     display: none;
-    /* 평소엔 숨김 */
     position: fixed;
-    /* 화면 전체 고정 */
-    z-index: 10000;
-    /* 최상단 */
+    z-index: 9999;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.9);
-    /* 배경 진하게 */
+    display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
 }
 
+/* ★ 핵심 수술 부위: 이미지가 모니터를 뚫지 못하게 절대 크기 제한! */
 .modal-content-img {
-    max-width: 95%;
-    /* 여백 살짝 남기고 꽉 차게 */
-    max-height: 90%;
+    width: 90%;
+    /* 좌우 여백을 살짝 남김 */
+    max-width: 450px;
+    /* 모바일 컨테이너(480px)를 넘어가지 않도록 철벽 방어! */
+    max-height: 80vh;
+    /* 세로 길이도 브라우저 높이의 80%까지만 허용 */
     object-fit: contain;
-    animation: zoomIn 0.2s ease-out;
+    /* 비율 찌그러짐 완벽 방지 */
+    border-radius: 8px;
+    /* 모서리를 살짝 둥글게 처리 (선택) */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    /* 살짝 그림자 추가로 입체감 */
 }
 
 /* ★ 여기가 문의하신 닫기 버튼 스타일입니다 ★ */
 .close-modal-btn {
     position: absolute;
-    top: 20px;
-    /* 위쪽 여백 줄임 */
-    right: 20px;
-    /* 오른쪽 여백 줄임 */
-    color: #868e96;
-    /* 흐릿한 회색에서 선명한 흰색으로 */
-    font-size: 45px;
-    /* 크기 키움 */
-    font-weight: 300;
-    /* 너무 두껍지 않게 세련되게 */
+    top: 30px;
+    right: 30px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
     cursor: pointer;
-    line-height: 1;
-    z-index: 10001;
-    transition: transform 0.2s;
+    transition: 0.3s;
+    z-index: 10000;
 }
 
 .close-modal-btn:hover {
-    transform: scale(1.2);
-    /* 마우스 올리면 살짝 커짐 */
-    color: #ddd;
+    color: #ff1a1a !important;
+    transform: scale(1.15);
 }
 
 /* ==================================================

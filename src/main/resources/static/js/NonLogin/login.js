@@ -1,28 +1,48 @@
-/* ==========================================
-   KUMO 로그인 페이지 Logic (AJAX 통합)
-   ========================================== */
+document.addEventListener("DOMContentLoaded", function () {
+    
+    // 🌟 KUMO 전용 작은 알림창 설정
+const KumoSwal = Swal.mixin({
+    width: '340px',
+    padding: '1.2em',
+    customClass: {
+        title: 'kumo-swal-title',
+        popup: 'kumo-swal-popup'
+    },
+    confirmButtonColor: '#7db4e6',
+    cancelButtonColor: '#6c757d',
+    // 다크모드 대응
+    background: document.body.classList.contains('dark-mode') ? '#2a2b2e' : '#fff',
+    color: document.body.classList.contains('dark-mode') ? '#e3e5e8' : '#333'
+});
 
-document.addEventListener("DOMContentLoaded", function() {
+// 사용 예시
+function alertSns() {
+    KumoSwal.fire({
+        icon: 'info',
+        title: loginMessages.sns_alert
+    });
+}
 
-    // 1. [아이디 불러오기] 페이지 로드 시 로컬 스토리지 확인
-    // 기존에 cookie를 뒤지던 로직을 localStorage로 통일했습니다.
     const savedEmail = localStorage.getItem("savedEmail");
     const emailInput = document.querySelector('input[name="email"]');
     const saveIdCheckbox = document.getElementById('saveId');
 
     if (savedEmail && emailInput) {
         emailInput.value = savedEmail;
-        if (saveIdCheckbox) {
-            saveIdCheckbox.checked = true;
-        }
+        if (saveIdCheckbox) saveIdCheckbox.checked = true;
     }
 
     const loginForm = document.querySelector('form');
-    const errorMsgBox = document.querySelector('.login-error-msg');
     const inputs = document.querySelectorAll('.custom-input');
     const captchaArea = document.getElementById('captchaArea');
 
-    // 2. [로그인 제출] 비동기(AJAX) 처리
+    const isDark = () => document.body.classList.contains('dark-mode');
+    const swalTheme = () => ({
+        background: isDark() ? '#2a2b2e' : '#fff',
+        color: isDark() ? '#e3e5e8' : '#333',
+        confirmButtonColor: '#7db4e6'
+    });
+
     if (loginForm) {
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -36,8 +56,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 contentType: 'application/x-www-form-urlencoded',
 
                 success: function(response) {
-                    // ★ [아이디 저장 로직 녹여내기]
-                    // 오타 수정: querySelector.('.saveId') -> getElementById('saveId')
                     const emailVal = emailInput.value;
                     const isSaveChecked = saveIdCheckbox ? saveIdCheckbox.checked : false;
 
@@ -47,30 +65,25 @@ document.addEventListener("DOMContentLoaded", function() {
                         localStorage.removeItem("savedEmail");
                     }
 
-                    // 🌟 서버에서 내려준 경로로 이동 (권한별 분기)
                     window.location.href = response.redirectUrl || '/';
                 },
 
                 error: function(xhr) {
                     const response = xhr.responseJSON;
+                    const errorText = response?.message
+                        || (typeof loginMessages !== 'undefined' ? loginMessages.error_text : '아이디 또는 비밀번호가 일치하지 않습니다.');
 
-                    if (errorMsgBox) {
-                        const errorText = errorMsgBox.querySelector('span');
-                        if (response && response.message && errorText) {
-                            errorText.textContent = response.message;
-                        }
-                        errorMsgBox.style.display = 'flex';
+                    Swal.fire({
+                        icon: 'error',
+                        title: typeof loginMessages !== 'undefined' ? loginMessages.error_title : '로그인 실패',
+                        text: errorText,
+                        ...swalTheme()
+                    });
 
-                        // 캡차 노출 로직
-                        if (response && response.showCaptcha) {
-                            if (captchaArea) {
-                                captchaArea.style.display = 'block';
-                                console.warn("보안 인증(CAPTCHA)이 활성화되었습니다.");
-                            }
-                        }
+                    if (response?.showCaptcha && captchaArea) {
+                        captchaArea.style.display = 'block';
                     }
 
-                    // 비밀번호 입력창 초기화 및 포커스
                     const pwInput = document.querySelector('input[name="password"]');
                     if (pwInput) {
                         pwInput.value = '';
@@ -81,30 +94,31 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // 3. 입력 시작 시 에러 메시지 숨기기
-    if (errorMsgBox) {
-        inputs.forEach(input => {
-            input.addEventListener('input', function() {
-                errorMsgBox.style.display = 'none';
-            });
+    // 입력 시 에러 숨기기
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            // SweetAlert는 자동으로 닫히므로 별도 처리 불필요
         });
-    }
+    });
 
-    // 4. URL 파라미터 정리
+    // URL 파라미터 정리
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('error')) {
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
+        window.history.replaceState({}, document.title, window.location.pathname);
     }
 });
 
-/**
- * SNS 로그인 버튼 클릭 시 알림창
- */
+// 구글/라인 SNS 버튼 클릭
 function alertSns() {
-    if (typeof loginMessages !== 'undefined' && loginMessages.sns_alert) {
-        alert(loginMessages.sns_alert);
-    } else {
-        alert("서비스 준비 중입니다.");
-    }
+    const isDark = document.body.classList.contains('dark-mode');
+    Swal.fire({
+        icon: 'info',
+        title: typeof loginMessages !== 'undefined' ? loginMessages.sns_alert : '서비스 준비 중입니다.',
+        confirmButtonColor: '#7db4e6',
+        background: isDark ? '#2a2b2e' : '#fff',
+        color: isDark ? '#e3e5e8' : '#333',
+        width: '360px',        // ← 크기 축소
+        padding: '1.5em',      // ← 내부 여백 축소
+        toast: false
+    });
 }

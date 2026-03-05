@@ -221,28 +221,40 @@
 /* badge */
 /* ========================= */
 
-.badge-count {
+/* ========================= */
+/* badge (카카오톡 감성 신형 뱃지) */
+/* ========================= */
 
-  background: #ff6b6b;
+/* 1. 버튼 구석에 뱃지를 고정시키기 위한 설정 */
+.chat-badge-wrapper {
+  position: relative !important;
+}
 
-  color: white;
-
-  border-radius: 50%;
-
-  padding: 2px 7px;
-
-  font-size: 0.75rem;
-
-  font-weight: 700;
-
-  position: absolute;
-
+/* 2. 🔴 카톡 감성 빨간색 알림 뱃지 */
+.unread-badge {
+  position: absolute !important;
   top: -5px;
-
+  /* 버튼 위로 살짝 튀어나오게 */
   right: -5px;
-
-  border: 2px solid #ffffff;
-
+  /* 버튼 오른쪽으로 살짝 튀어나오게 */
+  background-color: #ff4d4f !important;
+  /* 쨍한 빨간색 */
+  color: white !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  min-width: 18px;
+  /* 숫자가 1개여도 완벽한 원형 유지 */
+  height: 18px;
+  border-radius: 10px;
+  /* 숫자가 커지면 알약 모양 */
+  padding: 0 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid white;
+  /* ★ 카톡 뱃지의 핵심: 하얀 테두리 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 10;
 }
 
 
@@ -305,4 +317,15 @@
 
   transform: translateY(-1px);
 
+}
+
+.kumo-cloud-animation {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
+.kumo-cloud-animation.cloud-show {
+  opacity: 1;
+  transform: translateY(0);
 }

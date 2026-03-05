@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8" />
     <title th:text="${job.title}">상세 정보</title>
-    <link rel="stylesheet" th:href="@{/css/NonLoginFooter.css}">
+    <link rel="stylesheet" th:href="@{/css/NonLoginFragments/NonLoginFooter.css}">
     <link rel="stylesheet" th:href="@{/css/mapView/job_detail.css}">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
 	<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -65,15 +65,12 @@
         </div>
     </div>
 
-    <div class="map-section" th:if="${job.lat != null}">
-        <iframe
-                width="100%"
-                height="100%"
-                frameborder="0" style="border:0"
+        <div class="map-section" th:if="${job.lat != null}">
+            <iframe width="100%" height="100%" frameborder="0" style="border:0"
                 th:src="'https://maps.google.com/maps?q=' + ${job.lat} + ',' + ${job.lng} + '&hl=es;z=14&output=embed'"
                 allowfullscreen="true">
-        </iframe>
-    </div>
+            </iframe>
+        </div>
 
     <div class="map-section" th:unless="${job.lat != null}"
          style="display:flex; align-items:center; justify-content:center; color:#999;"
@@ -83,7 +80,7 @@
 
     <div class="description-section">
         <h3 class="section-title" th:text="${lang == 'ja' ? '詳細情報' : '상세정보'}">상세정보</h3>
-        <div class="description-text" th:utext="${#strings.replace(job.body, '&#10;', '&lt;br/&gt;')}">
+        <div class="description-text" th:text="${job.body}">
             내용이 없습니다.
         </div>
     </div>
@@ -126,105 +123,133 @@
     </div>
 </div>
 
-<div class="fixed-bottom-bar" th:if="${isSeeker}">
-    <div class="btn-group-seeker">
-        <button class="btn-action btn-apply"
-                th:data-id="${job.id}"
-                th:data-source="${job.source}"
-                th:text="${lang == 'ja' ? '応募する' : '구인 신청'}"
-                onclick="applyForJob(this)">
-            구인 신청
-        </button>
+    <div class="fixed-bottom-bar" th:if="${isSeeker}">
+        <div class="btn-group-seeker">
 
-        <div class="icon-actions">
-	        <button class="btn-icon btn-scrap"
-	                th:data-id="${job.id}"
-	                th:data-source="${job.source}"
-	                onclick="toggleScrap(this)">
-		        
-		        <svg width="28" height="28" viewBox="0 0 24 24"
-		             th:fill="${isScraped == true ? '#4285F4' : 'none'}"
-		             th:stroke="${isScraped == true ? '#4285F4' : '#999'}"
-		             stroke-width="1.5">
-			        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-		        </svg>
-	        </button>
+            <div class="seeker-left">
+                <button class="btn-icon" id="chatToggleBtn"
+                    th:onclick="${job.userId != null} ? |toggleChatColor(this, '${job.userId}', '${job.id}', '${loginUserId}')| : 'alert(\'작성자 정보가 없는 공고라 채팅이 불가능합니다.\')'"
+                    title="1:1 채팅하기">
 
-            <button class="btn-icon" onclick="openReportModal()">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff4d4f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-            </button>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 21a9 9 0 1 0-8.5-5.6L2 22l6.6-1.6A9 9 0 0 0 12 21z"></path>
 
-            <button class="btn-icon" onclick="history.back()">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-            </button>
+                        <circle cx="8.5" cy="11.5" r="1" fill="#999" stroke="none"></circle>
+                        <circle cx="12" cy="11.5" r="1" fill="#999" stroke="none"></circle>
+                        <circle cx="15.5" cy="11.5" r="1" fill="#999" stroke="none"></circle>
+                    </svg>
+
+                </button>
+            </div>
+
+            <div class="seeker-center">
+                <button class="btn-action btn-apply" th:data-id="${job.id}" th:data-source="${job.source}"
+                    th:text="${lang == 'ja' ? '応募する' : '구인 신청'}" onclick="applyForJob(this)">
+                    구인 신청
+                </button>
+            </div>
+
+            <div class="seeker-right">
+                <button class="btn-icon btn-scrap" th:data-id="${job.id}" th:data-source="${job.source}"
+                    onclick="toggleScrap(this)">
+                    <svg width="28" height="28" viewBox="0 0 24 24" th:fill="${isScraped == true ? '#4285F4' : 'none'}"
+                        th:stroke="${isScraped == true ? '#4285F4' : '#999'}" stroke-width="1.5">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </button>
+                <button class="btn-icon" onclick="openReportModal()">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff4d4f" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </button>
+                <button class="btn-icon" onclick="history.back()">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+
         </div>
     </div>
-</div>
 
-<div id="reportModal" class="modal-overlay" style="display: none;">
-    <div class="modal-window">
-        <div class="modal-header">
-            <h3 th:text="${lang == 'ja' ? '通報する' : '신고하기'}">신고하기</h3>
-            <button class="btn-close-modal" onclick="closeReportModal()">×</button>
-        </div>
-
-        <div class="modal-body">
-            <div class="form-group">
-                <label th:text="${lang == 'ja' ? '投稿のタイトル' : '글 제목'}">글 제목</label>
-                <input type="text" class="modal-input" th:value="${job.title}" readonly>
+    <div id="reportModal" class="modal-overlay" style="display: none;">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>신고하기</h3>
+                <button class="btn-close-modal" onclick="closeReportModal()">×</button>
             </div>
 
-            <div class="form-group">
-                <label th:text="${lang == 'ja' ? '種類' : '종류'}">종류</label>
-                <select class="modal-select" id="reportType">
-                    <option value="" th:text="${lang == 'ja' ? '選択してください' : '선택해주세요'}">선택해주세요</option>
-                    <option value="spam" th:text="${lang == 'ja' ? 'スパム / 不適切な宣伝' : '스팸 / 부적절한 홍보'}">스팸 / 부적절한 홍보</option>
-                    <option value="false_info" th:text="${lang == 'ja' ? '虚偽の求人' : '허위 공고'}">허위 공고</option>
-                    <option value="abuse" th:text="${lang == 'ja' ? '暴言 / 差別的発言' : '욕설 / 비하 발언'}">욕설 / 비하 발언</option>
-                    <option value="other" th:text="${lang == 'ja' ? 'その他' : '기타'}">기타</option>
-                </select>
-            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>글 제목</label>
+                    <input type="text" class="modal-input" th:value="${job.title}" readonly>
+                </div>
 
-            <div class="form-group">
-                <label th:text="${lang == 'ja' ? '詳細内容' : '상세내용'}">상세내용</label>
-                <textarea class="modal-textarea" id="reportDetail"
-                          th:placeholder="${lang == 'ja' ? '通報の理由を詳細に入力してください。' : '신고 사유를 상세히 입력해주세요.'}"></textarea>
-            </div>
+                <div class="form-group">
+                    <label>종류</label>
+                    <select class="modal-select" id="reportType">
+                        <option value="">선택해주세요</option>
+                        <option value="spam">스팸 / 부적절한 홍보</option>
+                        <option value="false_info">허위 공고</option>
+                        <option value="abuse">욕설 / 비하 발언</option>
+                        <option value="other">기타</option>
+                    </select>
+                </div>
 
-            <div class="modal-footer">
-                <button class="btn-submit-report" onclick="submitReport()"
-                        th:text="${lang == 'ja' ? '通報する' : '신고하기'}">신고하기</button>
+                <div class="form-group">
+                    <label>상세내용</label>
+                    <textarea class="modal-textarea" id="reportDetail" placeholder="신고 사유를 상세히 입력해주세요."></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-submit-report" onclick="submitReport()">신고하기</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 
-<script th:inline="javascript">
-	/* <![CDATA[ */
-	// [수정] Spring Security를 이용한 로그인 여부 판별
-	const isUserLoggedIn = [[${#authorization.expression('isAuthenticated()')}]];
-	
-	// 🌟 2. [추가됨] 서버의 리소스 파일(properties)에서 다국어 메시지를 가져와 JS 객체로 만듭니다.
-	const MESSAGES = {
-		loginRequired: [[#{job.msg.loginRequired}]],
-	reportSuccess: [[#{job.msg.reportSuccess}]],
-	reportError: [[#{job.msg.reportError}]],
-	confirmReport: [[#{job.msg.confirmReport}]],
-	selectReportType: [[#{job.msg.selectReportType}]],
-	applyReady: [[#{job.msg.applyReady}]],
-	processError: [[#{job.msg.processError}]]
-	};
-	/* ]]> */
-</script>
+    <script th:inline="javascript">
+        /* <![CDATA[ */
+        // [수정] Spring Security를 이용한 로그인 여부 판별
+        const isUserLoggedIn = /*[[${#authorization.expression('isAuthenticated()')}]]*/ false;
+
+        // 🌟 VS Code가 에러를 뿜지 않도록 타임리프의 '주석 문법'으로 변경했습니다!
+        // 에디터는 주석 뒤의 문자열('...')을 보고 안심하고, 실제 서버는 주석 안의 코드를 실행해서 문자열을 바꿔치기합니다.
+        const MESSAGES = {
+            loginRequired: /*[[#{job.msg.loginRequired}]]*/ '로그인이 필요합니다.',
+            reportSuccess: /*[[#{job.msg.reportSuccess}]]*/ '신고가 접수되었습니다.',
+            reportError:   /*[[#{job.msg.reportError}]]*/ '신고 처리 중 오류가 발생했습니다.',
+            confirmReport: /*[[#{job.msg.confirmReport}]]*/ '정말 신고하시겠습니까?',
+            selectReportType: /*[[#{job.msg.selectReportType}]]*/ '신고 유형을 선택해주세요.',
+            applyReady:    /*[[#{job.msg.applyReady}]]*/ '지원을 준비 중입니다.',
+            processError:  /*[[#{job.msg.processError}]]*/ '처리 중 오류가 발생했습니다.'
+        };
+        /* ]]> */
+
+        // 채팅 버튼 클릭 시 하늘색으로 토글 후 채팅방으로 이동하는 함수
+        function toggleChatColor(btn, recruiterId, jobPostId, userId) {
+            const svg = btn.querySelector('svg');
+            const dots = svg.querySelectorAll('circle'); // 안쪽 꽉 찬 점 3개 찾기
+
+            // 1. 겉 테두리 색상을 프로젝트 테마 하늘색으로 변경
+            svg.setAttribute('stroke', '#8bbbe5');
+
+            // 2. 안쪽 꽉 찬 점 3개 색상도 하늘색으로 같이 변경!
+            dots.forEach(dot => dot.setAttribute('fill', '#8bbbe5'));
+
+            // 0.2초 뒤 채팅방으로 슝
+            setTimeout(() => {
+                location.href = `/chat/create?recruiterId=${recruiterId}&jobPostId=${jobPostId}&userId=${userId}`;
+            }, 200);
+        }
+    </script>
 
 </body>
 </html>

@@ -1,6 +1,22 @@
 /* ==============================
    1. 헤더 기본 레이아웃
    ============================== */
+     /* 1. 구글 폰트(Noto Sans KR) 가져오기 (만약 HTML <head>에 이미 있다면 생략 가능) */
+     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+  
+     /* 2. 페이지 전체에 예쁜 폰트 강제 적용! */
+     body {
+       /* 1순위: Noto Sans, 2순위: 맥 기본 폰트, 3순위: 윈도우 맑은고딕 */
+       font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+     }
+  
+     /* 3. 🚨 윈도우의 고질병: 버튼이나 입력창은 부모 폰트를 무시하는 경향이 있음! 강제로 상속시킴 */
+     input,
+     button,
+     textarea,
+     select {
+       font-family: inherit;
+     }
 
 .authenticated-header,
 .custom-header {
@@ -438,9 +454,12 @@ body.dark-mode .icon-btn:hover {
 body.dark-mode .notify-dropdown,
 body.dark-mode .lang-dropdown,
 body.dark-mode .profile-dropdown {
-  background-color: #2d2d2d;
-  border-color: #444;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  /* 메인 카드/컨테이너 색상과 맞춰서 통일감 부여 */
+  background-color: #2a2b2e;
+  /* 기존 #444보다 푸른기가 살짝 섞인 은은한 테두리 */
+  border-color: #3e3f42;
+  /* 드롭다운이 더 잘 떠보이도록 부드럽고 넓은 그림자 */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 body.dark-mode .notify-header span,
@@ -464,8 +483,9 @@ body.dark-mode .profile-info,
 body.dark-mode .notify-header,
 body.dark-mode .notify-footer,
 body.dark-mode .notify-body {
-  background-color: #383838;
-  border-color: #444;
+  /* 드롭다운 내의 헤더나 아이템 영역은 1단계 더 밝게 포인트! */
+  background-color: #323336;
+  border-color: #3e3f42;
 }
 
 body.dark-mode .notify-item.unread {

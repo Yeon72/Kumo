@@ -1,74 +1,88 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <title>KUMO - 지원 내역 확인</title>
-    <!-- 🌟 외부 CSS 및 공통 스타일 연결 -->
-    <link rel="stylesheet" th:href="@{/css/SeekerView/history.css}">
+    <title th:text="#{history.page.title}">KUMO - 지원 내역 확인</title>
     <link rel="stylesheet" th:href="@{/css/SeekerView/myPage.css}">
+    <link rel="stylesheet" th:href="@{/css/SeekerView/history.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
-<div th:replace="~{AuthenticatedFragments/AuthenticatedHeader :: headerFragment}"></div>
+    <div th:replace="~{AuthenticatedFragments/AuthenticatedHeader :: headerFragment}"></div>
 
-<div class="mypage-container">
-    <aside th:replace="~{SeekerView/SeekerSidebar :: sidebarFragment('history')}"></aside>
-    
-    <main class="content-area">
-        <div class="content-header">
-            <h2 th:text="#{sidebar.history}">지원 내역 확인</h2>
-        </div>
-        
-        <div class="history-container">
-            <!-- 지원 내역이 없을 때 -->
-            <div th:if="${history == null or #lists.isEmpty(history)}" class="text-center py-5">
-                <i class="fa-solid fa-clipboard-list fa-3x mb-3" style="color: #eee;"></i>
-                <p class="text-muted">지원한 내역이 없습니다.</p>
+    <div class="mypage-container">
+        <aside th:replace="~{SeekerView/SeekerSidebar :: sidebarFragment('history')}"></aside>
+
+        <main class="content-area">
+            <div class="content-header">
+                <h2 th:text="#{sidebar.history}">지원 내역 확인</h2>
             </div>
-            
-            <!-- 지원 내역 테이블 -->
-            <div class="table-wrapper" th:if="${history != null and !#lists.isEmpty(history)}">
-                <table class="job-table">
-                    <thead>
-                        <tr>
-                            <th>제목</th>
-                            <th>상호명</th>
-                            <th>근무지</th>
-                            <th>급여</th>
-                            <th>연락처</th>
-                            <th>담당자</th>
-                            <th>관리</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="h : ${history}">
-                            <td style="min-width: 200px;">
-                                <a class="job-title-link" 
-                                   th:href="@{/map/jobs/detail(id=${h.targetPostId}, source=${h.targetSource})}"
-                                   th:text="${h.title}">공고 제목</a>
-                                <span class="status-badge" th:classappend="'status-' + ${h.status.toLowerCase()}" th:text="${h.status}">상태</span>
-                            </td>
-                            <td th:text="${h.businessName}">상호명</td>
-                            <td th:text="${h.location}">근무지</td>
-                            <td th:text="${h.wage}">급여</td>
-                            <td th:text="${h.contact}">연락처</td>
-                            <td th:text="${h.manager}">담당자</td>
-                            <td>
-                                <!-- 🌟 data-id 속성에 ID 저장 (JS에서 사용) -->
-                                <button type="button" class="btn-cancel-app" th:data-id="${h.appId}">지원취소</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+
+            <div class="history-container">
+                <div th:if="${history == null or #lists.isEmpty(history)}" class="text-center py-5">
+                    <i class="fa-solid fa-clipboard-list fa-3x mb-3" style="color: #eee;"></i>
+                    <p class="text-muted" th:text="#{history.empty}">지원한 내역이 없습니다.</p>
+                </div>
+
+                <div class="table-wrapper" th:if="${history != null and !#lists.isEmpty(history)}">
+                    <table class="job-table">
+                        <thead>
+                            <tr>
+                                <th th:text="#{history.table.title}">제목</th>
+                                <th th:text="#{history.table.business}">상호명</th>
+                                <th th:text="#{history.table.location}">근무지</th>
+                                <th th:text="#{history.table.wage}">급여</th>
+                                <th th:text="#{history.table.contact}">연락처</th>
+                                <th th:text="#{history.table.manager}">담당자</th>
+                                <th th:text="#{history.table.manage}">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="h : ${history}">
+                                <td style="min-width: 200px;">
+                                    <a class="job-title-link"
+                                        th:href="@{/map/jobs/detail(id=${h.targetPostId}, source=${h.targetSource})}"
+                                        th:text="${h.title}">공고 제목</a>
+                                    <span class="status-badge" th:classappend="'status-' + ${h.status.toLowerCase()}"
+                                        th:text="#{${'status.' + h.status.toLowerCase()}}">상태</span>
+                                </td>
+                                <td th:text="${h.businessName}">상호명</td>
+                                <td th:text="${h.location}">근무지</td>
+                                <td th:text="${#locale.language == 'ja' ? h.wageJp : h.wage}">급여</td>
+                                <td th:text="${h.contact}">연락처</td>
+                                <td th:text="${h.manager}">담당자</td>
+                                <td>
+                                    <button type="button" class="btn-cancel-app" th:data-id="${h.appId}"
+                                        th:text="#{history.btn.cancel}">지원취소</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    </main>
-</div>
+        </main>
+    </div>
 
-<div th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"></div>
+    <div th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"></div>
 
-<!-- 🌟 외부 JS 연결 (jQuery 의존성 없음) -->
-<script th:src="@{/js/SeekerView/history.js}"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        /* <![CDATA[ */
+    const historyMsg = {
+        cancelConfirmTitle: /*[[#{history.swal.cancel_title}]]*/ '지원을 취소하시겠습니까?',
+        cancelConfirmBtn:   /*[[#{history.swal.cancel_btn}]]*/ '취소하기',
+        cancelBack:         /*[[#{history.swal.cancel_back}]]*/ '돌아가기',
+        errorTitle:         /*[[#{history.swal.error_title}]]*/ '오류',        // ← 추가
+        cancelError:        /*[[#{history.swal.cancel_error}]]*/ '취소 중 오류가 발생했습니다.',  // ← 추가
+        serverError:        /*[[#{history.swal.server_error}]]*/ '서버와 통신 중 오류가 발생했습니다.'  // ← 추가
+    };
+        /* ]]> */
+    </script>
+    <script th:src="@{/js/SeekerView/history.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

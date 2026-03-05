@@ -1,87 +1,140 @@
-/* applicant_info.css */
+/* ============================================================
+   KUMO RECRUITER - 지원자 관리 통합 스타일
+   디자인 시스템: #7db4e6 블루, 라운드 카드, Noto Sans KR
+   ============================================================ */
 
+/* ============================
+   1. 페이지 타이틀 영역
+   ============================ */
 .applicant-card {
   background: white;
   border-radius: 25px;
   padding: 30px;
+  /* 기존 35px 40px에서 30px로 통일 */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
-  /* ... 기존 배경, 패딩 설정 유지 ... */
-
-  /* [수정] main.css의 margin-left(180px)와 시각적 선을 맞추기 위한 설정 */
-  margin-left: 0; /* 부모 컨테이너가 이미 180px이므로 0으로 설정하여 정렬 */
+  margin-left: 0;
   width: 100%;
-  max-width: 1200px; /* 창이 커져도 깨지지 않는 적정 너비 */
+  max-width: 1200px;
   box-sizing: border-box;
 }
 
-.card-header-flex {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
 .table-title {
-  font-size: 1.4rem;
-  font-weight: 800;
-  margin: 0 0 10px 0;
-}
-
-.applicant-count {
-  font-size: 0.9rem;
-  color: #8b95a1;
-}
-
-.count-badge {
-  background-color: #e8f3ff;
-  color: #7db4e6;
-  padding: 2px 8px;
-  border-radius: 8px;
+  font-size: 22px;
   font-weight: 700;
-}
-
-/* 필터 버튼 */
-.btn-filter {
-  border: 1px solid #eee;
-  background: white;
-  border-radius: 10px;
-  padding: 8px 15px;
-  font-size: 0.9rem;
-  color: #666;
-}
-
-/* 테이블 스타일 */
-.kumo-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.kumo-table th {
-  text-align: left;
-  padding: 15px;
-  color: #b0b8c1;
-  font-weight: 600;
-  font-size: 0.85rem;
-  border-bottom: 1px solid #f9f9f9;
-}
-
-.kumo-table td {
-  padding: 15px;
-  border-bottom: 1px solid #f9f9f9;
-  font-size: 0.95rem;
   color: #333d4b;
+  letter-spacing: -0.3px;
 }
 
-.sort-icon {
-  font-size: 0.7rem;
-  margin-left: 5px;
+body.dark-mode .table-title {
+  color: #e2e8f0;
 }
 
-/* 유저 프로필 섹션 */
+.text-muted.fw-semibold {
+  font-size: 13px;
+  color: #8b95a1 !important;
+}
+
+/* ============================
+   2. 아코디언 (공고 리스트)
+   ============================ */
+.job-accordion {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #eef0f6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.job-accordion .accordion-item {
+  border: none;
+  border-bottom: 1px solid #f1f3f8;
+}
+
+.job-accordion .accordion-item:last-child {
+  border-bottom: none;
+}
+
+.job-accordion .accordion-button {
+  background-color: #ffffff;
+  padding: 20px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333d4b;
+  transition: background 0.2s;
+}
+
+.job-accordion .accordion-button:not(.collapsed) {
+  background-color: #f0f7ff;
+  color: #7db4e6;
+  box-shadow: none;
+  border-bottom: 1px solid #e0eef8;
+}
+
+.job-accordion .accordion-button:focus {
+  box-shadow: none;
+}
+
+.job-accordion .accordion-button::after {
+  filter: opacity(0.4);
+}
+
+.job-accordion .accordion-button:not(.collapsed)::after {
+  filter: none;
+  tint: #7db4e6;
+}
+
+/* 아코디언 바디 */
+.accordion-body {
+  background-color: #f8faff;
+  padding: 20px 24px 24px 24px;
+  border-left: 3px solid #7db4e6;
+}
+
+/* ============================
+   3. 미니 테이블
+   ============================ */
+.mini-table {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-top: 12px;
+  border: 1px solid #f0f1f6;
+}
+
+.mini-table th {
+  background-color: #f8f9fc;
+  color: #8b95a1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f1f6;
+  text-transform: uppercase;
+}
+
+.mini-table td {
+  vertical-align: middle;
+  font-size: 13px;
+  color: #333d4b;
+  padding: 14px 16px;
+  border-color: #f5f6fa;
+}
+
+.mini-table tbody tr {
+  transition: background 0.15s;
+}
+
+.mini-table tbody tr:hover td {
+  background-color: #f5f9ff;
+}
+
+/* ============================
+   4. 유저 프로필
+   ============================ */
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .avatar-sm {
@@ -91,408 +144,526 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 14px;
+  background-color: #e8f3ff;
+  flex-shrink: 0;
 }
 
-/* 열람 버튼 (피그마 스타일) */
-.btn-view {
-  background-color: #7db4e6;
-  color: white;
-  border: none;
+.user-name {
+  font-weight: 600;
+  color: #333d4b;
+  font-size: 13px;
+}
+
+/* ============================
+   5. 상태 뱃지
+   ============================ */
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
   border-radius: 8px;
-  padding: 6px 15px;
-  font-size: 0.85rem;
-  transition: background 0.2s;
+  letter-spacing: 0.2px;
 }
 
-.btn-view:hover {
-  background-color: #5a9ce6;
+.badge.bg-warning {
+  background-color: #fff3cd !important;
+  color: #b78700 !important;
 }
 
-/* 체크박스 커스텀 */
-.kumo-check {
-  width: 18px;
-  height: 18px;
-  accent-color: #7db4e6;
-  cursor: pointer;
+.badge.bg-success {
+  background-color: #d4edda !important;
+  color: #1e7e34 !important;
 }
 
-/* ============================================================
-   [KUMO RECRUITER] 지원자 상세 정보 (Applicant Detail) 통합 마스터
-   ============================================================ */
-
-/* 1. 배경 및 사이드바 공간 확보 (오른쪽 확장 버전) */
-.applicant-detail-bg {
-  background-color: #f8faff !important; /* 부드러운 배경색 */
-  min-height: calc(100vh - 80px);
-  /* 오른쪽 sidebar(350px) 공간을 360px로 최적화하여 카드 확장 */
-  padding: 20px 340px 30px 40px !important;
-  overflow-x: hidden;
-  overflow-y: auto;
+.badge.bg-secondary {
+  background-color: #fff5f5 !important;
+  /* 부드럽고 연한 핑크베이지 배경 */
+  color: #ff6b6b !important;
+  /* 눈이 편안한 차분한 파스텔 레드 */
 }
 
-.applicant-detail-wrapper {
-  max-width: 1150px; /* 사장님 피드백 반영: 가로 너비 확장 */
-  margin: 0;
+.badge.bg-primary {
+  background-color: #e0f0ff !important;
+  color: #1a7ad4 !important;
 }
 
-/* 2. 상단 타이틀 (콤팩트 사이즈) */
-.detail-header-title h2 {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #2c3e50;
-  margin-bottom: 25px;
-}
-
-/* 3. 중앙 화이트 보드 (곡률 35px & 부드러운 그림자) */
-.applicant-white-card {
-  background: #ffffff;
-  border-radius: 35px;
-  padding: 45px 60px; /* 내부 여백 최적화 */
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(230, 235, 241, 0.8);
-  position: relative;
-}
-
-/* 4. 카드 내 상단 목록 버튼 (흰색 칸 내부 좌측 상단) */
-.card-top-actions {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: -5px;
-  margin-left: -5px;
-  margin-bottom: 35px;
-  border-bottom: 1px solid #f1f4f8; /* 구분선 */
-  padding-bottom: 15px;
-}
-
-.btn-back-list {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background-color: #f8faff;
-  color: #718096;
-  border: 1px solid #edf2f7;
-  padding: 6px 14px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  text-decoration: none;
+/* ============================
+   6. 열람 버튼
+   ============================ */
+.btn.btn-outline-primary.rounded-pill {
+  border-color: #7db4e6;
+  color: #7db4e6;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
   transition: all 0.2s;
 }
 
-.btn-back-list:hover {
-  background-color: #ffffff;
-  color: #7db4e6; /* 시그니처 블루 */
-  border-color: #7db4e6;
-  transform: translateX(-3px);
+.btn.btn-outline-primary.rounded-pill:hover {
+  background-color: #7db4e6;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(125, 180, 230, 0.3);
 }
 
-.btn-back-list i {
-  font-size: 1.3rem;
-  line-height: 0;
+/* ============================
+   7. 합격/불합격 처리된 행
+   ============================ */
+.processed-row td {
+  background-color: #fafafa !important;
+  color: #adb5bd !important;
 }
 
-/* 5. 프로필 섹션 (점 현상 해결 및 구조 최적화) */
-.detail-profile-row {
-  display: flex;
-  align-items: center;
-  gap: 40px;
-  margin-bottom: 50px;
+.processed-row .user-profile {
+  opacity: 0.5;
 }
 
-.profile-avatar-box {
-  /* 고정 크기 확실하게 지정 */
-  width: 135px;
-  height: 135px;
-  flex-shrink: 0; /* 찌그러짐 방지 */
+.processed-row .user-name {
+  color: #adb5bd !important;
 }
 
-/* [추가] 중간 박스도 부모 크기를 100% 따라가도록 설정 */
-.avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background-color: #f0f4f8;
-  border: 5px solid #f8faff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+/* ============================
+   8. 이력서 모달
+   ============================ */
+.modal-content {
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   overflow: hidden;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* 이미지 스타일: 이제 부모(placeholder)를 기준으로 꽉 찹니다 */
-.avatar-placeholder img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 2;
-  /* 로드되면 JS가 opacity: 1로 바꿈 */
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.modal-header {
+  background-color: #f8faff !important;
+  border-bottom: 1px solid #eef0f6 !important;
+  padding: 20px 28px;
 }
 
-/* 기본 아이콘 (이미지 없을 때 뒤에 보이는 것) */
-.default-icon {
-  font-size: 3.5rem;
-  color: #b7cce2;
-  z-index: 1;
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333d4b !important;
 }
 
-.name-line h1 {
-  font-size: 2.4rem;
-  font-weight: 800;
-  color: #2d3748;
-  margin: 0 0 10px 0; /* 마진 정리 */
+.modal-header .text-muted {
+  font-size: 13px;
+  color: #8b95a1 !important;
 }
 
-.name-line span {
-  color: #a0aec0;
-  font-size: 1.1rem;
+.modal-footer {
+  background-color: #f8faff !important;
+  border-top: 1px solid #eef0f6 !important;
+  padding: 16px 28px;
 }
 
-.contact-line {
-  margin-top: 15px;
+/* 모달 바디 - 이력서 내용 */
+.resume-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  background-color: #f4f6fb;
+  padding: 20px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.contact-line p {
-  margin: 5px 0;
-  color: #718096;
-  font-size: 1rem;
+.resume-modal-body::-webkit-scrollbar {
+  display: none;
+}
+
+.resume-section {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f1f6;
+}
+
+.resume-section h5 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333d4b;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #e8f3ff;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.contact-line i {
-  color: #7db4e6; /* 아이콘 색상 포인트 */
-}
-
-/* 6. 정보 그리드 (3분할 밸런스 조정) */
-.detail-grid-row {
-  display: flex;
-  gap: 50px;
-  margin-bottom: 50px;
-}
-
-.grid-col {
-  flex: 1;
-  min-width: 0;
-}
-
-.grid-col h3 {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #2d3748;
-  margin-bottom: 25px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.grid-col h3 i {
+.resume-section h5 i {
   color: #7db4e6;
 }
 
-.middle-border {
-  border-left: 1px solid #edf2f7;
-  border-right: 1px solid #edf2f7;
-  padding: 0 50px;
+.spec-item {
+  margin-bottom: 10px;
+  font-size: 13px;
 }
 
-/* 항목별 가로 배치 정렬 */
-.info-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.info-item span {
+.spec-item .label {
+  font-weight: 600;
   color: #8b95a1;
-  font-size: 0.9rem;
-}
-.info-item strong {
-  color: #333d4b;
-  font-size: 1rem;
-  font-weight: 700;
-  text-align: right;
+  width: 100px;
+  display: inline-block;
 }
 
-.pr-box {
-  margin-top: 20px;
-  padding: 25px;
-  background: #f8faff;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  line-height: 1.8;
-  color: #4a5568;
+/* 모달 버튼 */
+.modal-footer .btn-outline-secondary {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 20px;
+  transition: all 0.2s;
 }
 
-/* 7. 하단 액션 버튼 (슬림&웅장 밸런스) */
-.detail-footer-btns {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
+.modal-footer .btn-outline-secondary:hover {
+  background-color: #ff6b6b;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.35);
 }
 
-.btn-action-main,
-.btn-action-sub,
-.btn-action-gray {
-  min-width: 170px;
-  padding: 16px 0;
-  border-radius: 16px;
-  border: none;
-  font-weight: 800;
-  font-size: 1.05rem;
-  transition: all 0.2s ease;
+.modal-footer .btn-primary {
+  background-color: #7db4e6;
+  border-color: #7db4e6;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 20px;
+  transition: all 0.2s;
 }
 
-.btn-action-main {
-  background: #7db4e6;
-  color: white;
-}
-.btn-action-sub {
-  background: #c3e2ff;
-  color: #4a90e2;
-}
-.btn-action-gray {
-  background: #b7cce2;
-  color: #4a5568;
+.modal-footer .btn-primary:hover {
+  background-color: #5a9cd6;
+  box-shadow: 0 4px 12px rgba(125, 180, 230, 0.35);
 }
 
-.btn-action-main:hover,
-.btn-action-sub:hover,
-.btn-action-gray:hover {
-  transform: translateY(-3px);
-  filter: brightness(0.98);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+.modal-footer .btn-success {
+  background-color: #51cf66;
+  border-color: #51cf66;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 20px;
+  transition: all 0.2s;
 }
 
-/* =========================================
-   🌟 관리 버튼 (톱니바퀴) 가운데 정렬 & 디자인
-========================================= */
-
-/* 1. 6번째 칸(관리)을 완벽한 정중앙으로 세팅 */
-.kumo-table th:nth-child(6),
-.kumo-table td:nth-child(6) {
-  text-align: center !important;
-  vertical-align: middle !important;
+.modal-footer .btn-success:hover {
+  background-color: #40c057;
+  box-shadow: 0 4px 12px rgba(81, 207, 102, 0.35);
 }
 
-/* 2. 톱니바퀴 버튼 배경/테두리 제거 */
-.btn-gear {
-  background: transparent;
-  /* 배경 투명하게 */
-  border: none;
-  /* 테두리 제거 */
-  color: #a0aec0;
-  /* 은은한 회색 */
-  font-size: 1.25rem;
-  /* 아이콘 크기 살짝 키움 */
-  padding: 5px;
-  /* 클릭 영역 확보 */
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-/* 3. 마우스 올렸을 때 효과 (색상 변경 + 회전 애니메이션) */
-.btn-gear:hover {
-  color: #7db4e6;
-  /* 사장님 메인 파란색으로 변신 */
-  transform: rotate(90deg);
-  /* 톱니바퀴가 찌잉~ 하고 돌아가는 귀여운 디테일 */
+/* ============================
+   9. 빈 상태
+   ============================ */
+.text-center.py-5 h5 {
+  color: #adb5bd;
+  font-weight: 500;
+  font-size: 15px;
 }
 
 /* ============================================================
-   🌟 [추가] 아코디언 (공고 리스트) 및 지원자 미니 테이블 스타일
+   🌙 KUMO 럭셔리 웜-다크 리뉴얼 (수정본)
    ============================================================ */
 
-.job-accordion {
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    border: 1px solid #e9ecef;
-}
-.job-accordion .accordion-item {
-    border: none;
-    border-bottom: 1px solid #f1f3f5;
-}
-.job-accordion .accordion-item:last-child { border-bottom: none; }
-.job-accordion .accordion-button {
-    background-color: #fff;
-    padding: 20px;
-    font-weight: 600;
-    color: #212529;
-}
-.job-accordion .accordion-button:not(.collapsed) {
-    background-color: #f0f1f6;
-    color: #339af0;
-    box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
-}
-.job-accordion .accordion-button:focus {
-    box-shadow: none;
-    border-color: rgba(0,0,0,.125);
+/* 1. 전체 배경: 파란 기 없는 아주 깊은 차콜 */
+body.dark-mode {
+  background-color: #1e1f21 !important;
+  color: #e3e5e8;
 }
 
-.accordion-body {
-    background-color: #fcfcfc;
-    padding: 15px 30px 25px 30px;
-    border-left: 4px solid #339af0;
+/* 2. 메인 컨테이너 (둥근 사각형) */
+body.dark-mode .job-accordion {
+  background-color: #2a2b2e !important;
+  border: 1px solid #37393d;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  /* 깊은 그림자로 입체감 */
 }
 
-.mini-table {
-    background: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    margin-top: 10px;
-}
-.mini-table th {
-    background-color: #f1f3f5;
-    color: #495057;
-    font-size: 0.9rem;
-    font-weight: 600;
-    border-bottom: none;
-}
-.mini-table td {
-    vertical-align: middle;
-    font-size: 0.95rem;
-    border-color: #f0f1f6;
+/* 3. 개별 공고 칸 (Accordion Header) */
+body.dark-mode .accordion-item {
+  background-color: #323336 !important;
+  border: 1px solid #3e4044;
+  /* 테두리를 주어야 '밝게' 느껴집니다 */
+  border-radius: 12px !important;
+  /* 모서리 둥글게 통일 */
+  margin-bottom: 8px !important;
+  /* 칸 사이 여백을 줘서 독립된 카드 느낌 */
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 🌟 [추가] 이력서 모달창 스타일 */
-.resume-modal-body {
-    max-height: 70vh;
-    overflow-y: auto;
-    background-color: #f0f1f6;
-    padding: 20px;
+/* 4. 마우스를 올렸을 때 (Glow 효과) */
+body.dark-mode .accordion-button:hover {
+  background-color: #3b3d41 !important;
+  border-color: rgba(125, 180, 230, 0.4);
+  /* 마우스 올리면 하늘색 테두리 광채 */
 }
-.resume-section {
-    background: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+/* 5. 선택되었을 때 (Active - 하늘색 강조) */
+body.dark-mode .accordion-button:not(.collapsed) {
+  background-color: #252629 !important;
+  color: #7db4e6 !important;
+  font-weight: 800;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
-.resume-section h5 {
-    border-bottom: 2px solid #339af0;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-    font-weight: bold;
-    color: #212529;
+
+/* 6. 안쪽 상세 테이블 영역 (대비 증가) */
+body.dark-mode .accordion-body {
+  background-color: #1a1a1d;
+  /* 안쪽은 더 어둡게 해서 깊이감 형성 */
+  border-top: 1px solid #3e4044;
+  padding: 20px;
 }
-.spec-item { margin-bottom: 10px; }
-.spec-item .label {
-    font-weight: 600;
-    color: #495057;
-    width: 100px;
-    display: inline-block;
+
+/* 7. 미니 테이블 리디자인 */
+body.dark-mode .mini-table {
+  background-color: #232428;
+  border: 1px solid #37393d;
+  border-radius: 10px;
+}
+
+body.dark-mode .mini-table th {
+  background-color: #2a2b30;
+  color: #a0aec0;
+  border-bottom: 2px solid #37393d;
+  font-weight: 700;
+}
+
+body.dark-mode .mini-table td {
+  color: #d1d4d9;
+  border-bottom: 1px solid #2d2e33;
+}
+
+/* 8. 뱃지(Badge) 스타일: 네온광 효과 */
+body.dark-mode .badge {
+  border-radius: 6px;
+  font-weight: 700;
+  padding: 5px 10px;
+}
+
+body.dark-mode .badge.bg-warning {
+  background-color: rgba(252, 196, 25, 0.1) !important;
+  color: #fcc419 !important;
+  border: 1px solid rgba(252, 196, 25, 0.3);
+}
+
+body.dark-mode .badge.bg-success {
+  background-color: rgba(81, 207, 102, 0.1) !important;
+  color: #51cf66 !important;
+  border: 1px solid rgba(81, 207, 102, 0.3);
+}
+
+body.dark-mode .badge.bg-primary {
+  background-color: rgba(125, 180, 230, 0.1) !important;
+  color: #7db4e6 !important;
+  border: 1px solid rgba(125, 180, 230, 0.3);
+  box-shadow: 0 0 10px rgba(125, 180, 230, 0.1);
+  /* 미세한 광채 */
+}
+
+/* 9. 모달(Modal) 럭셔리 스타일 */
+body.dark-mode .modal-content {
+  background-color: #2a2b2e;
+  border: 1px solid #3e4044;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .modal-header {
+  border-bottom: 1px solid #3e4044 !important;
+  background-color: #252629 !important;
+}
+
+body.dark-mode .resume-section {
+  background-color: #232428;
+  border: 1px solid #37393d;
+  border-radius: 12px;
+}
+
+/* 10. 기타 텍스트 및 효과 */
+body.dark-mode .text-muted {
+  color: #8e949e !important;
+}
+
+body.dark-mode .text-dark {
+  color: #ffffff !important;
+}
+
+/* 진행 완료된 행 흐리게 */
+body.dark-mode .processed-row td {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+  color: #5c626b !important;
+}
+
+/* 10. 다크모드 - 불합격(Secondary) 배지 수정 */
+body.dark-mode .badge.bg-secondary {
+  /* 쌩회색보다는 약간의 온기가 있는 웜 그레이 톤 */
+  background-color: rgba(134, 142, 150, 0.15) !important;
+  color: #adb5bd !important;
+  /* 눈이 편안하면서 가독성 좋은 밝은 회색 */
+  border: 1px solid rgba(134, 142, 150, 0.3) !important;
+  /* 배지가 흐릿해 보이지 않게 잡아주는 테두리 */
+
+  /* 다른 배지들과 통일감을 주는 디테일 */
+  border-radius: 6px;
+  font-weight: 700;
+  padding: 5px 10px;
+}
+
+/* ============================
+   모달 다크모드 완전 개선
+   ============================ */
+
+/* 모달 전체 배경 */
+body.dark-mode .modal-content {
+  background-color: #2a2b2e !important;
+  border: 1px solid #37393d !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* 모달 헤더 */
+body.dark-mode .modal-header {
+  background-color: #232428 !important;
+  border-bottom: 1px solid #37393d !important;
+}
+
+body.dark-mode .modal-title,
+body.dark-mode #resumeModalLabel {
+  color: #e3e5e8 !important;
+}
+
+body.dark-mode .modal-header .text-muted {
+  color: #91959b !important;
+}
+
+body.dark-mode .modal-header .text-dark,
+body.dark-mode #modalJob {
+  color: #c8cdd4 !important;
+}
+
+/* 닫기 버튼 */
+body.dark-mode .modal-header .btn-close {
+  filter: invert(1) brightness(0.7);
+}
+
+/* 모달 바디 */
+body.dark-mode .resume-modal-body {
+  background-color: #1e1f21 !important;
+}
+
+/* 이력서 섹션 카드 */
+body.dark-mode .resume-section {
+  background-color: #2a2b2e !important;
+  border: 1px solid #37393d !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.dark-mode .resume-section h5 {
+  color: #e3e5e8 !important;
+  border-bottom-color: #37393d !important;
+}
+
+body.dark-mode .resume-section h5 i {
+  color: #7db4e6 !important;
+}
+
+body.dark-mode .resume-section p,
+body.dark-mode .resume-section div {
+  color: #b0b3b8 !important;
+}
+
+body.dark-mode .resume-section .fw-bold {
+  color: #e3e5e8 !important;
+}
+
+body.dark-mode .spec-item .label {
+  color: #91959b !important;
+}
+
+/* 모달 푸터 */
+body.dark-mode .modal-footer {
+  background-color: #232428 !important;
+  border-top: 1px solid #37393d !important;
+}
+
+body.dark-mode .badge.bg-secondary {
+  background-color: rgba(255, 107, 107, 0.1) !important;
+  color: #ff6b6b !important;
+  border: 1px solid rgba(255, 107, 107, 0.3) !important;
+}
+
+body.dark-mode .modal-footer .btn-outline-secondary {
+  border-color: #ff6b6b !important;
+  color: #ff6b6b !important;
+  background-color: transparent !important;
+}
+
+body.dark-mode .modal-footer .btn-outline-secondary:hover {
+  background-color: rgba(255, 107, 107, 0.15) !important;
+  color: #ff6b6b !important;
+}
+
+body.dark-mode .modal-footer .btn-primary {
+  background-color: #7db4e6 !important;
+  border-color: #7db4e6 !important;
+  color: #fff !important;
+}
+
+body.dark-mode .modal-footer .btn-success {
+  background-color: rgba(81, 207, 102, 0.2) !important;
+  border-color: rgba(81, 207, 102, 0.4) !important;
+  color: #51cf66 !important;
+}
+
+body.dark-mode .modal-footer .btn-success:hover {
+  background-color: rgba(81, 207, 102, 0.35) !important;
+}
+
+/* 첨부파일 버튼 */
+body.dark-mode .resume-section .btn-light {
+  background-color: #37393d !important;
+  border-color: #3e4044 !important;
+  color: #7db4e6 !important;
+}
+
+/* 스피너 */
+body.dark-mode .spinner-border {
+  color: #7db4e6 !important;
+}
+
+/* 🌙 다크모드에서 클래스가 없는 기본 행(검토중 등)의 배경색 해결 */
+body.dark-mode .mini-table tbody tr td {
+  background-color: transparent !important;
+  /* 부트스트랩이 강제로 넣는 화이트 배경을 제거합니다 */
+}
+
+.total-count-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 0.9rem;
+    color: #8b95a1;
+    margin-top: 13px;
+}
+
+.total-count-badge {
+  background-color: #e8f3ff;
+  color: #7db4e6;
+  padding: 2px 10px;
+  border-radius: 8px;
+  min-width: 28px;
+  text-align: center;
+      font-weight: 700;
+}
+
+/* 다크모드 */
+body.dark-mode .total-count-row {
+  color: #91959b;
+}
+
+body.dark-mode .total-count-badge {
+  background-color: rgba(125, 180, 230, 0.15);
+  color: #7db4e6;
 }

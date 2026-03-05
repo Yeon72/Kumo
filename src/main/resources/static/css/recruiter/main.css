@@ -59,6 +59,7 @@ footer {
   /* [수정] 푸터도 우측 사이드바 너비만큼 오른쪽 여백을 줘서 글자가 가려지지 않게 합니다. */
   padding: 20px 360px 20px 40px;
   border-top: 1px solid #f2f4f6;
+  margin-top: 15px;
   background-color: transparent;
   box-sizing: border-box;
 }
@@ -260,7 +261,7 @@ footer {
   align-items: center;
   justify-content: space-between;
   padding: 15px 0;
-  border-bottom: 1px solid #f9fafb;
+  border-bottom: 1px solid #37393d;
   transition: background-color 0.2s;
 }
 
@@ -357,13 +358,62 @@ body.dark-mode .btn-scout-action {
   font-size: 0.9rem;
 }
 
+/* ============================================================
+   ☁️ KUMO 시그니처 .btn-detail (통합 리뉴얼)
+   ============================================================ */
+
+/* 1. 라이트 모드 (기본): 맑고 투명한 조약돌 느낌 */
 .btn-detail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  background-color: rgba(125, 180, 230, 0.12);
+  /* 쿠모 하늘색 12% 투명도 */
   color: #7db4e6;
-  background: #e8f3ff;
-  padding: 5px 10px;
-  border-radius: 8px;
+  /* 쿠모 대표색 */
+  border: 1.5px solid rgba(125, 180, 230, 0.2);
+  border-radius: 10px;
   font-weight: 700;
+  font-size: 0.85rem;
   text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+/* 라이트 모드 호버: 색이 차오르며 살짝 뜸 */
+.btn-detail:hover {
+  background-color: #7db4e6;
+  color: #ffffff;
+  transform: translateY(-2.5px);
+  box-shadow: 0 5px 15px rgba(125, 180, 230, 0.35);
+}
+
+/* 2. 다크 모드 (Warm-Dark): 밤하늘의 네온 조명 느낌 */
+body.dark-mode .btn-detail {
+  background-color: rgba(125, 180, 230, 0.08) !important;
+  /* 더 은은한 투명도 */
+  color: #7db4e6 !important;
+  border: 1px solid rgba(125, 180, 230, 0.35) !important;
+  box-shadow: none;
+}
+
+/* 다크 모드 호버: 발광(Glow) 효과 극대화 */
+body.dark-mode .btn-detail:hover {
+  background-color: #7db4e6 !important;
+  color: #1e1f21 !important;
+  /* 글자색을 다크 배경색으로 바꿔서 대비감 UP! */
+  transform: translateY(-2.5px);
+  /* 🌟 쿠모만의 영롱한 광채 효과 */
+  box-shadow: 0 0 15px rgba(125, 180, 230, 0.5) !important;
+  border-color: #7db4e6 !important;
+}
+
+/* 3. 공통 클릭 반응 (쫀득한 손맛) */
+.btn-detail:active,
+body.dark-mode .btn-detail:active {
+  transform: translateY(0) scale(0.95) !important;
+  transition: all 0.1s !important;
 }
 
 /* 3. 내 공고 패널 */
@@ -417,18 +467,6 @@ body.dark-mode .btn-scout-action {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* 1. (크롬/사파리/엣지) 모든 요소의 스크롤바 투명하게 만들기 */
-*::-webkit-scrollbar {
-  display: none !important; /* 강제로 숨김 */
-  width: 0 !important; /* 혹시 몰라 너비도 0으로 */
-}
-
-/* 2. (파이어폭스/IE) 모든 요소의 스크롤바 숨기기 */
-* {
-  -ms-overflow-style: none !important; /* IE */
-  scrollbar-width: none !important; /* 파이어폭스 */
 }
 
 /* 내 공고 목록 컨테이너 */
@@ -490,24 +528,7 @@ body.dark-mode .myjobs-row:hover {
   cursor: pointer;
 }
 
-/* 2. 다크모드 전용: 고급스러운 호버 효과 */
-body.dark-mode .btn-detail:hover {
-  /* 🌟 색상은 사장님 포인트 컬러(7db4e6)를 조금 더 확실하게 사용 */
-  background-color: #7db4e6 !important;
-  color: #ffffff !important;
 
-  /* 🌟 고급짐의 핵심 1: 아주 살짝 위로 띄우기 (-2px) */
-  transform: translateY(-2px);
-
-  /* 🌟 고급짐의 핵심 2: 은은한 파란색 네온 광채 추가 */
-  box-shadow: 0 5px 15px rgba(122, 186, 255, 0.4) !important;
-}
-
-/* 3. 클릭 시 반응 (쫀득함의 완성) */
-body.dark-mode .btn-detail:active {
-  transform: translateY(0) scale(0.96);
-  /* 누를 때 살짝 들어가는 느낌 */
-}
 
 /* main.css에 추가 */
 .chart-placeholder {
@@ -515,4 +536,50 @@ body.dark-mode .btn-detail:active {
   width: 100%;
   height: 300px;
   /* 사장님 패널 높이에 맞게 조절하세요 (예: 250px ~ 350px) */
+}
+
+/* ============================================================
+   ✨ KUMO 시그니처 커스텀 스크롤바 (전역 적용)
+   ============================================================ */
+
+/* 1. 스크롤바 전체 너비 설정 (아주 얇게) */
+::-webkit-scrollbar {
+  width: 8px;
+  /* 세로 스크롤바 두께 */
+  height: 8px;
+  /* 가로 스크롤바 두께 */
+}
+
+/* 2. 스크롤바 트랙 (바닥) */
+::-webkit-scrollbar-track {
+  background: transparent;
+  /* 배경을 투명하게 해서 평소엔 안 보이게 */
+}
+
+/* 3. 스크롤바 핸들 (움직이는 막대) */
+::-webkit-scrollbar-thumb {
+  background-color: rgba(125, 180, 230, 0.3);
+  /* 쿠모 하늘색에 투명도 30% */
+  border-radius: 10px;
+  /* 조약돌처럼 둥글게 */
+  border: 2px solid transparent;
+  /* 트랙과 약간 띄워진 느낌 */
+  background-clip: padding-box;
+}
+
+/* 4. 마우스를 올렸을 때만 더 선명하게 */
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(125, 180, 230, 0.7);
+  /* 좀 더 진한 하늘색으로 변신 */
+}
+
+/* 🌙 다크모드 대응 */
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  /* 다크모드에선 은은한 화이트 */
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(125, 180, 230, 0.5);
+  /* 다크모드 호버 시 하늘색 광채 */
 }
