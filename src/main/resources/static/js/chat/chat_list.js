@@ -1,14 +1,14 @@
 /* --- src/main/resources/static/js/chat_list.js --- */
 
-// 방 입장 함수
+// 방 입장 함수 (수정됨)
 function enterRoom(roomId) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('userId');
+    // 🌟 URL 대신, HTML에서 넘겨준 전역 변수에서 내 아이디를 꺼냅니다!
+    const userId = window.MY_USER_ID;
 
     if (userId) {
         location.href = '/chat/room/' + roomId + '?userId=' + userId;
     } else {
-        alert("로그인 정보(userId)가 없습니다! URL을 확인해주세요.");
+        alert("로그인 정보(userId)를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.");
     }
 }
 
