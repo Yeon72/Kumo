@@ -3,6 +3,7 @@ package net.kumo.kumo.repository;
 import java.util.List;
 import java.util.Optional;
 
+import net.kumo.kumo.domain.entity.UserEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -36,4 +37,6 @@ public interface TokyoGeocodedRepository extends BaseRepository<TokyoGeocodedEnt
 
     // datanum으로 단일 공고 찾기
     Optional<TokyoGeocodedEntity> findByDatanum(Long datanum);
+	
+	void deleteByUser(UserEntity user);
 }

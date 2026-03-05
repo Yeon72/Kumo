@@ -158,7 +158,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 console.log("받은 알림 데이터:", data);
                 notifyList.innerHTML = ''; 
 
-                if (!data || data.length === 0) {
+                if (!data || !Array.isArray(data) || data.length === 0) {
                     renderEmptyState(); 
                 } else {
                     data.forEach(n => {

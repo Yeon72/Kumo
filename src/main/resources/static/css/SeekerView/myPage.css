@@ -765,6 +765,90 @@ body.dark-mode .non-login-footer {
     margin-top: 0 !important;
 }
 
+.age-suffix {
+    margin-left: 10px;
+    /* 🌟 이 숫자를 조절해서 간격을 원하는 만큼 띄우세요! */
+    font-size: 14px;
+    color: #b0b3b8;
+}
+
+/* 다크모드 대응도 잊지 마세요! */
+body.dark-mode .age-suffix {
+    color: #cbcbcb;
+}
+
+/* --- 회원 탈퇴 모달 다크모드 추가 --- */
+body.dark-mode .delete-modal-content {
+    background-color: #1e1e1e;
+    border-color: #333;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .delete-modal-header {
+    border-bottom-color: #333;
+}
+
+body.dark-mode .delete-modal-header h3 {
+    color: #fff;
+}
+
+body.dark-mode .btn-close-modal {
+    color: #888;
+}
+
+body.dark-mode .warning-box {
+    background-color: rgba(255, 107, 107, 0.15);
+    border-color: rgba(255, 107, 107, 0.3);
+}
+
+body.dark-mode .warning-title {
+    color: #ff8e8e;
+}
+
+body.dark-mode .warning-list li {
+    color: #ccc;
+}
+
+body.dark-mode .warning-list li strong {
+    color: #ff6b6b;
+}
+
+body.dark-mode .delete-input-group label {
+    color: #bbb;
+}
+
+body.dark-mode .delete-modal-footer {
+    background-color: #252525;
+    border-top-color: #333;
+}
+
+body.dark-mode .btn-modal-cancel {
+    background-color: #333;
+    border-color: #444;
+    color: #aaa;
+}
+
+body.dark-mode .btn-modal-cancel:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+body.dark-mode .btn-modal-danger:disabled {
+    background-color: #4a2b2b;
+    color: #775555;
+}
+
+footer,
+.non-login-footer {
+    margin-left: 240px;
+    /* 사이드바 너비만큼 밀기 */
+    width: calc(100% - 240px);
+    /* 사이드바 제외한 너비 */
+    padding: 15px 40px !important;
+    /* 높이 줄이기 */
+    box-sizing: border-box;
+}
+
 footer,
 .non-login-footer,
 .dashboard-footer {
@@ -772,17 +856,6 @@ footer,
     width: calc(100% - 240px) !important;
     padding: 15px 40px !important;
     box-sizing: border-box !important;
-}
-
-/* 기타 */
-.age-suffix {
-    margin-left: 10px;
-    font-size: 14px;
-    color: #3e424e;
-}
-
-body.dark-mode .age-suffix {
-    color: #b0b3b8;
 }
 
 .content-area::-webkit-scrollbar {
@@ -838,5 +911,3 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
 footer strong {
     color: #8fa1b3;
 }
-
-

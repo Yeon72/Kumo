@@ -2,6 +2,7 @@ package net.kumo.kumo.repository;
 
 import net.kumo.kumo.domain.entity.ChatMessageEntity;
 import net.kumo.kumo.domain.entity.ChatRoomEntity;
+import net.kumo.kumo.domain.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query; // ★ 추가됨
@@ -33,4 +34,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessageEntity, 
             "AND m.sender.userId != :userId " +
             "AND m.isRead = false")
     int countUnreadMessagesForUser(@Param("userId") Long userId);
+	
+	void deleteBySender(UserEntity user);
 }

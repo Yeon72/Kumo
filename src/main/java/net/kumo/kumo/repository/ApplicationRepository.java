@@ -33,4 +33,5 @@ public interface ApplicationRepository extends JpaRepository<ApplicationEntity, 
         long countUnreadBySourceAndPostIds(
                         @Param("source") String source,
                         @Param("postIds") List<Long> postIds);
+	void deleteBySeeker(UserEntity user);
 }

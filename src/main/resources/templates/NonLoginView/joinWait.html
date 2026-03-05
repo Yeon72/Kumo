@@ -1,15 +1,20 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 <head>
     <meta charset="UTF-8">
-    <title>KUMO - 가입 심사 대기</title>
+    <title th:text="#{join.wait.page_title}">KUMO - 가입 심사 대기</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" th:href="@{/css/NonLogin/joinWait.css}">
+    
+    <!-- 헤더/푸터 공통 스타일 -->
+    <link rel="stylesheet" th:href="@{/css/NonLoginFragments/NonLoginHeader.css}">
+    <link rel="stylesheet" th:href="@{/css/NonLoginFragments/NonLoginFooter.css}">
 </head>
 <body>
 
+<!-- 비로그인용 헤더 -->
 <div th:replace="~{NonLoginFragments/NonLoginHeader :: headerFragment}"></div>
 
 <main class="wait-container">
@@ -17,18 +22,31 @@
         <i class="fa-solid fa-hourglass-half"></i>
     </div>
 
-    <h1 class="wait-title">회원가입 신청이 완료되었습니다.</h1>
+    <h1 class="wait-title" th:text="#{join.wait.title}">회원가입 신청이 완료되었습니다.</h1>
 
-    <div class="wait-desc">
+    <div class="wait-desc" th:utext="#{join.wait.desc}">
         제출해주신 증빙서류를 검토 중입니다.<br>
         관리자 승인이 완료되면 서비스 이용이 가능합니다.<br>
         (심사는 영업일 기준 1~3일 소요될 수 있습니다.)
     </div>
 
-    <a th:href="@{/}" class="btn-home">메인으로 돌아가기</a>
+    <a href="/" class="btn-home" th:text="#{join.wait.btn_home}">메인으로 돌아가기</a>
 </main>
 
+<!-- 비로그인용 푸터 -->
 <div th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"></div>
+
+<!-- 헤더 기능 작동을 위한 JS (다크모드, 언어변경 등) -->
+<script th:src="@{/js/NonLogin/NonLoginHeader.js}"></script>
+<script>
+    // 페이지 로드 시 다크모드 상태 적용
+    document.addEventListener('DOMContentLoaded', () => {
+        const isDarkMode = localStorage.getItem('dark-mode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        }
+    });
+</script>
 
 </body>
 </html>
