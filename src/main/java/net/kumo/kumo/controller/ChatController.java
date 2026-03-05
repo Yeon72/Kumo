@@ -208,4 +208,31 @@ public class ChatController {
         // 2. 채팅방 안에 있는 두 사람에게 "방금 다 읽었대! 1 지워!" 하고 브로드캐스팅
         messagingTemplate.convertAndSend("/sub/chat/room/" + readSignal.getRoomId(), readSignal);
     }
+
+    // ★ 프론트(JS)에서 안 읽은 개수를 가져갈 수 있게 API 주소 개방! (현우님 프로젝트 맞춤형)
+    @GetMapping("/api/chat/unread-count")
+    @ResponseBody
+    public ResponseEntity<Long> getUnreadCount(Principal principal) {
+        // 1. 로그인 안 한 유저면 0개 리턴
+        if (principal == null) {
+            return ResponseEntity.ok(0L);
+        }
+
+        // 2. 현재 접속한 사람의 이메일을 뽑아옵니다 (chatList에 있던 그 방식 그대로!)
+        String loginEmail = principal.getName();
+
+        // 3. 이메일로 내 정보를 찾아서 PK(userId)를 꺼냅니다.
+        Long userId = userRepository.findByEmail(loginEmail)
+                .map(UserEntity::getUserId)
+                .orElse(null);
+
+        // 유저를 못 찾았으면 안전하게 0 리턴
+        if (userId == null) {
+            return ResponseEntity.ok(0L);
+        }
+
+        // 4. 서비스 시켜서 숫자 가져온 다음 화면으로 던져줌
+        long unreadCount = chatService.getUnreadMessageCount(userId);
+        return ResponseEntity.ok(unreadCount);
+    }
 }

@@ -19,13 +19,14 @@
         등록</button>
     </a>
 
-    <button id="chatToggleButton" class="btn btn-common-action btn-light-blue w-100 position-relative" type="button"
-      onclick="toggleChatModal(6)" style="transition: all 0.3s ease;">
+    <button id="chatToggleButton" class="btn btn-common-action btn-light-blue w-100 chat-badge-wrapper" type="button"
+      onclick="toggleChatModal(6)" style="position: relative; transition: all 0.3s ease;">
 
       <div id="chatDefaultState" style="display: flex; align-items: center; justify-content: center; width: 100%;">
         <i class="bi bi-chat-dots-fill me-2"></i>
         <span th:text="#{main.sidebar.chat}">채팅</span>
-        <span class="badge-count">3</span>
+
+        <span class="unread-badge" id="side-unread-badge" style="display: none;"></span>
       </div>
 
       <div id="chatActiveState" style="display: none; align-items: center; justify-content: center; width: 100%;">
@@ -43,6 +44,9 @@
   </div>
 
   <script>
+    // ==========================================
+    // 1. 기존 채팅 모달 띄우는 함수
+    // ==========================================
     function toggleChatModal(userId) {
       var modal = document.getElementById('kumoChatModal');
       var iframe = document.getElementById('chatIframe');
@@ -81,5 +85,35 @@
         btn.style.boxShadow = '';
       }
     }
+
+    // ==========================================
+    // ★ 2. 새로 추가된 빨간 뱃지 생명 부여 스크립트!
+    // ==========================================
+    function updateSidebarBadge() {
+      fetch('/api/chat/unread-count')
+        .then(res => {
+          if (!res.ok) throw new Error("서버 응답 오류 (로그인 안됨)");
+          return res.json();
+        })
+        .then(count => {
+          const badge = document.getElementById('side-unread-badge');
+          if (badge) {
+            if (count > 0) {
+              badge.textContent = count;       // 빨간 원 안에 숫자 넣기
+              badge.style.display = 'flex';    // 빨간 원 짠! 하고 나타나기
+            } else {
+              badge.style.display = 'none';    // 0개면 안 보이게 숨기기
+            }
+          }
+        })
+        .catch(err => console.log("알림 뱃지 갱신 대기 중...", err));
+    }
+
+    // 페이지가 다 로드되면 무조건 1번 실행!
+    document.addEventListener("DOMContentLoaded", updateSidebarBadge);
+
+    // 10초마다 백엔드 몰래 찔러서 숫자 갱신하기 (새로고침 안해도 알림이 뜸!)
+    setInterval(updateSidebarBadge, 10000);
+
   </script>
 </aside>
