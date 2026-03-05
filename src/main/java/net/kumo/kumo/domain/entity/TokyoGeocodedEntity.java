@@ -1,3 +1,4 @@
+// 안녕하세요
 package net.kumo.kumo.domain.entity;
 
 import java.time.LocalDateTime;
