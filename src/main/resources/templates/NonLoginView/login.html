@@ -83,6 +83,8 @@
 <script th:inline="javascript">
     /* <![CDATA[ */
     const loginMessages = {
+        sns_alert: [[#{login.sns.alert}]],
+        captcha_error: [[#{login.captcha.error}]]
         sns_alert:   /*[[#{login.sns.alert}]]*/ '서비스 준비 중입니다.',
         error_title: /*[[#{login.swal.error_title}]]*/ '로그인 실패',
         error_text:  /*[[#{login.error.fail}]]*/ '아이디 또는 비밀번호가 일치하지 않습니다.'
