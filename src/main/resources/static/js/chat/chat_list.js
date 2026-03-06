@@ -32,7 +32,7 @@ function enterRoom(roomId) {
     const userId = window.MY_USER_ID;
 
     // 🌟 1. 현재 주소창에서 lang 파라미터를 꺼내옵니다 (없으면 기본값 kr)
-    const currentLang = new URLSearchParams(window.location.search).get('lang') || 'kr';
+    const currentLang = window.getKumoLang();
 
     if (userId) {
         // 🌟 2. 주소 맨 끝에 &lang=${currentLang} 를 붙여서 이동시킵니다!

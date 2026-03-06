@@ -61,7 +61,7 @@ function openScoutChat(recruiterId) {
     }
 
     // 1. 부모 창(현재 스카우트 현황 페이지)의 언어 설정을 그대로 가져옵니다. (없으면 kr)
-    const currentLang = new URLSearchParams(window.location.search).get('lang') || 'kr';
+    const currentLang = window.getKumoLang();
 
     // 2. 백엔드의 /chat/create 주소는 jobPostId와 jobSource를 필수로 요구합니다.
     // 스카우트는 특정 공고에서 누른 것이 아니므로 식별을 위해 0과 'SCOUT'라는 임시 값을 보냅니다.

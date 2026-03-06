@@ -237,7 +237,7 @@
     const isUserLoggedIn = /*[[${#authorization.expression('isAuthenticated()')}]]*/ false;
 
     // 🌟 JS 파일들이 주소창(URL)을 읽어서 언어를 세팅합니다. (html lang="ko"와 무관하게 작동함!)
-    const currentLang = new URLSearchParams(window.location.search).get('lang') || 'kr';
+    const currentLang = window.getKumoLang();
 
     // 서버 사이드 다국어 메시지 바인딩
     const MESSAGES = {
