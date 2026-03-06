@@ -420,11 +420,17 @@ const JobService = {
         sessionStorage.setItem('kumo_recent_jobs', JSON.stringify(recentJobs));
     },
 
+    // 🌟 [수정] 검색바에서 검색 실행 시 지역(mainRegion)도 같이 달고 새 창으로 이동!
     searchJobs: function() {
         const keyword = $('#keywordInput').val().trim();
         const currentLang = new URLSearchParams(window.location.search).get('lang') || 'kr';
 
-        let url = `/map/search_list?lang=${currentLang}`;
+        // 1. 현재 화면의 셀렉트 박스(도쿄/오사카)에서 선택된 값을 가져옵니다.
+        const currentRegion = $('#regionSelect').val() || 'tokyo';
+
+        // 2. URL에 lang과 mainRegion을 모두 담아줍니다!
+        let url = `/map/search_list?lang=${currentLang}&mainRegion=${currentRegion}`;
+
         if (keyword) {
             url += `&keyword=${encodeURIComponent(keyword)}`;
         }
@@ -502,23 +508,24 @@ const MarkerManager = {
         return {
             render: ({ count, position }) => {
                 const cloudPath = "M 10 22 C 2 22, 2 12, 9 13 C 9 3, 23 3, 23 11 C 25 5, 34 7, 31 14 C 38 14, 38 22, 30 22 Z";
-                let cloudColor = "#4285F4";
+                let cloudColor = "#ffffff";
+                let cloudFontColor = "#4285F4";
 
                 return new google.maps.Marker({
                     label: {
                         text: String(count),
-                        color: "white",
+                        color: cloudFontColor,
                         fontSize: "14px",
                         fontWeight: "bold"
                     },
                     position,
                     icon: {
                         path: cloudPath,
-                        scale: 1.8,
+                        scale: 2.5,
                         fillColor: cloudColor,
                         fillOpacity: 0.95,
-                        strokeWeight: 1.5,
-                        strokeColor: "#ffffff",
+                        strokeWeight: 2.0,
+                        strokeColor: cloudFontColor,
                         anchor: new google.maps.Point(19, 14),
                         labelOrigin: new google.maps.Point(19, 14)
                     },

@@ -99,26 +99,30 @@ public class ChatService {
     }
 
     // ======================================================================
-    // 🌟 5. 내 채팅방 목록 가져오기 (리포지토리 변경점 반영)
-    // ======================================================================
+// 🌟 5. 내 채팅방 목록 가져오기 (상대방 프로필 이미지 로직 추가)
+// ======================================================================
     @Transactional(readOnly = true)
     public List<ChatRoomListDTO> getChatRoomsForUser(Long userId) {
 
-        // ★ 에러 나던 부분 수정: 위에서 새로 만든 쿼리 메서드 사용
         List<ChatRoomEntity> rooms = chatRoomRepository.findChatRoomsByUserId(userId);
 
         return rooms.stream().map(room -> {
             UserEntity opponent = room.getSeeker().getUserId().equals(userId) ? room.getRecruiter() : room.getSeeker();
 
-            // 주의: 이 메서드가 ChatMessageRepository에 있어야 합니다.
-            ChatMessageEntity lastMsg = chatMessageRepository.findFirstByRoomOrderByCreatedAtDesc(room);
+            // 🌟 [추가] 상대방 프로필 이미지 경로 추출 (기본값 설정)
+            String profileImg = "/images/common/default_profile.png";
+            if (opponent.getProfileImage() != null && opponent.getProfileImage().getFileUrl() != null) {
+                profileImg = opponent.getProfileImage().getFileUrl();
+            }
 
-            // 주의: 이 메서드도 ChatMessageRepository에 있어야 합니다.
+            ChatMessageEntity lastMsg = chatMessageRepository.findFirstByRoomOrderByCreatedAtDesc(room);
             boolean hasUnreadFlag = chatMessageRepository.existsByRoomAndSender_UserIdNotAndIsReadFalse(room, userId);
 
             return ChatRoomListDTO.builder()
                     .roomId(room.getId())
                     .opponentNickname(opponent.getNickname())
+                    // 🌟 이 줄을 추가해야 목록에서 강아지가 사라집니다!
+                    .opponentProfileImg(opponent.getProfileImage() != null ? opponent.getProfileImage().getFileUrl() : "/images/common/default_profile.png")
                     .lastMessage(lastMsg != null ? lastMsg.getContent() : "대화 내용이 없습니다.")
                     .lastTime(lastMsg != null ? lastMsg.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm")) : "")
                     .hasUnread(hasUnreadFlag)

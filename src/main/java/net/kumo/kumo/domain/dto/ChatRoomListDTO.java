@@ -9,6 +9,7 @@ import lombok.*;
 public class ChatRoomListDTO {
     private Long roomId;
     private String opponentNickname;
+    private String opponentProfileImg;
     private String lastMessage;
     private String lastTime;
     private boolean hasUnread;

@@ -4,95 +4,101 @@
 <head>
     <meta charset="UTF-8">
 
-    <title>KUMO - 채팅</title>
+    <title th:text="#{chat.list.title}">KUMO - 채팅</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap"
-        rel="stylesheet">
+          rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/chat_list.css}">
 
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
     <script th:inline="javascript">
-        // 컨트롤러가 모델에 담아준 userId를 자바스크립트 변수로 변환
         window.MY_USER_ID = [[${userId}]];
+        window.CHAT_LANG = {
+            pin: /*[[#{chat.list.option.pin}]]*/ '고정',
+            unpin: /*[[#{chat.list.option.unpin}]]*/ '해제',
+            deleteConfirm: /*[[#{chat.list.delete.confirm}]]*/ '정말 이 채팅방을 나가시겠습니까?',
+            image: /*[[#{chat.list.msg.image}]]*/ '(사진)',
+            file: /*[[#{chat.list.msg.file}]]*/ '(파일)',
+            noLogin: /*[[#{chat.list.msg.noLogin}]]*/ '로그인 정보(userId)를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.'
+        };
     </script>
 </head>
 
 <body>
 
-    <div class="mobile-container">
-        <div class="chat-header"
-            style="position: relative; display: flex; justify-content: space-between; align-items: center;">
+<div class="mobile-container">
+    <div class="chat-header"
+         style="position: relative; display: flex; justify-content: space-between; align-items: center;">
 
-            <i class="fa-solid fa-map-location-dot header-icon" id="mapIcon" style="cursor: pointer;"
-                onclick="window.top.location.href='/map/main'"></i>
+        <img th:src="@{/images/chatLogo.png}" class="header-logo" alt="KUMO"
+             style="position: absolute; left: 50%; transform: translateX(-50%);">
 
-            <img th:src="@{/images/chatLogo.png}" class="header-logo" alt="KUMO"
-                style="position: absolute; left: 50%; transform: translateX(-50%);">
+        <i class="fa-solid fa-magnifying-glass header-icon" id="searchIcon" style="cursor: pointer;"></i>
 
-            <i class="fa-solid fa-magnifying-glass header-icon" id="searchIcon" style="cursor: pointer;"></i>
+    </div>
 
+    <div id="searchBar" class="search-container">
+        <input type="text" id="searchInput" th:placeholder="#{chat.list.search.placeholder}" placeholder="상대방 이름으로 검색..." autocomplete="off">
+    </div>
+
+    <div class="tab-menu">
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button class="tab-btn active" data-filter="all" onclick="filterRooms('all', this)" th:text="#{chat.list.tab.all}">전체</button>
+            <button class="tab-btn" data-filter="unread" onclick="filterRooms('unread', this)" th:text="#{chat.list.tab.unread}">읽지않음</button>
+            <button class="tab-btn" data-filter="read" onclick="filterRooms('read', this)" th:text="#{chat.list.tab.read}">읽음</button>
         </div>
+    </div>
 
-        <div id="searchBar" class="search-container">
-            <input type="text" id="searchInput" placeholder="상대방 이름으로 검색..." autocomplete="off">
-        </div>
-
-        <div class="tab-menu">
-            <div style="display: flex; gap: 15px; align-items: center;">
-                <button class="tab-btn active" onclick="filterRooms('all', this)">전체</button>
-                <button class="tab-btn" onclick="filterRooms('unread', this)">읽지않음</button>
-                <button class="tab-btn" onclick="filterRooms('read', this)">읽음</button>
+    <div class="chat-list">
+        <div th:each="room : ${chatRooms}" th:data-unread="${room.hasUnread}" class="chat-item"
+             th:onclick="|enterRoom(${room.roomId})|">
+            <div class="avatar-wrapper">
+                <img th:src="${room.opponentProfileImg ?: '/images/common/default_profile.png'}"
+                     class="avatar-img" alt="프로필" style="object-fit: cover;">
             </div>
-        </div>
 
-        <div class="chat-list">
-            <div th:each="room : ${chatRooms}" th:data-unread="${room.hasUnread}" class="chat-item"
-                th:onclick="|enterRoom(${room.roomId})|">
-                <div class="avatar-wrapper">
-                    <img th:src="@{/images/dog_profile.jpg}" class="avatar-img" alt="프로필">
+            <div class="chat-content">
+                <div class="chat-name-row">
+                    <span class="chat-name" th:text="${room.opponentNickname}">상대방 이름</span>
+                    <i class="fa-solid fa-thumbtack pin-icon"></i>
                 </div>
+                <p class="chat-preview" th:text="${room.lastMessage}">최신 메시지 내용</p>
+            </div>
 
-                <div class="chat-content">
-                    <div class="chat-name-row">
-                        <span class="chat-name" th:text="${room.opponentNickname}">상대방 이름</span>
-                        <i class="fa-solid fa-thumbtack pin-icon"></i>
-                    </div>
-                    <p class="chat-preview" th:text="${room.lastMessage}">최신 메시지 내용</p>
-                </div>
+            <div class="chat-info">
+                <span class="chat-time" th:text="${room.lastTime}"></span>
 
-                <div class="chat-info">
-                    <span class="chat-time" th:text="${room.lastTime}"></span>
+                <div class="chat-options">
+                    <i class="fa-solid fa-ellipsis-vertical menu-dots options-icon"
+                       onclick="toggleOptionsMenu(event, this)"></i>
 
-                    <div class="chat-options">
-                        <i class="fa-solid fa-ellipsis-vertical menu-dots options-icon"
-                            onclick="toggleOptionsMenu(event, this)"></i>
+                    <div class="options-dropdown">
+                        <div class="option-item" onclick="togglePinRoom(event, this)">
+                            <i class="fa-solid fa-thumbtack option-icon"></i> <span class="pin-text" th:text="#{chat.list.option.pin}">고정</span>
+                        </div>
 
-                        <div class="options-dropdown">
-                            <div class="option-item" onclick="togglePinRoom(event, this)">
-                                <i class="fa-solid fa-thumbtack option-icon"></i> <span class="pin-text">고정</span>
-                            </div>
-
-                            <div class="option-item delete" onclick="deleteRoom(event, this)">
-                                <i class="fa-solid fa-trash-can option-icon"></i> 삭제
-                            </div>
+                        <div class="option-item delete" onclick="deleteRoom(event, this)">
+                            <i class="fa-solid fa-trash-can option-icon"></i> <span th:text="#{chat.list.option.delete}">삭제</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div th:if="${#lists.isEmpty(chatRooms)}" style="text-align: center; padding: 100px 0; color: #bbb;">
-            <i class="fa-regular fa-comment-dots" style="font-size: 3rem; margin-bottom: 15px;"></i>
-            <p>참여 중인 채팅방이 없습니다.</p>
-        </div>
-
     </div>
 
-    <input type="hidden" id="currentUserId" th:value="${userId}" />
+    <div th:if="${#lists.isEmpty(chatRooms)}" style="text-align: center; padding: 100px 0; color: #bbb;">
+        <i class="fa-regular fa-comment-dots" style="font-size: 3rem; margin-bottom: 15px;"></i>
+        <p th:text="#{chat.list.empty}">참여 중인 채팅방이 없습니다.</p>
+    </div>
 
-    <script th:src="@{/js/chat/chat_list.js(v='1.0')}"></script>
+</div>
+
+<input type="hidden" id="currentUserId" th:value="${userId}" />
+
+<script th:src="@{/js/chat/chat_list.js(v='1.0')}"></script>
 
 </body>
 

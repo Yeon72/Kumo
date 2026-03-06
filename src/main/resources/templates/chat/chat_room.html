@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>채팅방</title>
+    <title th:text="#{chat.room.title}">채팅방</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
-        rel="stylesheet">
+          rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" th:href="@{/css/chat_room.css(v='3.2')}">
@@ -16,188 +16,202 @@
 
 <body>
 
-    <input type="hidden" id="roomId" th:value="${roomId}">
-    <input type="hidden" id="myId" th:value="${userId}">
+<input type="hidden" id="roomId" th:value="${roomId}">
+<input type="hidden" id="myId" th:value="${userId}">
+<!--<input type="hidden" id="opponentImg" th:value="${opponentProfileImg}"> <div class="store-profile-row">-->
+<!--    <img th:src="${opponentProfileImg}" class="header-store-img" style="object-fit: cover;"> <span class="header-store-name" th:text="${roomName}">상대방 이름</span>-->
+<!--</div>-->
 
-    <div class="mobile-container">
-        <div class="chat-header">
-            <a th:href="@{/chat/list(userId=${userId})}" class="header-back-btn">
-                <i class="fa-solid fa-chevron-left"></i>
-            </a>
+<div th:if="${strSenderId != strUserId}" class="msg-row other">
+    <img th:src="${opponentProfileImg}" class="profile-img" style="object-fit: cover;"> ...
+</div>
 
-            <div class="header-translate-btn">
-                <img th:src="@{/images/icons/chat_room_translate.svg}" class="translate-icon-img" alt="번역">
+<div class="mobile-container">
+    <div class="chat-header">
+        <a th:href="@{/chat/list(userId=${userId}, lang=${param.lang})}" class="header-back-btn">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
+
+        <div class="header-translate-btn">
+            <img th:src="@{/images/icons/chat_room_translate.svg}" class="translate-icon-img" alt="번역">
+        </div>
+
+        <div class="header-center">
+            <div class="header-info-row">
+                <span th:text="${address}">주소 정보 없음</span>
             </div>
 
-            <div class="header-center">
-                <div class="store-profile-row">
-                    <img th:src="@{/images/dog_profile.jpg}" class="header-store-img">
-                    <span class="header-store-name" th:text="${roomName}">상대방 이름</span>
-                </div>
-
-                <div class="header-info-row">
-                    <span th:text="${address}">주소 정보 없음</span>
-                </div>
-
-                <div class="header-salary-row">
-                    給料: <span th:text="${salary}"></span>
-                </div>
+            <div class="header-salary-row">
+                <span th:text="#{chat.room.header.salary}">給料: </span>
+                <span th:text="${salaryJp}"></span>
             </div>
         </div>
-        <div class="msg-area" id="msgArea">
-            <th:block th:each="msg, stat : ${chatHistory}">
+    </div>
+    <div class="msg-area" id="msgArea">
+        <th:block th:each="msg, stat : ${chatHistory}">
 
-                <th:block th:if="${stat.first or msg.createdDate != chatHistory[stat.index - 1].createdDate}">
-                    <div class="date-divider" th:if="${msg.createdDate != null}">
-                        <span class="date-divider-text" th:text="${msg.createdDate}">2026-02-26</span>
-                    </div>
+            <th:block th:if="${stat.first or msg.createdDate != chatHistory[stat.index - 1].createdDate}">
+                <div class="date-divider" th:if="${msg.createdDate != null}">
+                    <span class="date-divider-text" th:text="${msg.createdDate}">2026-02-26</span>
+                </div>
+            </th:block>
+
+            <div th:if="${strSenderId != strUserId}" class="msg-row other">
+                <img th:src="${opponentProfileImg}" class="profile-img" style="object-fit: cover;">
+
+                <th:block th:if="${msg.messageType == 'TEXT' or msg.messageType == 'TALK'}">
+                    <div class="msg-bubble" th:text="${msg.content}">내용</div>
                 </th:block>
 
-                <th:block th:with="strSenderId=${#strings.toString(msg.senderId)}, strUserId=${#strings.toString(userId)}">
+                    <th:block th:if="${msg.messageType == 'IMAGE'}">
+                        <img th:src="${msg.content}" class="chat-image"
+                             style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
+                             onclick="openImageModal(this.src)">
+                    </th:block>
 
-                    <div th:if="${strSenderId != strUserId}" class="msg-row other">
-                        <img th:src="@{/images/dog_profile.jpg}" class="profile-img">
-
-                        <th:block th:if="${msg.messageType == 'TEXT' or msg.messageType == 'TALK'}">
-                            <div class="msg-bubble" th:text="${msg.content}">내용</div>
-                        </th:block>
-
-                        <th:block th:if="${msg.messageType == 'IMAGE'}">
-                            <img th:src="${msg.content}" class="chat-image"
-                                 style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
-                                 onclick="openImageModal(this.src)">
-                        </th:block>
-
-                        <th:block th:if="${msg.messageType == 'FILE'}">
-                            <div class="file-bubble" th:data-url="${msg.content}"
-                                 onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
-                                <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
-                                <div class="file-info-box">
-                                    <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
-                                    <div class="file-display-name"></div>
-                                    <div class="file-display-sub">파일 열기</div>
-                                </div>
+                    <th:block th:if="${msg.messageType == 'FILE'}">
+                        <div class="file-bubble" th:data-url="${msg.content}"
+                             onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
+                            <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+                            <div class="file-info-box">
+                                <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
+                                <div class="file-display-name"></div>
+                                <div class="file-display-sub" th:text="#{chat.room.file.open}">파일 열기</div>
                             </div>
-                        </th:block>
+                        </div>
+                    </th:block>
 
+                    <span class="msg-time" th:text="${msg.createdAt}"></span>
+                </div>
+
+                <div th:if="${strSenderId == strUserId}" class="msg-row me">
+                    <div class="msg-info">
+                        <span class="unread-count" th:if="${msg.isRead == false}">1</span>
                         <span class="msg-time" th:text="${msg.createdAt}"></span>
                     </div>
 
-                    <div th:if="${strSenderId == strUserId}" class="msg-row me">
-                        <div class="msg-info">
-                            <span class="unread-count" th:if="${msg.isRead == false}">1</span>
-                            <span class="msg-time" th:text="${msg.createdAt}"></span>
-                        </div>
+                    <th:block th:if="${msg.messageType == 'TEXT' or msg.messageType == 'TALK'}">
+                        <div class="msg-bubble" th:text="${msg.content}">내용</div>
+                    </th:block>
 
-                        <th:block th:if="${msg.messageType == 'TEXT' or msg.messageType == 'TALK'}">
-                            <div class="msg-bubble" th:text="${msg.content}">내용</div>
-                        </th:block>
+                    <th:block th:if="${msg.messageType == 'IMAGE'}">
+                        <img th:src="${msg.content}" class="chat-image"
+                             style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
+                             onclick="openImageModal(this.src)">
+                    </th:block>
 
-                        <th:block th:if="${msg.messageType == 'IMAGE'}">
-                            <img th:src="${msg.content}" class="chat-image"
-                                 style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
-                                 onclick="openImageModal(this.src)">
-                        </th:block>
-
-                        <th:block th:if="${msg.messageType == 'FILE'}">
-                            <div class="file-bubble" th:data-url="${msg.content}"
-                                 onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
-                                <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
-                                <div class="file-info-box">
-                                    <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
-                                    <div class="file-display-name"></div>
-                                    <div class="file-display-sub">파일 열기</div>
-                                </div>
+                    <th:block th:if="${msg.messageType == 'FILE'}">
+                        <div class="file-bubble" th:data-url="${msg.content}"
+                             onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
+                            <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+                            <div class="file-info-box">
+                                <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
+                                <div class="file-display-name"></div>
+                                <div class="file-display-sub" th:text="#{chat.room.file.open}">파일 열기</div>
                             </div>
-                        </th:block>
-                    </div>
-
-                </th:block> </th:block>
-        </div>
-
-        <script>
-            (function () {
-                var chatBox = document.getElementById('msgArea');
-                if (chatBox) {
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
-            })();
-        </script>
-
-        <div class="input-area">
-            <i class="fa-solid fa-plus btn-plus" onclick="openMainMenu()" style="cursor: pointer;"></i>
-            <input type="file" id="fileInput" style="display: none;" accept="image/*" onchange="uploadImage()">
-            <img th:src="@{/images/icons/chat_room_images.svg}" class="btn-img-upload" alt="사진첨부"
-                onclick="document.getElementById('fileInput').click()">
-            <textarea class="input-field" id="msgInput" placeholder="메시지 입력..." rows="1" onkeydown="handleEnter(event)"
-                oninput="autoResize(this)"></textarea>
-            <button class="btn-send" onclick="sendMessage()">전송</button>
-        </div>
-
-        <dialog id="imageModal" class="std-dialog-clear">
-            <div class="image-modal" style="display: flex; position: static;">
-                <span class="close-modal-btn" onclick="closeImageModal()">&times;</span>
-                <img class="modal-content-img" id="modalImage">
-            </div>
-        </dialog>
-
-        <dialog id="mainPlusMenu" class="std-dialog-clear" style="margin-bottom: 0;">
-            <div class="main-menu-box" onclick="event.stopPropagation()">
-                <div class="menu-grid">
-
-                    <div class="menu-item" onclick="openSubMenu('template')">
-                        <div class="menu-icon-circle" style="background-color: #fff4cc;">
-                            <i class="fa-regular fa-message" style="color: #ffb800;"></i>
                         </div>
-                        <span class="menu-name">자주 쓰는 메시지</span>
-                    </div>
-
-                    <div class="menu-item" onclick="document.getElementById('fileInput').click(); closeMainMenu();">
-                        <div class="menu-icon-circle" style="background-color: #ffe8e8;">
-                            <i class="fa-regular fa-image" style="color: #ff5252;"></i>
-                        </div>
-                        <span class="menu-name">앨범</span>
-                    </div>
-
-                    <div class="menu-item" onclick="document.getElementById('docFileInput').click(); closeMainMenu();">
-                        <div class="menu-icon-circle" style="background-color: #e8f5e9;">
-                            <i class="fa-regular fa-file-lines" style="color: #4caf50;"></i>
-                        </div>
-                        <span class="menu-name">문서</span>
-                    </div>
-
-                    <div class="menu-item" onclick="alert('추후에 구현 예정이에요!')">
-                        <div class="menu-icon-circle" style="background-color: #e3f2fd;">
-                            <i class="fa-regular fa-calendar" style="color: #2196f3;"></i>
-                        </div>
-                        <span class="menu-name">면접 일정</span>
-                    </div>
-
+                    </th:block>
                 </div>
-            </div>
-        </dialog>
 
-        <input type="file" id="docFileInput" style="display: none;" accept=".pdf, .xlsx, .xls, .docx, .doc, .txt"
-            onchange="uploadFile()">
-
+            </th:block> </th:block>
     </div>
-    <dialog id="templateMenu" class="std-dialog-clear" style="margin-bottom: 0;">
-        <div class="template-box" onclick="event.stopPropagation()">
-            <div class="template-header">
-                <span>자주 쓰는 메시지</span>
-                <span class="close-btn" onclick="closeTemplateMenu()">&times;</span>
-            </div>
-            <div class="template-list">
-                <button onclick="insertText('안녕하세요, 면접 제안 드리고 싶습니다. :)')">📅 면접 제안</button>
-                <button onclick="insertText('이력서를 추가로 요청드려도 될까요? :)')">📂 이력서 요청</button>
-                <button onclick="insertText('합격 통보 드립니다. 축하합니다! :)')">🎉 합격 통보</button>
-                <button onclick="insertText('네, 면접 일정 확인했습니다. :)')">✅ 일정 확인</button>
-                <button onclick="insertText('도착했습니다. 기다리고 있어요. :)')">📍 도착 알림</button>
+
+    <script>
+        (function () {
+            var chatBox = document.getElementById('msgArea');
+            if (chatBox) {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        })();
+    </script>
+
+    <div class="input-area">
+        <i class="fa-solid fa-plus btn-plus" onclick="openMainMenu()" style="cursor: pointer;"></i>
+        <input type="file" id="fileInput" style="display: none;" accept="image/*" onchange="uploadImage()">
+        <img th:src="@{/images/icons/chat_room_images.svg}" class="btn-img-upload" alt="사진첨부"
+             onclick="document.getElementById('fileInput').click()">
+        <textarea class="input-field" id="msgInput" th:placeholder="#{chat.room.input.placeholder}" rows="1" onkeydown="handleEnter(event)"
+                  oninput="autoResize(this)"></textarea>
+        <button class="btn-send" onclick="sendMessage()"></button>
+    </div>
+
+    <dialog id="imageModal" class="std-dialog-clear">
+        <div class="image-modal" style="display: flex; position: static;">
+            <span class="close-modal-btn" onclick="closeImageModal()">&times;</span>
+            <img class="modal-content-img" id="modalImage">
+        </div>
+    </dialog>
+
+    <dialog id="mainPlusMenu" class="std-dialog-clear" style="margin-bottom: 0;">
+        <div class="main-menu-box" onclick="event.stopPropagation()">
+            <div class="menu-grid">
+
+                <div class="menu-item" onclick="openSubMenu('template')">
+                    <div class="menu-icon-circle" style="background-color: #fff4cc;">
+                        <i class="fa-regular fa-message" style="color: #ffb800;"></i>
+                    </div>
+                    <span class="menu-name" th:text="#{chat.room.menu.template}">자주 쓰는 메시지</span>
+                </div>
+
+                <div class="menu-item" onclick="document.getElementById('fileInput').click(); closeMainMenu();">
+                    <div class="menu-icon-circle" style="background-color: #ffe8e8;">
+                        <i class="fa-regular fa-image" style="color: #ff5252;"></i>
+                    </div>
+                    <span class="menu-name" th:text="#{chat.room.menu.album}">앨범</span>
+                </div>
+
+                <div class="menu-item" onclick="document.getElementById('docFileInput').click(); closeMainMenu();">
+                    <div class="menu-icon-circle" style="background-color: #e8f5e9;">
+                        <i class="fa-regular fa-file-lines" style="color: #4caf50;"></i>
+                    </div>
+                    <span class="menu-name" th:text="#{chat.room.menu.document}">문서</span>
+                </div>
+
+                <div class="menu-item" onclick="alert(window.CHAT_LANG.notImplement)">
+                    <div class="menu-icon-circle" style="background-color: #e3f2fd;">
+                        <i class="fa-regular fa-calendar" style="color: #2196f3;"></i>
+                    </div>
+                    <span class="menu-name" th:text="#{chat.room.menu.schedule}">면접 일정</span>
+                </div>
+
             </div>
         </div>
     </dialog>
 
-    <script th:src="@{/js/chat/chat_room.js(v='1.0')}"></script>
+    <input type="file" id="docFileInput" style="display: none;" accept=".pdf, .xlsx, .xls, .docx, .doc, .txt"
+           onchange="uploadFile()">
+
+</div>
+<dialog id="templateMenu" class="std-dialog-clear" style="margin-bottom: 0;">
+    <div class="template-box" onclick="event.stopPropagation()">
+        <div class="template-header">
+            <span th:text="#{chat.room.menu.template}">자주 쓰는 메시지</span>
+            <span class="close-btn" onclick="closeTemplateMenu()">&times;</span>
+        </div>
+        <div class="template-list">
+            <button th:onclick="|insertText('#{chat.room.template.1}')|" th:text="#{chat.room.template.1.btn}">📅 면접 제안</button>
+            <button th:onclick="|insertText('#{chat.room.template.2}')|" th:text="#{chat.room.template.2.btn}">📂 이력서 요청</button>
+            <button th:onclick="|insertText('#{chat.room.template.3}')|" th:text="#{chat.room.template.3.btn}">🎉 합격 통보</button>
+            <button th:onclick="|insertText('#{chat.room.template.4}')|" th:text="#{chat.room.template.4.btn}">✅ 일정 확인</button>
+            <button th:onclick="|insertText('#{chat.room.template.5}')|" th:text="#{chat.room.template.5.btn}">📍 도착 알림</button>
+        </div>
+    </div>
+</dialog>
+
+
+<script th:inline="javascript">
+	window.CHAT_LANG = {
+		openFile: /*[[#{chat.room.file.open}]]*/ '파일 열기',
+		salary: /*[[#{chat.room.header.salary}]]*/ '급료',
+		uploadFail: /*[[#{chat.room.msg.uploadFail}]]*/ '파일 업로드에 실패했습니다.',
+		emptyMsg: /*[[#{chat.room.msg.empty}]]*/ '메시지를 입력하세요.',
+		sendFail: /*[[#{chat.room.msg.sendFail}]]*/ '메시지 전송에 실패했습니다.',
+		reconnecting: /*[[#{chat.room.msg.reconnecting}]]*/ '채팅방 연결이 끊어졌습니다. 재연결 중...',
+		notImplement: /*[[#{chat.room.msg.notImplement}]]*/ '추후에 구현 예정이에요!'
+	};
+</script>
+
+<script th:src="@{/js/chat/chat_room.js(v='1.0')}"></script>
 
 </body>
 

@@ -261,7 +261,7 @@ footer {
   align-items: center;
   justify-content: space-between;
   padding: 15px 0;
-  border-bottom: 1px solid #37393d;
+  border-bottom: 1px solid #e8edf9;
   transition: background-color 0.2s;
 }
 
@@ -582,4 +582,8 @@ body.dark-mode ::-webkit-scrollbar-thumb {
 body.dark-mode ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(125, 180, 230, 0.5);
   /* 다크모드 호버 시 하늘색 광채 */
+}
+
+.authenticated-header .logo img {
+  display: none !important;
 }

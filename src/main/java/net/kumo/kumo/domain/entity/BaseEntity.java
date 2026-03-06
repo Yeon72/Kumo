@@ -1,14 +1,22 @@
 package net.kumo.kumo.domain.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
 import net.kumo.kumo.domain.enums.JobStatus;
 
-import java.time.LocalDateTime;
-
 @MappedSuperclass
-@Getter @Setter
+@Getter
+@Setter
 public abstract class BaseEntity {
 
     @Id
@@ -74,10 +82,10 @@ public abstract class BaseEntity {
 
     @Column(name = "user_id", insertable = false, updatable = false)
     private Long userId;
-    
+
     @Column(name = "view_count")
     private Integer viewCount;
-    
+
     public void addViewCount() {
         if (this.viewCount == null) {
             this.viewCount = 0;

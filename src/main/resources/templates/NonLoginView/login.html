@@ -83,11 +83,11 @@
 <script th:inline="javascript">
     /* <![CDATA[ */
     const loginMessages = {
-        sns_alert: [[#{login.sns.alert}]],
-        captcha_error: [[#{login.captcha.error}]]
-        sns_alert:   /*[[#{login.sns.alert}]]*/ '서비스 준비 중입니다.',
-        error_title: /*[[#{login.swal.error_title}]]*/ '로그인 실패',
-        error_text:  /*[[#{login.error.fail}]]*/ '아이디 또는 비밀번호가 일치하지 않습니다.'
+        // 주석 형식을 사용하면 타임리프가 해당 키를 찾았을 때 뒤의 '기본값'을 덮어씁니다.
+        sns_alert:     /*[[#{login.sns.alert}]]*/ 'SNS 알림입니다.',
+        captcha_error: /*[[#{login.captcha.error}]]*/ '캡차 인증에 실패했습니다.',
+        error_title:   /*[[#{login.swal.error_title}]]*/ '로그인 실패',
+        error_text:    /*[[#{login.error.fail}]]*/ '아이디 또는 비밀번호가 일치하지 않습니다.'
     };
     /* ]]> */
 </script>

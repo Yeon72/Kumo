@@ -1,14 +1,46 @@
-/* --- src/main/resources/static/js/chat_list.js --- */
+// ==========================================================
+// 🌟 [추가] 부모 창(메인 사이트) 다크모드 실시간 동기화
+// ==========================================================
+function syncDarkMode() {
+    try {
+        // 부모 창의 body에 'dark-mode' 클래스가 있는지 확인
+        if (window.parent.document.body.classList.contains('dark-mode')) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    } catch (e) {
+        console.log("iframe 다크모드 동기화 대기 중...");
+    }
+}
+
+// 1. 채팅창이 처음 켜질 때 즉시 다크모드 검사
+syncDarkMode();
+
+// 2. 사용자가 사이트에서 다크모드 토글을 누를 때 '실시간'으로 감지해서 적용
+try {
+    const observer = new MutationObserver(syncDarkMode);
+    // 부모 창의 body 클래스가 변하는 것을 감시합니다.
+    observer.observe(window.parent.document.body, { attributes: true, attributeFilter: ['class'] });
+} catch (e) {
+    console.log("MutationObserver 연결 실패 (단독 실행 모드)");
+}
+// ==========================================================
 
 // 방 입장 함수 (수정됨)
 function enterRoom(roomId) {
-    // 🌟 URL 대신, HTML에서 넘겨준 전역 변수에서 내 아이디를 꺼냅니다!
     const userId = window.MY_USER_ID;
 
+    // 🌟 1. 현재 주소창에서 lang 파라미터를 꺼내옵니다 (없으면 기본값 kr)
+    const currentLang = (typeof parent.getKumoLang === 'function')
+        ? parent.getKumoLang()
+        : 'kr';
+
     if (userId) {
-        location.href = '/chat/room/' + roomId + '?userId=' + userId;
+        // 🌟 2. 주소 맨 끝에 &lang=${currentLang} 를 붙여서 이동시킵니다!
+        location.href = `/chat/room/${roomId}?userId=${userId}&lang=${currentLang}`;
     } else {
-        alert("로그인 정보(userId)를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.");
+        alert(window.CHAT_LANG.noLogin);
     }
 }
 
@@ -48,8 +80,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 const nameElement = room.querySelector('.chat-name');
                 if (nameElement) {
                     const name = nameElement.innerText.toLowerCase();
-                    // 이름에 검색어가 포함되어 있으면 보여주고, 없으면 숨김
-                    if (name.startsWith(keyword)) {
+                    // 🌟 [수정 1] startsWith -> includes 로 변경 (중간 글자 검색 허용!)
+                    if (name.includes(keyword)) {
                         room.style.display = '';
                     } else {
                         room.style.display = 'none';
@@ -66,6 +98,10 @@ document.addEventListener("DOMContentLoaded", function () {
             if (searchInput) searchInput.value = '';
             tabBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
+
+            // 탭을 클릭할 때 필터링 로직이 즉시 작동하도록 연동
+            const filterType = this.getAttribute('data-filter');
+            filterRooms(filterType, this);
         });
     });
 
@@ -143,7 +179,7 @@ function togglePinRoom(event, element) {
 
     if (isPinned) {
         chatItem.classList.remove('is-pinned');
-        pinText.innerText = '고정';
+        pinText.innerText = window.CHAT_LANG.unpin; // 고정 시
 
         const myTime = chatItem.querySelector('.chat-time').innerText;
         const otherRooms = Array.from(chatList.querySelectorAll('.chat-item:not(.is-pinned)'));
@@ -153,7 +189,7 @@ function togglePinRoom(event, element) {
         else chatList.appendChild(chatItem);
     } else {
         chatItem.classList.add('is-pinned');
-        pinText.innerText = '해제';
+        pinText.innerText = window.CHAT_LANG.pin; // 고정 해제 시
         chatList.prepend(chatItem);
     }
 
@@ -163,7 +199,7 @@ function togglePinRoom(event, element) {
 // 삭제 버튼 클릭
 function deleteRoom(event, element) {
     event.stopPropagation();
-    if (confirm("정말 이 채팅방을 나가시겠습니까?")) {
+    if (confirm(window.CHAT_LANG.deleteConfirm)) {
         const chatItem = element.closest('.chat-item');
         if (chatItem) {
             chatItem.style.transition = 'all 0.3s ease';
@@ -184,7 +220,12 @@ var stompListClient = null;
 
 function connectChatList() {
     const urlParams = new URLSearchParams(window.location.search);
-    const myUserId = urlParams.get('userId');
+    let myUserId = urlParams.get('userId');
+
+    // 🌟 URL에 userId 파라미터가 없으면 전역 변수에서 가져오도록 방어 로직 추가!
+    if (!myUserId && window.MY_USER_ID) {
+        myUserId = window.MY_USER_ID;
+    }
 
     if (!myUserId) return;
 
@@ -196,7 +237,7 @@ function connectChatList() {
     stompListClient.connect({}, function (frame) {
         console.log('✅ [LIVE] 로비(목록) 웹소켓 연결 완료!');
 
-        // ★ 핵심: 백엔드가 '나(myUserId)'에게 보내는 전용 알림 파이프를 구독합니다.
+        // 백엔드가 '나'에게 보내는 전용 알림 파이프 구독
         const myLobbyTopic = '/sub/chat/user/' + myUserId;
 
         stompListClient.subscribe(myLobbyTopic, function (messageOutput) {
@@ -211,7 +252,7 @@ function connectChatList() {
 }
 
 // ==========================================================
-// ★ [LIVE] 완벽 조준 완료된 실시간 목록 갱신 (중복 함수 제거) ★
+// ★ [LIVE] 완벽 조준 완료된 실시간 목록 갱신
 // ==========================================================
 function updateChatListUI(newMsg) {
     const chatItems = document.querySelectorAll('.chat-item');
@@ -230,8 +271,8 @@ function updateChatListUI(newMsg) {
 
         // 1. 메시지 내용 교체
         if (recentMsgSpan) {
-            if (newMsg.messageType === 'IMAGE') recentMsgSpan.innerText = '(사진)';
-            else if (newMsg.messageType === 'FILE') recentMsgSpan.innerText = '(파일)';
+            if (newMsg.messageType === 'IMAGE') recentMsgSpan.innerText = window.CHAT_LANG.image;
+            else if (newMsg.messageType === 'FILE') recentMsgSpan.innerText = window.CHAT_LANG.file;
             else recentMsgSpan.innerText = newMsg.content;
         }
 
@@ -249,7 +290,7 @@ function updateChatListUI(newMsg) {
             const firstUnpinned = chatListContainer.querySelector('.chat-item:not(.is-pinned)');
 
             targetRoom.style.transition = 'background-color 0.4s ease';
-            targetRoom.style.backgroundColor = 'rgba(255, 184, 0, 0.15)';
+            targetRoom.style.backgroundColor = 'rgba(125, 180, 230, 0.15)'; // 하늘색 테마에 맞게 톤 조절
             setTimeout(() => targetRoom.style.backgroundColor = '', 1000);
 
             if (firstUnpinned) chatListContainer.insertBefore(targetRoom, firstUnpinned);
@@ -258,7 +299,10 @@ function updateChatListUI(newMsg) {
 
         // 4. 안읽음 상태 평가 및 뱃지 업데이트
         const urlParams = new URLSearchParams(window.location.search);
-        const myUserId = urlParams.get('userId');
+        let myUserId = urlParams.get('userId');
+        if (!myUserId && window.MY_USER_ID) {
+            myUserId = window.MY_USER_ID;
+        }
 
         // 만약 내가 보낸 게 아니면 무조건 "안 읽음(true)"
         const isUnread = (String(newMsg.senderId) !== String(myUserId));
@@ -267,13 +311,27 @@ function updateChatListUI(newMsg) {
         // 🌟 실시간 뱃지 그리기
         toggleUnreadBadge(targetRoom, isUnread);
 
-        // 5. 현재 탭(필터)에 맞춰 방 숨김/표시 처리
+        // 🌟 [수정 2] 5. 현재 탭(필터) 및 검색어에 맞춰 방 숨김/표시 완벽 방어 처리!
         const activeTab = document.querySelector('.tab-btn.active');
+        const searchInput = document.getElementById('searchInput');
+        const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const roomName = targetRoom.querySelector('.chat-name') ? targetRoom.querySelector('.chat-name').innerText.toLowerCase() : '';
+
         if (activeTab) {
-            const filterText = activeTab.innerText.trim();
-            if (filterText === '읽지않음' && !isUnread) targetRoom.style.display = 'none';
-            else if (filterText === '읽음' && isUnread) targetRoom.style.display = 'none';
-            else targetRoom.style.display = '';
+            const activeFilter = activeTab.getAttribute('data-filter');
+            let shouldShow = true; // 일단 보여준다고 가정
+
+            // 1) 탭 조건 검사
+            if (activeFilter === 'unread' && !isUnread) shouldShow = false;
+            if (activeFilter === 'read' && isUnread) shouldShow = false;
+
+            // 2) 검색어 조건 검사 (검색어가 있는데 이름에 없으면 숨김!)
+            if (keyword && !roomName.includes(keyword)) {
+                shouldShow = false;
+            }
+
+            // 최종 결정
+            targetRoom.style.display = shouldShow ? '' : 'none';
         }
     } else {
         // 백엔드 연결 후 방 생성 로직이 필요한 부분

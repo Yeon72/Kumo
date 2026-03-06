@@ -1,158 +1,144 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 
-  <head>
-    <meta charset="UTF-8" />
-    <title>KUMO RECRUITER - 내 계정</title>
-    <script th:src="@{/js/recruiter/main.js}"></script>
-    <script th:src="@{/js/recruiter/recruiterHeader.js}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<head>
+  <meta charset="UTF-8" />
+  <title>KUMO RECRUITER - 내 계정</title>
+  <script th:src="@{/js/recruiter/main.js}"></script>
+  <script th:src="@{/js/recruiter/recruiterHeader.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" th:href="@{/css/recruiter/recruiterHeader.css}" />
+  <link rel="stylesheet" th:href="@{/css/NonLoginFragments/NonLoginFooter.css}" />
+  <link rel="stylesheet" th:href="@{/css/recruiter/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/recruiter/main.css}" />
+  <link rel="stylesheet" th:href="@{/css/recruiter/settings.css}" />
+  <link rel="stylesheet" th:href="@{/css/recruiter/dark-theme.css}" />
+</head>
 
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <link rel="stylesheet" th:href="@{/css/recruiter/recruiterHeader.css}" />
-    <link
-      rel="stylesheet"
-      th:href="@{/css/NonLoginFragments/NonLoginFooter.css}"
-    />
-    <link rel="stylesheet" th:href="@{/css/recruiter/sidebar.css}" />
-    <link rel="stylesheet" th:href="@{/css/recruiter/main.css}" />
-    <link rel="stylesheet" th:href="@{/css/recruiter/settings.css}" />
-    <link rel="stylesheet" th:href="@{/css/recruiter/dark-theme.css}" />
-  </head>
-  <body>
-    <header
-      th:replace="~{recruiterView/fragments/recruiterHeader :: headerFragment}"
-    ></header>
-    <!-- 프로필 업로드 모달 -->
-    <div id="profileModal" class="profile-modal-overlay">
-      <div class="profile-modal-window">
-    
-        <div class="profile-modal-header">
-          <h3 th:text="#{modal.title}">프로필 사진 업로드</h3>
-          <span class="close-btn">&times;</span>
+<body>
+  <header th:replace="~{recruiterView/fragments/recruiterHeader :: headerFragment}"></header>
+
+  <!-- 프로필 업로드 모달 -->
+  <div id="profileModal" class="profile-modal-overlay">
+    <div class="profile-modal-window">
+
+      <div class="profile-modal-header">
+        <h3 th:text="#{modal.title}">프로필 사진 업로드</h3>
+        <span class="close-btn">&times;</span>
+      </div>
+
+      <div class="profile-modal-body">
+        <div class="preview-wrapper">
+          <img th:src="${user.profileImage ?: '/images/common/default_profile.png'}" id="profilePreview" alt="Profile">
         </div>
-    
-        <div class="profile-modal-body">
-          <div class="preview-wrapper">
-            <img th:src="${user.profileImage ?: '/images/common/default_profile.png'}" id="profilePreview" alt="Profile">
-          </div>
-    
-          <p class="guide-text" th:text="#{modal.guide}">JPG, PNG, GIF 파일만 업로드 가능합니다.</p>
-    
-          <div class="file-selection-area">
-            <input type="file" id="fileInput" accept="image/*" style="display:none;">
-            <label for="fileInput" class="custom-file-btn" id="uploadBtn">
-              <i class="fa-solid fa-cloud-arrow-up"></i>
-              <span th:text="#{modal.file.select}">사진 선택</span>
-            </label>
-            <p id="fileName" class="file-name" th:text="#{modal.file.none}">선택된 파일 없음</p>
-          </div>
-        </div>
-    
-        <div class="profile-modal-footer">
-          <button class="btn-cancel" id="cancelProfileBtn" th:text="#{btn.cancel}">취소</button>
-          <button class="btn-save" id="saveProfileBtn" th:text="#{btn.save}">저장하기</button>
+
+        <p class="guide-text" th:text="#{modal.guide}">JPG, PNG, GIF 파일만 업로드 가능합니다.</p>
+
+        <div class="file-selection-area">
+          <input type="file" id="fileInput" accept="image/*" style="display:none;">
+          <label for="fileInput" class="custom-file-btn" id="uploadBtn">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span th:text="#{modal.file.select}">사진 선택</span>
+          </label>
+          <p id="fileName" class="file-name" th:text="#{modal.file.none}">선택된 파일 없음</p>
         </div>
       </div>
-    </div>
 
-    <div class="dashboard-wrapper">
-      <div
-        th:replace="~{recruiterView/fragments/sidebar :: sidebarFragment}"
-      ></div>
-
-      <div class="main-container" style="margin-right: 0;">
-        <main class="content-body">
-          <div class="settings-container">
-            <div class="content-header">
-              <h2 class="settings-title" th:text="#{sidebar.menu.settings}">내 계정</h2>
-            </div>
-        
-            <div class="profile-section">
-              <div class="profile-photo-area">
-                <div class="img-wrapper">
-                  <img th:src="${user.profileImage?.fileUrl ?: '/images/common/default_profile.png'}" id="currentProfileImg" class="profile-img-lg">
-                </div>
-              
-                <button type="button" class="btn-upload-photo" id="btnOpenModal" th:text="#{set.btn.upload_photo}">
-                  프로필 사진 업로드
-                </button>
-              </div>
-
-        
-              <div class="info-list">
-                <div class="info-row">
-                  <span class="label" th:text="#{set.label.name}">이름</span>
-                  <span class="value" th:text="${fullName}">이름 데이터</span>
-                </div>
-        
-                <div class="info-row">
-                  <span class="label" th:text="#{join.label.birth}">생년월일</span>
-                  <span class="value">
-                    <span th:text="${#temporals.format(user.birthDate, 'yyyy / MM / dd')}">1990 / 01 / 01</span>
-                    <span class="age-suffix" th:text="#{set.label.age_suffix(${age})}"></span>
-                  </span>
-                </div>
-        
-                <div class="info-row">
-                  <span class="label" th:text="#{join.label.nickname}">닉네임</span>
-                  <span class="value" th:text="${user.nickname}">닉네임 데이터</span>
-                </div>
-        
-                <div class="info-row">
-                  <span class="label" th:text="#{join.label.email}">이메일</span>
-                  <span class="value" th:text="${user.email}">user@kumo.io</span>
-                </div>
-        
-                <div class="info-row">
-                  <span class="label" th:text="#{join.label.address}">주소</span>
-                  <span class="value" th:text="${user.addressMain + ' ' + user.addressDetail}">주소 데이터</span>
-                </div>
-        
-                <div class="info-row align-items-center">
-                  <span class="label" th:text="#{label.line}">LINE 연동></span>
-                  <label class="switch">
-                    <input type="checkbox" class="sns-toggle" th:checked="${user.socialProvider == 'LINE'}">
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-                
-                <div class="info-row align-items-center">
-                  <span class="label" th:text="#{label.google}">Google 연동</span>
-                  <label class="switch">
-                    <input type="checkbox" class="sns-toggle" th:checked="${user.socialProvider == 'GOOGLE'}">
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </div>
-        
-              <div class="action-buttons">
-                <button type="button" class="btn-quit" th:text="#{set.btn.quit}" onclick="openDeleteModal()">회원 탈퇴</button>
-                <a th:href="@{/Recruiter/ProfileEdit}" class="btn-edit" th:text="#{set.btn.edit}">회원정보 수정</a>
-              </div>
-            </div>
-          </div>
-        </main>
+      <div class="profile-modal-footer">
+        <button class="btn-cancel" id="cancelProfileBtn" th:text="#{btn.cancel}">취소</button>
+        <button class="btn-save" id="saveProfileBtn" th:text="#{btn.save}">저장하기</button>
       </div>
     </div>
+  </div>
 
-    <!-- 회원 탈퇴 모달 (기존 유지) -->
+  <div class="dashboard-wrapper">
+    <div th:replace="~{recruiterView/fragments/sidebar :: sidebarFragment}"></div>
+
+    <div class="main-container" style="margin-right: 0;">
+      <main class="content-body">
+        <div class="settings-container">
+          <div class="content-header">
+            <h2 class="settings-title" th:text="#{sidebar.menu.settings}">내 계정</h2>
+          </div>
+
+          <div class="profile-section">
+            <div class="profile-photo-area">
+              <div class="img-wrapper">
+                <img th:src="${user.profileImage?.fileUrl ?: '/images/common/default_profile.png'}"
+                  id="currentProfileImg" class="profile-img-lg">
+              </div>
+
+              <button type="button" class="btn-upload-photo" id="btnOpenModal" th:text="#{set.btn.upload_photo}">
+                프로필 사진 업로드
+              </button>
+            </div>
+
+            <div class="info-list">
+              <div class="info-row">
+                <span class="label" th:text="#{set.label.name}">이름</span>
+                <span class="value" th:text="${fullName}">이름 데이터</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label" th:text="#{join.label.birth}">생년월일</span>
+                <span class="value">
+                  <span th:text="${#temporals.format(user.birthDate, 'yyyy / MM / dd')}">1990 / 01 / 01</span>
+                  <span class="age-suffix" th:text="#{set.label.age_suffix(${age})}"></span>
+                </span>
+              </div>
+
+              <div class="info-row">
+                <span class="label" th:text="#{join.label.nickname}">닉네임</span>
+                <span class="value" th:text="${user.nickname}">닉네임 데이터</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label" th:text="#{join.label.email}">이메일</span>
+                <span class="value" th:text="${user.email}">user@kumo.io</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label" th:text="#{join.label.address}">주소</span>
+                <span class="value" th:text="${user.addressMain + ' ' + user.addressDetail}">주소 데이터</span>
+              </div>
+
+              <div class="info-row align-items-center">
+                <span class="label" th:text="#{label.line}">LINE 연동</span>
+                <label class="switch">
+                  <input type="checkbox" class="sns-toggle" th:checked="${user.socialProvider == 'LINE'}">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <div class="info-row align-items-center">
+                <span class="label" th:text="#{label.google}">Google 연동</span>
+                <label class="switch">
+                  <input type="checkbox" class="sns-toggle" th:checked="${user.socialProvider == 'GOOGLE'}">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button type="button" class="btn-quit" th:text="#{set.btn.quit}" onclick="openDeleteModal()">회원
+                탈퇴</button>
+              <a th:href="@{/Recruiter/ProfileEdit}" class="btn-edit" th:text="#{set.btn.edit}">회원정보 수정</a>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 회원 탈퇴 모달 -->
   <div id="deleteAccountModal" class="delete-modal-overlay">
     <div class="delete-modal-content">
       <div class="delete-modal-header">
-        <h3 th:text="#{set.btn.quit}">회원 탈퇴</h3>
+        <h3 th:text="#{delete.modal.title}">회원 탈퇴</h3>
         <button type="button" class="btn-close-modal" onclick="closeDeleteModal()">
           <i class="fa-solid fa-xmark"></i>
         </button>
@@ -160,73 +146,38 @@
       <div class="delete-modal-body">
         <div class="warning-box">
           <i class="fa-solid fa-triangle-exclamation"></i>
-          <p class="warning-title" th:text="#{set.delete.warning.title}">정말 KUMO를 떠나시겠습니까?</p>
+          <p class="warning-title" th:text="#{delete.modal.warning.title}">정말 KUMO를 떠나시겠습니까?</p>
           <ul class="warning-list">
-            <li th:text="#{set.delete.warning.1}">등록된 회사 정보 및 프로필 정보가 영구적으로 삭제됩니다.</li>
-            <li th:text="#{set.delete.warning.2}">진행 중인 모든 공고가 취소 처리됩니다.</li>
-            <li th:text="#{set.delete.warning.3}">탈퇴 후에는 데이터를 절대 복구할 수 없습니다.</li>
+            <li th:utext="#{delete.modal.warning.4}">등록된 회사 정보 및 프로필 정보가 <strong>영구적으로 삭제</strong>됩니다.</li>
+            <li th:utext="#{delete.modal.warning.5}">진행 중인 모든 <strong>공고가 취소</strong> 처리됩니다.</li>
+            <li th:utext="#{delete.modal.warning.3}">탈퇴 후에는 데이터를 <strong>절대 복구할 수 없습니다.</strong></li>
           </ul>
         </div>
         <div class="delete-input-group">
-          <label for="deleteConfirmPw" th:text="#{set.delete.label.pw}">본인 확인을 위해 비밀번호를 입력해 주세요.</label>
-          <input type="password" id="deleteConfirmPw" class="custom-modal-input" th:placeholder="#{join.placeholder.pw}"
-            oninput="checkDeleteInput()">
-  
-          <label for="deleteConfirmPwCheck" style="margin-top: 15px;" th:text="#{join.label.pw_check}">비밀번호 확인</label>
+          <label for="deleteConfirmPw" th:text="#{delete.modal.confirm.pw}">본인 확인을 위해 비밀번호를 입력해 주세요.</label>
+          <input type="password" id="deleteConfirmPw" class="custom-modal-input"
+            th:placeholder="#{delete.modal.placeholder.pw}" oninput="checkDeleteInput()">
+
+          <label for="deleteConfirmPwCheck" style="margin-top: 15px;" th:text="#{delete.modal.confirm.pw.check}">비밀번호
+            확인</label>
           <input type="password" id="deleteConfirmPwCheck" class="custom-modal-input"
-            th:placeholder="#{join.placeholder.pw_check}" oninput="checkDeleteInput()">
-  
+            th:placeholder="#{delete.modal.placeholder.pw.check}" oninput="checkDeleteInput()">
+
           <p id="deleteMismatchMsg" class="error-msg" style="display: none; margin-top: 8px;"
-            th:text="#{join.error.pw_mismatch}">비밀번호가 일치하지 않습니다.</p>
+            th:text="#{delete.modal.error.mismatch}">비밀번호가 일치하지 않습니다.</p>
           <p id="deleteErrorMsg" class="error-msg" style="display: none; margin-top: 8px;"
-            th:text="#{set.delete.error.wrong_pw}">비밀번호가 틀렸습니다.</p>
+            th:text="#{delete.modal.error.wrong}">비밀번호가 틀렸습니다.</p>
         </div>
       </div>
       <div class="delete-modal-footer">
         <button type="button" class="btn-modal-cancel" onclick="closeDeleteModal()" th:text="#{btn.cancel}">취소</button>
         <button type="button" id="btnConfirmDelete" class="btn-modal-danger" onclick="executeDelete()" disabled
-          th:text="#{set.btn.quit}">탈퇴하기</button>
+          th:text="#{btn.delete.confirm}">탈퇴하기</button>
       </div>
     </div>
   </div>
-    <div id="deleteAccountModal" class="delete-modal-overlay">
-      <div class="delete-modal-content">
-        <div class="delete-modal-header">
-          <h3 th:text="#{delete.modal.title}">회원 탈퇴</h3>
-          <button type="button" class="btn-close-modal" onclick="closeDeleteModal()">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-        <div class="delete-modal-body">
-          <div class="warning-box">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <p class="warning-title" th:text="#{delete.modal.warning.title}">정말 KUMO를 떠나시겠습니까?</p>
-            <ul class="warning-list">
-              <li th:utext="#{delete.modal.warning.1}">등록된 회사 정보 및 프로필 정보가 <strong>영구적으로 삭제</strong>됩니다.</li>
-              <li th:utext="#{delete.modal.warning.2}">진행 중인 모든 <strong>공고가 취소</strong> 처리됩니다.</li>
-              <li th:utext="#{delete.modal.warning.3}">탈퇴 후에는 데이터를 <strong>절대 복구할 수 없습니다.</strong></li>
-            </ul>
-          </div>
-          <div class="delete-input-group">
-            <label for="deleteConfirmPw" th:text="#{delete.modal.confirm.pw}">본인 확인을 위해 비밀번호를 입력해 주세요.</label>
-            <input type="password" id="deleteConfirmPw" class="custom-modal-input" th:placeholder="#{delete.modal.placeholder.pw}"
-              oninput="checkDeleteInput()">
-            <label for="deleteConfirmPwCheck" style="margin-top: 15px;" th:text="#{delete.modal.confirm.pw.check}">비밀번호 확인</label>
-            <input type="password" id="deleteConfirmPwCheck" class="custom-modal-input" th:placeholder="#{delete.modal.placeholder.pw.check}"
-              oninput="checkDeleteInput()">
-            <p id="deleteMismatchMsg" class="error-msg" style="display: none; margin-top: 8px;" th:text="#{delete.modal.error.mismatch}">비밀번호가 일치하지 않습니다.
-            </p>
-            <p id="deleteErrorMsg" class="error-msg" style="display: none; margin-top: 8px;" th:text="#{delete.modal.error.wrong}">비밀번호가 틀렸습니다.</p>
-          </div>
-        </div>
-        <div class="delete-modal-footer">
-          <button type="button" class="btn-modal-cancel" onclick="closeDeleteModal()" th:text="#{btn.cancel}">취소</button>
-          <button type="button" id="btnConfirmDelete" class="btn-modal-danger" onclick="executeDelete()"
-            disabled th:text="#{btn.delete.confirm}">탈퇴하기</button>
-        </div>
-      </div>
-    </div>
 
+  <!-- ✅ JS 변수 먼저 정의 후 settings.js 로드 -->
   <script th:inline="javascript">
     /* <![CDATA[ */
     const settingsMsg = {
@@ -235,34 +186,27 @@
       uploadSuccess: /*[[#{set.swal.upload_success}]]*/ '프로필 사진이 업로드 되었습니다.',
       uploadFail:    /*[[#{set.swal.upload_fail}]]*/ '업로드 실패'
     };
-    const msgSwalTitle = /*[[#{set.swal.del_title}]]*/ '탈퇴하시겠습니까?';
-    const msgSwalText = /*[[#{set.swal.del_text}]]*/ '데이터가 삭제됩니다.';
-    const msgSwalConfirm = /*[[#{set.swal.btn_confirm}]]*/ '탈퇴하기';
-    const msgSwalCancel = /*[[#{set.swal.btn_cancel}]]*/ '취소';
-    const msgSwalSuccess = /*[[#{set.swal.success_title}]]*/ '탈퇴 완료';
-    const msgSwalSuccessText = /*[[#{set.swal.success_text}]]*/ '감사합니다.';
-    const msgSnsTitle = /*[[#{set.swal.sns_title}]]*/ 'Service Notice';
-    const msgSnsText = /*[[#{set.swal.sns_text}]]*/ '아직 서비스 준비 중입니다.';
+
+    const snsMsg = {
+      snsTitle: /*[[#{set.swal.sns_title}]]*/ 'Service Notice',
+      snsText:  /*[[#{set.swal.sns_text}]]*/ '아직 서비스 준비 중입니다.'
+    };
+
+    const delMsg = {
+      confirmTitle: /*[[#{delete.swal.confirm.title}]]*/ '탈퇴하시겠습니까?',
+      confirmText:  /*[[#{delete.swal.confirm.text}]]*/ '데이터가 삭제됩니다.',
+      successTitle: /*[[#{delete.swal.success.title}]]*/ '탈퇴 완료',
+      successText:  /*[[#{delete.swal.success.text}]]*/ '감사합니다.',
+      errorTitle:   /*[[#{delete.swal.error.title}]]*/ '오류',
+      errorText:    /*[[#{delete.swal.error.text}]]*/ '비밀번호가 틀렸습니다.',
+      btnDelete:    /*[[#{delete.swal.btn.delete}]]*/ '탈퇴하기',
+      btnCancel:    /*[[#{delete.swal.btn.cancel}]]*/ '취소'
+    };
     /* ]]> */
   </script>
-    <script th:src="@{/js/recruiter/settings.js}"></script>
-    <script th:inline="javascript">
-        const snsMsg = {
-            snsTitle: /*[[#{set.swal.sns_title}]]*/ 'Service Notice',
-            snsText:  /*[[#{set.swal.sns_text}]]*/ '아직 서비스 준비 중입니다.',
-        };
+  <script th:src="@{/js/recruiter/settings.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-        const delMsg = {
-            confirmTitle: [[#{delete.swal.confirm.title}]],
-            confirmText: [[#{delete.swal.confirm.text}]],
-            successTitle: [[#{delete.swal.success.title}]],
-            successText: [[#{delete.swal.success.text}]],
-            errorTitle: [[#{delete.swal.error.title}]],
-            errorText: [[#{delete.swal.error.text}]],
-            btnDelete: [[#{delete.swal.btn.delete}]],
-            btnCancel: [[#{delete.swal.btn.cancel}]]
-        };
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+</body>
+
 </html>

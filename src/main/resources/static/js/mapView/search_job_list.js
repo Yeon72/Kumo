@@ -161,14 +161,24 @@ const SearchService = {
                 ? `<button class="${btnClass}" onclick="SearchService.toggleSearchScrap(this, ${job.id}, '${job.source}')">${btnText}</button>`
                 : '';
 
+
+            // ==========================================
+            // 🌟 [핵심 추가] 어드민 판별 로직! (main.js와 완벽하게 동일)
+            // ==========================================
+            let managerName = job.manager;
+            if (job.userId === 9999 || !managerName) {
+                managerName = "Admin";
+            }
+
+
             html += `
             <tr>
                 <td>
                     <div class="job-title-cell">
                         <span class="job-title-text">${job.title || '제목 없음'}</span>
-                        <div class="badges">
-                            <span class="badge badge-green">식품제조</span>
-                        </div>
+<!--                        <div class="badges">-->
+<!--                            <span class="badge badge-green">식품제조</span>-->
+<!--                        </div>-->
                     </div>
                 </td>
                 <td class="text-blue font-weight-bold">${job.companyName || '-'}</td>
@@ -184,7 +194,7 @@ const SearchService = {
                     <div class="author-box">
                         <img src="${job.thumbnailUrl || 'https://placehold.co/30'}" class="author-img">
                         <div class="author-info">
-                            <span class="author-name">${job.manager || LIST_MESSAGES.manager}</span>
+                            <span class="author-name">${managerName}</span>
                         </div>
                     </div>
                 </td>

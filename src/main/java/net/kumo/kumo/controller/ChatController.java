@@ -1,5 +1,24 @@
 package net.kumo.kumo.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
 import lombok.RequiredArgsConstructor;
 import net.kumo.kumo.domain.dto.ChatMessageDTO;
 import net.kumo.kumo.domain.dto.ChatRoomListDTO;
@@ -9,21 +28,6 @@ import net.kumo.kumo.repository.ChatRoomRepository;
 import net.kumo.kumo.repository.UserRepository;
 import net.kumo.kumo.service.ChatService;
 import net.kumo.kumo.service.MapService;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
-import java.io.IOException;
-import java.security.Principal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
@@ -75,14 +79,24 @@ public class ChatController {
     // ======================================================================
     @GetMapping("/chat/room/{roomId}")
     public String enterRoom(@PathVariable Long roomId,
-                            @RequestParam("userId") Long userId,
-                            Model model) {
+            @RequestParam("userId") Long userId,
+            Model model) {
 
         ChatRoomEntity room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
 
+        // ChatController.java 내부 enterRoom 메서드
         UserEntity opponent = room.getSeeker().getUserId().equals(userId) ? room.getRecruiter() : room.getSeeker();
-        model.addAttribute("roomName", opponent.getNickname());
+
+        // 🌟 엔티티 구조에 맞춘 안전한 경로 추출
+        String oppImgUrl = "/images/common/default_profile.png"; // 기본값
+
+        // profileImage가 null이 아니고, 그 안의 fileUrl도 있을 때만 교체
+        if (opponent.getProfileImage() != null && opponent.getProfileImage().getFileUrl() != null) {
+            oppImgUrl = opponent.getProfileImage().getFileUrl();
+        }
+
+        model.addAttribute("opponentProfileImg", oppImgUrl);
 
         // =========================================================
         // 🌟 수정된 부분: 대화 기록 불러오기 & 모델에 담기 (읽음 처리도 자동 수행됨!)
@@ -92,11 +106,12 @@ public class ChatController {
         // =========================================================
 
         try {
-            net.kumo.kumo.domain.dto.JobDetailDTO jobDetail =
-                    mapService.getJobDetail(room.getTargetPostId(), room.getTargetSource(), "ko");
+            net.kumo.kumo.domain.dto.JobDetailDTO jobDetail = mapService.getJobDetail(room.getTargetPostId(),
+                    room.getTargetSource(), "ko");
 
             model.addAttribute("jobTitle", jobDetail.getTitle());
             model.addAttribute("salary", jobDetail.getWage());
+            model.addAttribute("salaryJp", jobDetail.getWageJp());
             model.addAttribute("address", jobDetail.getAddress());
         } catch (Exception e) {
             model.addAttribute("jobTitle", "삭제되거나 마감된 공고입니다.");
@@ -147,13 +162,16 @@ public class ChatController {
     @ResponseBody
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            if (file.isEmpty()) return ResponseEntity.badRequest().body("파일이 없습니다.");
+            if (file.isEmpty())
+                return ResponseEntity.badRequest().body("파일이 없습니다.");
 
             String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null) return ResponseEntity.badRequest().body("파일명 오류");
+            if (originalFilename == null)
+                return ResponseEntity.badRequest().body("파일명 오류");
 
             String ext = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
-            List<String> allowedExts = Arrays.asList("jpg", "jpeg", "png", "gif", "webp", "avif", "pdf", "docx", "doc", "xlsx", "xls", "txt");
+            List<String> allowedExts = Arrays.asList("jpg", "jpeg", "png", "gif", "webp", "avif", "pdf", "docx", "doc",
+                    "xlsx", "xls", "txt");
 
             if (!allowedExts.contains(ext)) {
                 return ResponseEntity.badRequest().body("업로드 실패: 지원하지 않는 형식입니다.");
@@ -168,7 +186,8 @@ public class ChatController {
             String savedFilename = UUID.randomUUID().toString() + "_" + originalFilename;
 
             File folder = new File(fullPath);
-            if (!folder.exists()) folder.mkdirs();
+            if (!folder.exists())
+                folder.mkdirs();
 
             File dest = new File(fullPath + savedFilename);
             file.transferTo(dest);

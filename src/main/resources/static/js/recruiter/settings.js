@@ -6,11 +6,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const btnSave = document.getElementById('saveProfileBtn');
 
     const fileInput = document.getElementById('fileInput');
-    const profilePreview = document.getElementById('profilePreview'); // 모달 내 미리보기
-    const currentProfileImg = document.getElementById('currentProfileImg'); // 메인 화면 이미지
+    const profilePreview = document.getElementById('profilePreview');
+    const currentProfileImg = document.getElementById('currentProfileImg');
     const fileNameSpan = document.getElementById('fileName');
 
-    // [1] 프로필 모달 열기 & 초기화 (Seeker 로직: 현재 이미지 미리보기에 반영)
+    // [1] 프로필 모달 열기 & 초기화
     if (btnOpenModal) {
         btnOpenModal.addEventListener('click', function () {
             modal.style.display = "flex";
@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // [3] 서버 전송 (저장 버튼 - Seeker의 비동기 방식 + Recruiter의 Swal UI)
+    // [3] 서버 전송 (저장 버튼)
     if (btnSave) {
         btnSave.addEventListener('click', function () {
             const file = fileInput.files[0];
@@ -77,16 +77,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: formData
             })
             .then(response => {
-                if (response.ok) return response.text(); // Seeker 방식: URL 텍스트 응답
+                if (response.ok) return response.text();
                 throw new Error('UPLOAD_FAILED');
             })
             .then(newImageUrl => {
-                // 성공 알림 (Recruiter 방식: Swal)
                 Swal.fire({
                     icon: 'success',
                     title: typeof settingsMsg !== 'undefined' ? settingsMsg.uploadSuccess : '프로필 사진이 업로드 되었습니다.'
                 }).then(() => {
-                    // 비동기 업데이트 (Seeker 방식: 새로고침 없음)
                     if (newImageUrl && currentProfileImg) {
                         currentProfileImg.src = newImageUrl;
                     }
@@ -103,7 +101,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // SNS 토글 알림 (기존 로직 유지)
+    // [4] SNS 토글 알림
     document.querySelectorAll('.sns-toggle').forEach(toggle => {
         toggle.addEventListener('click', (e) => {
             e.preventDefault();
@@ -113,12 +111,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 text: typeof snsMsg !== 'undefined' ? snsMsg.snsText : '아직 서비스 준비 중입니다.',
                 icon: 'info',
                 confirmButtonColor: '#7db4e6',
-                background: isDark ? '#1e1e1e' : '#fff',
-                color: isDark ? '#fff' : '#333'
+                background: isDark ? '#2a2b2e' : '#fff',
+                color: isDark ? '#e3e5e8' : '#333'
             });
         });
     });
-});
+
+}); // ← DOMContentLoaded 끝
+
 
 /**
  * 회원 탈퇴 관련 함수들 (글로벌 스코프)
@@ -129,7 +129,7 @@ function openDeleteModal() {
     const modal = document.getElementById('deleteAccountModal');
     if (modal) {
         modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // 스크롤 방지
+        document.body.style.overflow = 'hidden';
     }
 }
 
@@ -141,9 +141,8 @@ function closeDeleteModal() {
         setTimeout(() => {
             modal.style.display = 'none';
             modal.classList.remove('closing');
-            document.body.style.overflow = ''; // 스크롤 복구
+            document.body.style.overflow = '';
 
-            // 입력 필드 초기화
             document.getElementById('deleteConfirmPw').value = '';
             document.getElementById('deleteConfirmPwCheck').value = '';
             document.getElementById('deleteMismatchMsg').style.display = 'none';
@@ -182,22 +181,20 @@ function executeDelete() {
 
     Swal.fire({
         title: typeof delMsg !== 'undefined' ? delMsg.confirmTitle : '정말 탈퇴하시겠습니까?',
-        text: typeof delMsg !== 'undefined' ? delMsg.confirmText : "탈퇴 후 데이터는 복구할 수 없습니다.",
+        text: typeof delMsg !== 'undefined' ? delMsg.confirmText : '탈퇴 후 데이터는 복구할 수 없습니다.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
         confirmButtonText: typeof delMsg !== 'undefined' ? delMsg.btnDelete : '탈퇴',
         cancelButtonText: typeof delMsg !== 'undefined' ? delMsg.btnCancel : '취소',
-        background: isDark ? '#1e1e1e' : '#fff',
-        color: isDark ? '#fff' : '#333'
+        background: isDark ? '#2a2b2e' : '#fff',
+        color: isDark ? '#e3e5e8' : '#333'
     }).then((result) => {
         if (result.isConfirmed) {
             fetch('/api/user/delete', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: password })
             })
             .then(async response => {
@@ -206,10 +203,10 @@ function executeDelete() {
                         title: typeof delMsg !== 'undefined' ? delMsg.successTitle : '탈퇴 완료',
                         text: typeof delMsg !== 'undefined' ? delMsg.successText : '그동안 KUMO를 이용해 주셔서 감사합니다.',
                         icon: 'success',
-                        background: isDark ? '#1e1e1e' : '#fff',
-                        color: isDark ? '#fff' : '#333'
+                        background: isDark ? '#2a2b2e' : '#fff',
+                        color: isDark ? '#e3e5e8' : '#333'
                     }).then(() => {
-                        window.location.href = '/logout'; // 홈으로 이동
+                        window.location.href = '/logout';
                     });
                 } else {
                     const errorText = await response.text();
@@ -223,24 +220,10 @@ function executeDelete() {
                     title: typeof delMsg !== 'undefined' ? delMsg.errorTitle : '오류',
                     text: typeof delMsg !== 'undefined' ? delMsg.errorText : '서버와의 통신 중 오류가 발생했습니다.',
                     icon: 'error',
-                    background: isDark ? '#1e1e1e' : '#fff',
-                    color: isDark ? '#fff' : '#333'
+                    background: isDark ? '#2a2b2e' : '#fff',
+                    color: isDark ? '#e3e5e8' : '#333'
                 });
             });
         }
     });
 }
-    toggle.addEventListener('click', (e) => {
-        e.preventDefault();
-        const isDark = document.documentElement.classList.contains('dark-mode');
-        Swal.fire({
-            title: msgSnsTitle,   // ← 변수로 교체
-            text: msgSnsText,     // ← 변수로 교체
-            icon: 'info',
-            confirmButtonColor: '#7db4e6',
-            background: isDark ? '#2a2b2e' : '#fff',
-            color: isDark ? '#e3e5e8' : '#333'
-        });
-    });
-});
-});

@@ -12,18 +12,17 @@
             width: 400px;
             height: 600px;
             background: white;
-            border-radius: 16px; /* 모서리를 살짝 더 부드럽게 */
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15); /* 그림자도 살짝 부드럽게 */
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
             display: none;
             flex-direction: column;
             z-index: 99999 !important;
             overflow: hidden;
         }
 
-        /* 🌟 1. 헤더 높이 축소 (55px -> 42px) 및 2. 하늘색 배경 적용 */
         #floatingChatHeader {
             height: 42px;
-            background: #7db4e6; /* KUMO 메인 하늘색 */
+            background: #7db4e6;
             color: white;
             display: flex;
             align-items: center;
@@ -43,14 +42,14 @@
 
         #floatingChatHeader .chat-controls i {
             cursor: pointer;
-            font-size: 18px; /* 닫기 버튼이 눈에 띄게 살짝 키움 */
+            font-size: 18px;
             color: rgba(255, 255, 255, 0.8);
             transition: all 0.2s ease;
         }
 
         #floatingChatHeader .chat-controls i:hover {
             color: white;
-            transform: scale(1.15); /* 마우스 올리면 살짝 커지는 효과 */
+            transform: scale(1.15);
         }
 
         #floatingChatFrame {
@@ -67,7 +66,7 @@
             border: 1px solid #37393d;
         }
         body.dark-mode #floatingChatHeader {
-            background: #252629; /* 다크모드일 때는 차분한 다크톤 유지 */
+            background: #252629;
             border-bottom: 1px solid #3e4044;
             color: #e3e5e8;
         }
@@ -78,9 +77,12 @@
 
     <div id="floatingChatContainer">
         <div id="floatingChatHeader">
-            <span class="chat-title"><i class="fa-regular fa-comment-dots"></i> KUMO 채팅</span>
+            <span class="chat-title">
+                <i class="fa-regular fa-comment-dots"></i>
+                <th:block th:text="#{chat.floating.title}">KUMO 채팅</th:block>
+            </span>
             <div class="chat-controls">
-                <i class="fa-solid fa-xmark" onclick="closeFloatingChat()" title="닫기"></i>
+                <i class="fa-solid fa-xmark" onclick="closeFloatingChat()" th:title="#{chat.floating.close}" title="닫기"></i>
             </div>
         </div>
         <iframe id="floatingChatFrame" src=""></iframe>

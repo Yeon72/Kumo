@@ -4,6 +4,20 @@
    [v3] 하늘색 테마 디자인 적용 (레이아웃 유지)
    ================================================== */
 
+/* ✅ 폰트어썸 아이콘(<i> 태그)만 빼고 Noto Sans KR 강제 적용! */
+*:not(i) {
+    font-family: 'Noto Sans KR', sans-serif !important;
+}
+
+/* 🌟 혹시 몰라 추가하는 고집 센 녀석들 (이건 그대로 유지하세요) */
+body,
+input,
+textarea,
+button,
+select {
+    font-family: 'Noto Sans KR', sans-serif !important;
+}
+
 /* 기본 초기화 */
 * {
     box-sizing: border-box;
@@ -329,23 +343,51 @@ textarea.input-field::placeholder {
 }
 
 /* ★ 전송 버튼 스타일 (margin-bottom 제거) ★ */
+/* 1. 버튼 본체 (여기에 배경색과 둥근 테두리를 줍니다) */
 .btn-send {
-    background-color: transparent;
+    background-color: #e0f0ff;
+    /* 🌟 예쁜 파스텔 파란색 배경 (원하시는 색으로 변경!) */
+    width: 40px;
+    /* 🌟 가로 크기 (정사각형으로 맞춤) */
+    height: 40px;
+    /* 🌟 세로 크기 (정사각형으로 맞춤) */
+    border-radius: 50%;
+    /* 🌟 핵심! 완전한 동그라미로 깎아줍니다 */
+    display: flex;
+    justify-content: center;
+    /* 가로 중앙 정렬 */
+    align-items: center;
+    /* 세로 중앙 정렬 */
     border: none;
     cursor: pointer;
-    padding: 0 0 0 5px;
-    font-size: 0;
-
-    /* 기존 margin-bottom 제거 */
+    padding: 0;
+    /* 기존에 있던 불필요한 패딩 제거 */
     margin-bottom: 0;
+    transition: all 0.2s ease;
+    /* 부드러운 애니메이션 */
 }
 
+/* 2. 전송 아이콘 (배경색은 빼고 아이콘 색상만!) */
 .btn-send::before {
     content: '\f1d8';
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
-    font-size: 24px;
+    font-size: 18px;
+    /* 🌟 동그라미 안에 쏙 들어가게 크기 살짝 조절 */
     color: #3498db;
+    /* 아이콘 색상 */
+    margin-right: 2px;
+    /* 비행기 모양 특성상 시각적 중앙을 맞추기 위한 미세 조정 */
+}
+
+/* 3. 마우스 올렸을 때 살짝 진해지는 효과 (보너스!) */
+.btn-send:hover {
+    background-color: #3498db;
+}
+
+.btn-send:hover::before {
+    color: #ffffff;
+    /* 마우스 올리면 비행기가 하얀색으로 변신! */
 }
 
 /* [상용구 메뉴] 배경 (어두운 처리) - 기존과 동일 */
@@ -654,18 +696,6 @@ dialog[open] {
     transform: scale(0.9) !important;
 }
 
-/* 전송(종이비행기) 버튼 (가상 요소 폰트 아이콘이라 text-shadow 사용) */
-.btn-send {
-    transition: text-shadow 0.2s ease, transform 0.1s ease !important;
-}
-
-.btn-send:hover {
-    text-shadow: 0px 3px 4px rgba(0, 0, 0, 0.4) !important;
-}
-
-.btn-send:active {
-    transform: scale(0.9) !important;
-}
 
 /* 1. 내부 아이콘(알맹이)에 애니메이션 속성 부여 */
 .menu-icon-circle i {
@@ -850,4 +880,117 @@ dialog[open] {
 
 .chat-image:active {
     transform: scale(0.98);
+}
+
+/* ============================================================
+   🌙 채팅방 다크모드 (KUMO Master Palette 적용)
+   ============================================================ */
+body.dark-mode {
+    background-color: #1e1f21 !important;
+    color: #e3e5e8 !important;
+}
+
+body.dark-mode .mobile-container {
+    background-color: #1e1f21 !important;
+}
+
+/* 헤더 */
+body.dark-mode .chat-header {
+    background-color: #1e1f21 !important;
+    border-bottom: 1px solid #37393d !important;
+}
+body.dark-mode .header-store-name { color: #e3e5e8 !important; }
+body.dark-mode .header-info-row { color: #b0b3b8 !important; }
+body.dark-mode .header-salary-row { color: #7db4e6 !important; }
+body.dark-mode .header-back-btn i,
+body.dark-mode .translate-icon-img { filter: brightness(0) invert(1) opacity(0.8); }
+
+/* 메시지 영역 */
+body.dark-mode .msg-area {
+    background-color: #1e1f21 !important;
+}
+
+/* 상대방 말풍선 */
+body.dark-mode .msg-row.other .msg-bubble {
+    background-color: #2a2b2e !important;
+    color: #e3e5e8 !important;
+    border: 1px solid #37393d !important;
+}
+
+/* 내 말풍선 */
+body.dark-mode .msg-row.me .msg-bubble {
+    background-color: #7db4e6 !important;
+    color: #1e1f21 !important; /* 🌟 포인트 컬러 배경엔 어두운 글자! */
+}
+
+/* 날짜 구분선 */
+body.dark-mode .date-divider-text {
+    background-color: #252729 !important;
+    color: #91959b !important;
+    border: 1px solid #37393d !important;
+}
+
+/* 시간 & 안읽음 표시 */
+body.dark-mode .msg-time { color: #91959b !important; }
+
+/* 입력창(하단) */
+body.dark-mode .input-area {
+    background-color: #1e1f21 !important;
+    border-top: 1px solid #37393d !important;
+}
+body.dark-mode .input-field {
+    background-color: #252729 !important;
+    border: 1px solid #37393d !important;
+    color: #e3e5e8 !important;
+}
+body.dark-mode .input-field::placeholder { color: #91959b !important; }
+body.dark-mode .btn-send {
+    background-color: #7db4e6 !important;
+    color: #1e1f21 !important;
+}
+body.dark-mode .btn-plus, body.dark-mode .btn-img-upload { filter: brightness(0) invert(1) opacity(0.6); }
+
+/* 모달 메뉴 (템플릿, 플러스 메뉴) */
+body.dark-mode .main-menu-box,
+body.dark-mode .template-box {
+    background-color: #2a2b2e !important;
+    border-top: 1px solid #37393d !important;
+    color: #e3e5e8 !important;
+}
+body.dark-mode .template-header { border-bottom: 1px solid #37393d !important; }
+body.dark-mode .template-list button {
+    background-color: #252729 !important;
+    color: #e3e5e8 !important;
+    border: 1px solid #37393d !important;
+}
+body.dark-mode .template-list button:hover { background-color: #37393d !important; }
+body.dark-mode .menu-name { color: #b0b3b8 !important; }
+
+/* 파일 말풍선 */
+body.dark-mode .file-bubble {
+    background-color: #2a2b2e !important;
+    border: 1px solid #37393d !important;
+}
+body.dark-mode .file-display-name { color: #e3e5e8 !important; }
+body.dark-mode .file-display-sub { color: #91959b !important; }
+
+/* 🌙 다크모드: 번역 아이콘 항상 선명하게 강제 고정 */
+body.dark-mode .translate-icon-img {
+    filter: invert(1) brightness(0.9) !important;
+    /* 검은 아이콘을 하얗게 반전 (기본 회색 필터 무시) */
+    opacity: 1 !important;
+    /* 혹시 모를 투명도 간섭 완벽 차단 */
+}
+
+/* 🌙 다크모드: 번역 아이콘 원본 색상 그대로 항상 선명하게 강제 고정 */
+body.dark-mode .translate-icon-img {
+    filter: none !important;
+    /* 요주의 범인 invert 제거! 원본 색상 100% 출력 */
+    opacity: 1 !important;
+    /* 회색으로 묻히는 현상 차단 */
+}
+
+/* 🌙 다크모드 전용 호버 효과 (원본 색상 유지 + 은은한 하얀색 그림자) */
+body.dark-mode .header-translate-btn:hover .translate-icon-img {
+    filter: drop-shadow(0px 3px 4px rgba(255, 255, 255, 0.3)) !important;
 }

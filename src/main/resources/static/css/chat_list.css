@@ -1,5 +1,14 @@
 @charset "UTF-8";
 
+/* 🌟 i 태그(FontAwesome 아이콘)는 폰트 덮어쓰기에서 제외! */
+*:not(i) {
+    font-family: 'Noto Sans KR', sans-serif !important;
+}
+
+body, input, textarea, button, select {
+    font-family: 'Noto Sans KR', sans-serif !important;
+}
+
 /* --- 1. 기본 설정 --- */
 * {
     box-sizing: border-box;
@@ -472,3 +481,102 @@ button {
     width: 16px;
     text-align: center;
 }
+
+/* 기본 상태: 검색창 숨김 (높이 0, 투명도 0) */
+.search-container {
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out; /* 부드럽게 스르륵 열리는 효과 */
+    padding: 0 15px;
+}
+
+/* 돋보기를 눌러서 active 클래스가 붙었을 때: 검색창 나타남 */
+.search-container.active {
+    height: 50px; /* 검색창 높이에 맞게 조절 */
+    opacity: 1;
+    margin-bottom: 10px;
+}
+
+/* 검색 입력칸 예쁘게 꾸미기 (선택 사항) */
+#searchInput {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    outline: none;
+    font-size: 14px;
+}
+
+#searchInput:focus {
+    border-color: #7db4e6; /* KUMO 메인 하늘색 */
+    box-shadow: 0 0 5px rgba(125, 180, 230, 0.3);
+}
+
+/* ============================================================
+   🌙 채팅 목록 다크모드 (KUMO Master Palette 적용)
+   ============================================================ */
+body.dark-mode {
+    background-color: #1e1f21 !important;
+    color: #e3e5e8 !important;
+}
+
+body.dark-mode .mobile-container {
+    background-color: #1e1f21 !important;
+}
+
+/* 탭 메뉴 */
+body.dark-mode .tab-menu {
+    background-color: #1e1f21 !important;
+    border-bottom: 2px solid #37393d !important;
+    box-shadow: 0 12px 15px -10px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.dark-mode .tab-btn {
+    color: #b0b3b8 !important;
+}
+
+body.dark-mode .tab-btn.active {
+    background-color: #7db4e6 !important;
+    color: #1e1f21 !important; /* 대비를 위해 어두운 글자 */
+    box-shadow: 0 4px 10px rgba(125, 180, 230, 0.2) !important;
+}
+
+/* 검색창 */
+body.dark-mode .search-container {
+    background-color: #1e1f21 !important;
+}
+body.dark-mode #searchInput {
+    background-color: #252729 !important;
+    border: 1px solid #37393d !important;
+    color: #e3e5e8 !important;
+}
+body.dark-mode #searchInput::placeholder {
+    color: #91959b !important;
+}
+
+/* 채팅 리스트 아이템 */
+body.dark-mode .chat-item {
+    border-bottom: 1px solid #37393d !important;
+}
+body.dark-mode .chat-item:hover {
+    background-color: #2a2b2e !important;
+}
+body.dark-mode .chat-item.is-pinned {
+    background-color: #252729 !important;
+}
+
+/* 텍스트 컬러 */
+body.dark-mode .chat-name { color: #e3e5e8 !important; }
+body.dark-mode .chat-preview { color: #b0b3b8 !important; }
+body.dark-mode .chat-time { color: #91959b !important; }
+
+/* 옵션(점 세개) 드롭다운 */
+body.dark-mode .options-dropdown {
+    background-color: #2a2b2e !important;
+    border: 1px solid #37393d !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+}
+body.dark-mode .option-item { color: #e3e5e8 !important; }
+body.dark-mode .option-item:hover { background-color: #37393d !important; }
+body.dark-mode .option-item.delete:hover { background-color: #3a2020 !important; color: #ff6b6b !important;}

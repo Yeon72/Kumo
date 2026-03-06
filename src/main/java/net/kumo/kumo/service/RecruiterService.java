@@ -1,7 +1,10 @@
 package net.kumo.kumo.service;
 
 import java.util.List;
+import java.util.Locale;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -43,6 +46,7 @@ public class RecruiterService {
     private final OsakaGeocodedRepository osakaGeocodedRepository;
     private final TokyoGeocodedRepository tokyoGeocodedRepository;
     private final ApplicationRepository applicationRepository;
+    private final MessageSource messageSource;
 
     /**
      * 구인자 대시보드 통계 데이터 가져오기
@@ -104,15 +108,22 @@ public class RecruiterService {
      */
     @Transactional
     public void sendScoutOffer(String recruiterEmail, Long seekerId) {
+        // 🌟 2. 현재 요청을 보낸 사용자의 언어(Locale) 정보 가져오기
+        Locale currentLocale = LocaleContextHolder.getLocale();
+
         UserEntity recruiter = userRepository.findByEmail(recruiterEmail)
-                .orElseThrow(() -> new RuntimeException("구인자 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException(
+                        messageSource.getMessage("error.recruiter.notfound", null, currentLocale)));
+
         UserEntity seeker = userRepository.findById(seekerId)
-                .orElseThrow(() -> new RuntimeException("구직자 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException(
+                        messageSource.getMessage("error.seeker.notfound", null, currentLocale)));
 
         // 이미 대기 중인 제안이 있는지 확인 (중복 제안 방지)
         if (scoutOfferRepo.existsByRecruiterAndSeekerAndStatus(recruiter, seeker,
                 ScoutOfferEntity.ScoutStatus.PENDING)) {
-            throw new RuntimeException("이미 제안을 보낸 인재입니다.");
+            throw new RuntimeException(
+                    messageSource.getMessage("error.scout.duplicate", null, currentLocale));
         }
 
         // 1. 스카우트 제안 저장
@@ -123,17 +134,17 @@ public class RecruiterService {
                 .build();
         scoutOfferRepo.save(offer);
 
-        // 2. 구직자에게 알림 생성
+        // 2. 구직자에게 알림 생성 (기존 로직 완벽합니다!)
         NotificationEntity noti = NotificationEntity.builder()
                 .user(seeker)
                 .notifyType(NotificationType.SCOUT_OFFER)
                 .title("noti.scout.title")
-                .content(recruiter.getNickname()) // 🌟 사장님 닉네임만 저장 (번역 시 인자로 사용)
+                .content(recruiter.getNickname()) // 🌟 번역 시 인자로 사용될 사장님 닉네임
                 .targetUrl("/Seeker/scout")
                 .isRead(false)
                 .build();
         notificationRepo.save(noti);
-    } // 🌟 SeekerService 주입 (이력서 데이터 재사용)
+    }
 
     /**
      * 스카우트 동의 & 이력서 공개한 인재 목록 불러오기

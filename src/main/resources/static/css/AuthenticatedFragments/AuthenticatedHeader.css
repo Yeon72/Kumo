@@ -38,7 +38,7 @@ body.dark-mode {
     --text-sub: #aaaaaa;
     --border-color: #37393d;
     --primary-color: #7db4e6;
-    --hover-bg: #2f3033
+    --hover-bg: #2f3033;
     /* ← 회색 계열로 */
     --dropdown-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }

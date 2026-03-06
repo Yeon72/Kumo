@@ -126,12 +126,16 @@ async function updateAppStatus(status) {
 // =========================================================================
 function actionChat() {
     if (!currentSeekerId || !currentJobId || !currentJobSource) {
-        // ✨ 번역 적용: 채팅 오류 알림창
         Swal.fire({ icon: 'error', title: appMsg.errorTitle, text: appMsg.chatError });
         return;
     }
 
-    const chatUrl = `/chat/create?seekerId=${currentSeekerId}&jobPostId=${currentJobId}&jobSource=${currentJobSource}`;
+    // 🌟 1. 현재 사장님(부모 창)이 보고 있는 언어를 가져옵니다 (없으면 kr)
+    const currentLang = new URLSearchParams(window.location.search).get('lang') || 'kr';
+
+    // 🌟 2. URL 맨 끝에 &lang=${currentLang} 를 붙여서 완벽하게 넘겨줍니다!
+    const chatUrl = `/chat/create?seekerId=${currentSeekerId}&jobPostId=${currentJobId}&jobSource=${currentJobSource}&lang=${currentLang}`;
+
     const chatContainer = document.getElementById('floatingChatContainer');
     const chatFrame = document.getElementById('floatingChatFrame');
 
