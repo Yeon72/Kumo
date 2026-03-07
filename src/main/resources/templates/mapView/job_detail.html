@@ -12,11 +12,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" th:href="@{/css/recruiter/recruiterHeader.css}" />
+    <link rel="stylesheet" th:href="@{/css/AuthenticatedFragments/AuthenticatedHeader.css}">
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script th:src="@{/js/mapView/job_detail.js}"></script>
-    <script th:src="@{/js/AuthenticatedHeader/AuthenticatedHeader.js}"></script>
-    <script th:src="@{/js/recruiter/recruiterHeader.js}"></script>
 </head>
 <body>
 
@@ -32,6 +31,10 @@
     <header th:replace="~{recruiterView/fragments/recruiterHeader :: headerFragment}"
         sec:authorize="hasRole('RECRUITER')"></header>
 </div>
+    
+    <th:block sec:authorize="hasRole('RECRUITER')">
+        <script th:src="@{/js/recruiter/recruiterHeader.js}"></script>
+    </th:block>
 
 <div class="container">
     <div class="header-section">
