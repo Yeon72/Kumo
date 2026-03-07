@@ -150,7 +150,8 @@ body {
 
 /* 카드 디자인 */
 .dev-card {
-    width: 240px;
+width: 280px;
+    /* 🌟 240px에서 살짝 넓혀주면 훨씬 예쁩니다! */
     min-height: 200px;
     padding: 25px;
     border-radius: 16px;
@@ -180,7 +181,12 @@ body {
     font-weight: 700;
     line-height: 1.5;
     margin-bottom: 20px;
-    word-break: keep-all;
+
+    /* 🌟 핵심 수정: 폭주하는 일본어 텍스트 가두기 */
+    word-break: break-word;
+    /* 단어가 너무 길면 강제로 쪼개서 줄바꿈 */
+    overflow-wrap: break-word;
+    /* 박스를 넘어가는 텍스트 강제 줄바꿈 */
 
     /* [수정] #333 -> 변수 사용 */
     color: var(--text-main);
