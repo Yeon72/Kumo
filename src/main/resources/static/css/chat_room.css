@@ -52,14 +52,14 @@ body {
     flex: 0 0 auto;
     background-color: #d0e8ff;
     padding: 10px 15px;
-    position: relative;
     border-bottom: 1px solid #c0dfff;
     z-index: 10;
     display: flex;
-    flex-direction: column;
+    /* 🌟 세로(column)에서 가로(row)로 변경하여 슬림하게 만듦 */
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    min-height: 80px;
+    min-height: 60px; /* 불필요하게 컸던 높이를 메신저답게 줄임 */
 }
 
 .header-back-btn {
@@ -73,11 +73,12 @@ body {
     z-index: 12;
 }
 
-/* 번역 버튼 틀은 원래대로 원상복구 */
+/* 번역 버튼 (우측 고정) */
 .header-translate-btn {
     position: absolute;
-    top: 12px;
-    right: 12px;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
     background-color: transparent;
     box-shadow: none;
     border-radius: 0;
@@ -91,13 +92,12 @@ body {
     transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out;
 }
 
-/* ★ 추가: 마우스를 올렸을 때 이미지(아이콘) 자체에만 그림자 생성 */
 .header-translate-btn:hover .translate-icon-img {
     filter: drop-shadow(0px 3px 4px rgba(0, 0, 0, 0.4));
 }
 
 .header-translate-btn:active {
-    transform: scale(0.9);
+    transform: translateY(-50%) scale(0.9);
     opacity: 0.7;
 }
 
@@ -105,64 +105,37 @@ body {
     width: 24px;
     height: 24px;
     object-fit: contain;
-    /* 그림자가 부드럽게 생기도록 애니메이션 추가 */
     transition: filter 0.2s ease-in-out;
 }
 
+/* 🌟 복구 및 최적화된 중앙 정렬 구역 */
 .header-center {
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 1px;
-    width: 100%;
-    margin-top: 2px;
+    padding: 0 40px; /* 양옆 버튼(뒤로가기, 번역)과 겹치지 않게 보호 여백 */
 }
 
+/* 사진과 닉네임 나란히 배치 */
 .store-profile-row {
     display: flex;
     align-items: center;
-    margin-bottom: 2px;
+    gap: 8px; /* 사진과 이름 사이 간격 촘촘하게 */
 }
 
 .header-store-img {
-    width: 32px;
-    height: 32px;
+    width: 36px; /* 기존보다 살짝 키워서 시원하게 */
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid white;
-    margin-right: 6px;
+    border: 2px solid white; /* 프로필 테두리 강조 */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* 은은한 입체감 */
 }
 
 .header-store-name {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: #333;
-}
-
-.online-dot {
-    width: 6px;
-    height: 6px;
-    background-color: #4285f4;
-    border-radius: 50%;
-    margin-left: 4px;
-    margin-top: 2px;
-}
-
-.header-info-row {
-    font-size: 11px;
-    color: #666;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    text-align: center;
-    line-height: 1.2;
-}
-
-.header-salary-row {
-    font-size: 12px;
-    font-weight: 600;
-    color: #444;
-    margin-top: 1px;
 }
 
 /* ==================================================
@@ -893,15 +866,13 @@ body.dark-mode {
 body.dark-mode .mobile-container {
     background-color: #1e1f21 !important;
 }
-
 /* 헤더 */
 body.dark-mode .chat-header {
     background-color: #1e1f21 !important;
     border-bottom: 1px solid #37393d !important;
 }
 body.dark-mode .header-store-name { color: #e3e5e8 !important; }
-body.dark-mode .header-info-row { color: #b0b3b8 !important; }
-body.dark-mode .header-salary-row { color: #7db4e6 !important; }
+body.dark-mode .header-store-img { border-color: #37393d !important; } /* 다크모드 프로필 테두리 */
 body.dark-mode .header-back-btn i,
 body.dark-mode .translate-icon-img { filter: brightness(0) invert(1) opacity(0.8); }
 
