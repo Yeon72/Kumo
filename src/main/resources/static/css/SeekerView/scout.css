@@ -125,3 +125,31 @@ body.dark-mode .offer-date {
 body.dark-mode .content-header h2 {
     color: #ffffff;
 }
+.swal-dark-popup {
+    background-color: #2a2b2e !important;
+    border: 1px solid #3e4044 !important;
+}
+
+.swal-dark-title {
+    color: #e3e5e8 !important;
+}
+
+.swal-dark-text {
+    color: #91959b !important;
+}
+
+/* 아이콘 색상 보정 */
+.swal-dark-popup .swal2-warning {
+    border-color: #f0a500 !important;
+    color: #f0a500 !important;
+}
+
+.swal-dark-popup .swal2-success {
+    border-color: #7db4e6 !important;
+    color: #7db4e6 !important;
+}
+
+.swal-dark-popup .swal2-error {
+    border-color: #ff6b6b !important;
+    color: #ff6b6b !important;
+}

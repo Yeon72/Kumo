@@ -1,52 +1,82 @@
 /* scout.js */
 document.addEventListener('DOMContentLoaded', () => {
-    // 삭제 버튼 이벤트 리스너 등록
-    const deleteButtons = document.querySelectorAll('.btn-delete-scout');
+    const L = window.SCOUT_LANG || {};
 
-    deleteButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
+    // ✅ 다크모드 감지해서 SweetAlert2 옵션 자동 적용
+    function getSwalTheme() {
+        return document.body.classList.contains('dark-mode') ? {
+            customClass: {
+                popup:         'swal-dark-popup',
+                title:         'swal-dark-title',
+                htmlContainer: 'swal-dark-text',
+                confirmButton: 'swal-dark-confirm',
+                cancelButton:  'swal-dark-cancel'
+            }
+        } : {};
+    }
+
+    document.querySelectorAll('.btn-delete-scout').forEach(btn => {
+        btn.addEventListener('click', function () {
             const scoutId = this.getAttribute('data-id');
             const card = this.closest('.scout-card');
 
-            // 💡 팁: 다국어 적용을 원하시면 HTML에서 window.SCOUT_LANG = { confirmDelete: ... } 등을
-            // 만들어서 가져오게 하시면 좋습니다!
-            if (!confirm("이 제안을 목록에서 삭제하시겠습니까?")) return;
+            Swal.fire({
+                ...getSwalTheme(),
+                title: L.confirmTitle || '삭제 확인',
+                text: L.confirmDelete || '이 제안을 목록에서 삭제하시겠습니까?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#7db4e6',
+                cancelButtonColor: '#aaaaaa',
+                confirmButtonText: L.confirmBtn || '삭제',
+                cancelButtonText: L.cancelBtn || '취소'
+            }).then(result => {
+                if (!result.isConfirmed) return;
 
-            // 🌟 Vanilla JS Fetch API 사용
-            fetch('/Seeker/scout/delete', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `scoutId=${scoutId}`
-            })
+                fetch('/Seeker/scout/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `scoutId=${scoutId}`
+                })
                 .then(response => {
                     if (response.ok) {
-                        // 삭제 성공 시 애니메이션 후 제거
-                        card.style.opacity = '0';
-                        card.style.transform = 'scale(0.95)';
-                        setTimeout(() => {
-                            card.remove();
-                            // 목록이 비었는지 확인
-                            const remainingCards = document.querySelectorAll('.scout-card');
-                            if (remainingCards.length === 0) {
-                                const list = document.querySelector('.scout-list');
-                                // 빈 목록 텍스트도 다국어 처리를 위해 HTML에 숨겨둔 텍스트를 복사하거나 변수를 쓰는 것을 권장합니다.
-                                list.innerHTML = '<div class="text-center py-5"><p class="text-muted">받은 스카우트 제의가 없습니다.</p></div>';
-                            }
-                        }, 300);
+                        Swal.fire({
+                            ...getSwalTheme(),
+                            icon: 'success',
+                            title: L.successMsg || '삭제되었습니다.',
+                            timer: 1200,
+                            showConfirmButton: false
+                        }).then(() => {
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.95)';
+                            card.style.transition = 'all 0.3s ease';
+                            setTimeout(() => {
+                                card.remove();
+                                if (document.querySelectorAll('.scout-card').length === 0) {
+                                    document.querySelector('.scout-list').innerHTML =
+                                        `<div class="text-center py-5"><p class="text-muted">${L.emptyMsg || '받은 스카우트 제의가 없습니다.'}</p></div>`;
+                                }
+                            }, 300);
+                        });
                     } else {
-                        alert("삭제 중 오류가 발생했습니다.");
+                        Swal.fire({
+                            ...getSwalTheme(),
+                            icon: 'error',
+                            title: L.errorMsg || '삭제 중 오류가 발생했습니다.'
+                        });
                     }
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("서버와 통신 중 오류가 발생했습니다.");
+                .catch(() => {
+                    Swal.fire({
+                        ...getSwalTheme(),
+                        icon: 'error',
+                        title: L.networkError || '서버와 통신 중 오류가 발생했습니다.'
+                    });
                 });
+            });
         });
     });
 });
-
 // ==========================================================
 // 🌟 [추가됨] 스카우트 전용 1:1 채팅 열기 함수
 // ==========================================================

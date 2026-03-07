@@ -4,9 +4,11 @@ import java.io.File;
 import java.security.Principal;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -50,6 +52,9 @@ public class RecruiterController {
     private final SeekerProfileRepository seekerProfileRepo;
     private final CompanyService cs;
     private final JobPostingService js;
+
+    @Autowired
+    private MessageSource messageSource;
 
     /**
      * 메인 컨트롤러
@@ -106,11 +111,14 @@ public class RecruiterController {
      * 초간단 스카우트 제의 발송 (GET 방식)
      */
     @GetMapping("/sendOffer")
-    public String sendOffer(@RequestParam("userId") Long seekerId, @AuthenticationPrincipal UserDetails userDetails,
-            RedirectAttributes rttr) {
+    public String sendOffer(@RequestParam("userId") Long seekerId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            RedirectAttributes rttr,
+            Locale locale) {
         try {
             rs.sendScoutOffer(userDetails.getUsername(), seekerId);
-            rttr.addFlashAttribute("successMsg", "제의를 성공적으로 보냈습니다.");
+            rttr.addFlashAttribute("successMsg",
+                    messageSource.getMessage("scout.offer.success", null, locale));
         } catch (Exception e) {
             rttr.addFlashAttribute("errorMsg", e.getMessage());
         }
