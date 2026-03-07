@@ -266,6 +266,12 @@ body.dark-mode {
     max-height: 350px;
     overflow-y: auto;
     background-color: var(--bg-card);
+    transition: max-height 0.3s ease; /* 부드러운 애니메이션 추가 */
+}
+
+/* [추가] 알림 확장 상태 */
+.notify-body.expanded {
+    max-height: 800px; /* 충분히 큰 값으로 설정 */
 }
 
 /* 알림 아이템 */

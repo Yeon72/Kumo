@@ -28,7 +28,9 @@
                             <div class="header-buttons">
                                 <button class="header-btn read-all" id="markAllReadBtn" th:text="#{header.mark_read}">모두 읽음</button>
                                 <span class="divider">|</span>
-                                <button class="header-btn delete-all" id="deleteAllBtn" th:text="#{header.delete_all}">전체 삭제</button>
+                                <button class="header-btn delete-all" id="deleteAllBtn" 
+                                        th:text="#{header.delete_all}"
+                                        th:data-confirm="#{header.delete_all_confirm}">전체 삭제</button>
                             </div>
                         </div>
 

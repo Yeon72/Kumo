@@ -63,6 +63,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (!isAlreadyOpen) {
                     menu.classList.add('show');
                     if (config.btnId === 'notifyBtn') {
+                        const nList = document.getElementById('notifyList');
+                        const exBtn = document.getElementById('expandBtn');
+                        if(nList) nList.classList.remove('expanded'); 
+                        
+                        const span = exBtn ? exBtn.querySelector('span') : null;
+                        const icon = exBtn ? exBtn.querySelector('i') : null;
+                        if(span && exBtn) span.innerText = exBtn.getAttribute('data-more') || "더 보기";
+                        if(icon) icon.className = 'fa-solid fa-chevron-down';
+                        
                         loadNotifications(); // 알림창 열 때 데이터 로드
                     }
                 }
@@ -106,13 +115,15 @@ document.addEventListener("DOMContentLoaded", function() {
     if (expandBtn) {
         expandBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            notifyList.classList.toggle('expanded');
+            if (!notifyList) return;
+            
+            const isExpanded = notifyList.classList.toggle('expanded');
             const span = this.querySelector('span');
             const icon = this.querySelector('i');
             const moreTxt = this.getAttribute('data-more') || "더 보기";
             const foldTxt = this.getAttribute('data-fold') || "접기";
 
-            if (notifyList.classList.contains('expanded')) {
+            if (isExpanded) {
                 if(span) span.innerText = foldTxt;
                 if(icon) icon.className = 'fa-solid fa-chevron-up';
             } else {
@@ -138,7 +149,8 @@ document.addEventListener("DOMContentLoaded", function() {
     // [3-3] 전체 삭제
     if (deleteAllBtn) {
         deleteAllBtn.addEventListener('click', () => {
-            if(!confirm("모든 알림을 삭제하시겠습니까?")) return;
+            const confirmMsg = deleteAllBtn.getAttribute('data-confirm') || "모든 알림을 삭제하시겠습니까?";
+            if(!confirm(confirmMsg)) return;
             fetch('/api/notifications', { method: 'DELETE' })
                 .then(res => {
                     if (res.ok) {
@@ -156,14 +168,20 @@ document.addEventListener("DOMContentLoaded", function() {
             .then(res => res.json())
             .then(data => {
                 console.log("받은 알림 데이터:", data);
+                if (!notifyList) return;
+                
                 notifyList.innerHTML = ''; 
 
                 if (!data || !Array.isArray(data) || data.length === 0) {
-                    renderEmptyState(); 
+                    renderEmptyState();
+                    if(expandBtn) expandBtn.style.display = 'none'; 
                 } else {
                     data.forEach(n => {
                         notifyList.insertAdjacentHTML('beforeend', createNotificationHTML(n));
                     });
+                    if(expandBtn) {
+                        expandBtn.style.display = data.length > 4 ? 'block' : 'none';
+                    }
                 }
                 updateBadgeCount();
             })
