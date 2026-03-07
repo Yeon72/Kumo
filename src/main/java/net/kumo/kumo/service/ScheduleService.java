@@ -23,18 +23,48 @@ public class ScheduleService {
     private final UserRepository userRepository;
 
     /**
-     * 일정 저장 (등록 및 수정)
+     * 단일 일정 조회
+     * 
+     * @param scheduleId
+     * @param email
+     * @return
      */
+    @Transactional(readOnly = true)
+    public ScheduleEntity getScheduleById(Long scheduleId, String email) {
+        ScheduleEntity schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new RuntimeException("일정을 찾을 수 없습니다."));
+
+        // 본인 일정인지 검증
+        if (!schedule.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("권한이 없습니다.");
+        }
+        return schedule;
+    }
+
+    /**
+     * 일정 수정
+     * 
+     * @param schedule
+     * @param email
+     */
+    @Transactional // ← 이게 없으면 dirty checking 안 됨!
     public void saveSchedule(ScheduleEntity schedule, String email) {
-        // 1. 현재 로그인한 유저 정보 찾기
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        // 2. 일정에 주인(유저) 지정
-        schedule.setUser(user);
-
-        // 3. DB 저장
-        scheduleRepository.save(schedule);
+        if (schedule.getScheduleId() != null) {
+            ScheduleEntity existing = scheduleRepository.findById(schedule.getScheduleId()) // ← 오타 수정
+                    .orElseThrow(() -> new RuntimeException("일정을 찾을 수 없습니다."));
+            existing.setTitle(schedule.getTitle());
+            existing.setDescription(schedule.getDescription());
+            existing.setStartAt(schedule.getStartAt());
+            existing.setEndAt(schedule.getEndAt());
+            existing.setColorCode(schedule.getColorCode());
+            // @Transactional 있으면 save() 없어도 자동 update ✅
+        } else {
+            schedule.setUser(user);
+            scheduleRepository.save(schedule);
+        }
     }
 
     /**

@@ -192,40 +192,40 @@
 
     // 조용히 서버에 저장하는 함수 (drag & drop)
     function silentUpdate(info) {
-      function formatDateTime(d) {
-        if (!d) return null;
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        const h = String(d.getHours()).padStart(2, '0');
-        const min = String(d.getMinutes()).padStart(2, '0');
-        return `${y}-${m}-${day}T${h}:${min}:00`;
-      }
-
-      const data = {
-        scheduleId: info.event.id,
-        title: info.event.title,
-        description: info.event.extendedProps.description || "",
-        start: formatDateTime(info.event.start),
-        end: info.event.end ? formatDateTime(info.event.end) : formatDateTime(info.event.start),
-        color: info.event.backgroundColor || info.event.color || "#7db4e6"
-      };
-
-      $.ajax({
-        url: '/api/calendar/update',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(data),
-        success: function () {
-          updateAll(getLocalDateString(info.event.start), mainCal);
-        },
-        error: function (err) {
-          console.error(err);
-          Swal.fire(calMsg.errorTitle, calMsg.errorMove, 'error');
-          info.revert();
+        function formatDateTime(d) {
+          if (!d) return null;
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const h = String(d.getHours()).padStart(2, '0');
+          const min = String(d.getMinutes()).padStart(2, '0');
+          return `${y}-${m}-${day}T${h}:${min}:00`;
         }
-      });
-    }
+
+        const data = {
+          scheduleId: parseInt(info.event.id),  // ✅ info.event.id 사용
+          title: info.event.title,              // ✅ info에서 직접
+          description: info.event.extendedProps.description || "",
+          start: formatDateTime(info.event.start),
+          end: info.event.end ? formatDateTime(info.event.end) : formatDateTime(info.event.start),
+          color: info.event.backgroundColor || info.event.color || "#7db4e6"
+        };
+
+        $.ajax({
+          url: '/api/calendar/update',  // ✅ 드래그는 항상 update
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(data),
+          success: function () {
+            updateAll(getLocalDateString(info.event.start), mainCal);
+          },
+          error: function (err) {
+            console.error(err);
+            Swal.fire(calMsg.errorTitle, calMsg.errorMove, 'error');
+            info.revert();
+          }
+        });
+      }
 
     // 캘린더 로드 및 설정
     window.addEventListener('load', function () {
@@ -355,7 +355,7 @@
 
     // 수정 모달 세팅
     function openEditModal(event) {
-      editingEventId = event.id;
+      editingEventId = event.id ? parseInt(event.id) : null;  // ← 수정
       $('#scheduleTitle').val(event.title);
       $('#scheduleDescription').val(event.extendedProps.description || "");
 
@@ -422,7 +422,7 @@
       }
 
       const data = {
-        id: editingEventId,
+        scheduleId: editingEventId,  
         title: title,
         description: $('#scheduleDescription').val(),
         start: date + "T" + (startVal || "09:00") + ":00",
