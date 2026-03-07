@@ -416,6 +416,21 @@
 
 <div th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"></div>
 
+<script th:inline="javascript">
+    /* <![CDATA[ */
+    const resumeI18n = {
+        certLabel:        /*[[#{resume.label.certificate}]]*/ '자격증',
+        certName:         /*[[#{resume.placeholder.certName}]]*/ '자격증명',
+        certPublisher:    /*[[#{resume.placeholder.certPublisher}]]*/ '발급기관',
+        certYear:         /*[[#{resume.label.certYear}]]*/ '취득연도',
+        langLabel:        /*[[#{resume.label.language}]]*/ '어학 능력',
+        langName:         /*[[#{resume.placeholder.language}]]*/ '언어명',
+        advanced:         /*[[#{resume.btn.advanced}]]*/ '상급',
+        intermediate:     /*[[#{resume.btn.intermediate}]]*/ '중급',
+        beginner:         /*[[#{resume.btn.beginner}]]*/ '초급'
+    };
+    /* ]]> */
+</script>
 <script th:src="@{/js/SeekerView/Resume.js}"></script>
 
 <script th:inline="javascript">

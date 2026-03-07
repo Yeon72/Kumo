@@ -50,15 +50,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // 2. 공통 폼 복사 함수 (Clone 마법)
 // ==========================================
 // 자격증/어학 템플릿 (아이템이 없을 때 사용)
+const i = typeof resumeI18n !== 'undefined' ? resumeI18n : {};
 const TEMPLATES = {
     certFields: `
         <div class="form-group row cert-item clonable-item">
-            <label>자격증</label>
+            <label>${i.certLabel || '자격증'}</label>
             <div class="input-group cert-group">
-                <input type="text" name="certName" class="custom-input" style="flex:1">
-                <input type="text" name="certPublisher" class="custom-input" style="flex:1">
+                <input type="text" name="certName" class="custom-input" placeholder="${i.certName || ''}" style="flex:1">
+                <input type="text" name="certPublisher" class="custom-input" placeholder="${i.certPublisher || ''}" style="flex:1">
                 <select name="certYear" class="custom-select" style="flex:1">
-                    <option value="" selected disabled>취득연도</option>
+                    <option value="" selected disabled>${i.certYear || '취득연도'}</option>
                     ${Array.from({length: 57}, (_, i) => 2026 - i).map(y => `<option value="${y}">${y}</option>`).join('')}
                 </select>
                 <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
@@ -66,13 +67,13 @@ const TEMPLATES = {
         </div>`,
     langFields: `
         <div class="form-group row mt-5 lang-item clonable-item">
-            <label>어학 능력</label>
+            <label>${i.langLabel || '어학 능력'}</label>
             <div class="input-group cert-group">
-                <input type="text" name="languageName" class="custom-input" style="flex:1">
+                <input type="text" name="languageName" class="custom-input" placeholder="${i.langName || ''}" style="flex:1">
                 <div class="toggle-group multi-segment" style="flex:2">
-                    <button type="button" class="toggle-btn active" data-value="ADVANCED">상급</button>
-                    <button type="button" class="toggle-btn" data-value="INTERMEDIATE">중급</button>
-                    <button type="button" class="toggle-btn" data-value="BEGINNER">초급</button>
+                    <button type="button" class="toggle-btn active" data-value="ADVANCED">${i.advanced || '상급'}</button>
+                    <button type="button" class="toggle-btn" data-value="INTERMEDIATE">${i.intermediate || '중급'}</button>
+                    <button type="button" class="toggle-btn" data-value="BEGINNER">${i.beginner || '초급'}</button>
                     <input type="hidden" name="languageLevel" value="ADVANCED">
                 </div>
                 <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
