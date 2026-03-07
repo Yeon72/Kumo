@@ -35,17 +35,6 @@
         <div class="header-translate-btn">
             <img th:src="@{/images/icons/chat_room_translate.svg}" class="translate-icon-img" alt="번역">
         </div>
-
-        <div class="header-center">
-            <div class="header-info-row">
-                <span th:text="${address}">주소 정보 없음</span>
-            </div>
-
-            <div class="header-salary-row">
-                <span th:text="#{chat.room.header.salary}">給料: </span>
-                <span th:text="${salaryJp}"></span>
-            </div>
-        </div>
     </div>
     <div class="msg-area" id="msgArea">
         <th:block th:each="msg, stat : ${chatHistory}">

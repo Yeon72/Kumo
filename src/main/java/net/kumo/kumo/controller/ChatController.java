@@ -118,22 +118,6 @@ public class ChatController {
         List<net.kumo.kumo.domain.dto.ChatMessageDTO> history = chatService.getMessageHistory(roomId, userId, currentLang);
         model.addAttribute("chatHistory", history);
 
-        try {
-            net.kumo.kumo.domain.dto.JobDetailDTO jobDetail = mapService.getJobDetail(room.getTargetPostId(),
-                    room.getTargetSource(), currentLang);
-
-            model.addAttribute("jobTitle", jobDetail.getTitle());
-            model.addAttribute("address", jobDetail.getAddress());
-
-            String displayWage = "ja".equals(currentLang) ? jobDetail.getWageJp() : jobDetail.getWage();
-            model.addAttribute("displaySalary", (displayWage != null) ? displayWage : "-");
-
-        } catch (Exception e) {
-            model.addAttribute("jobTitle", "삭제되거나 마감된 공고입니다.");
-            model.addAttribute("displaySalary", "-");
-            model.addAttribute("address", "-");
-        }
-
         model.addAttribute("roomId", roomId);
         model.addAttribute("userId", userId);
         model.addAttribute("lang", currentLang);

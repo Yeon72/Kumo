@@ -109,15 +109,6 @@ body {
     transition: filter 0.2s ease-in-out;
 }
 
-.header-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    width: 100%;
-    margin-top: 2px;
-}
-
 .store-profile-row {
     display: flex;
     align-items: center;
