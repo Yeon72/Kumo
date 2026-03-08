@@ -593,7 +593,7 @@ public class JobPostingService {
     // 🌟 [NEW] 지원자 관리 탭 : 내 공고별 지원자 목록 가져오기
     // ==========================================
     @Transactional(readOnly = true)
-    public List<JobApplicantGroupDTO> getGroupedApplicantsForRecruiter(UserEntity user) {
+    public List<JobApplicantGroupDTO> getGroupedApplicantsForRecruiter(UserEntity user, String sortBy) {
         List<JobApplicantGroupDTO> groupedList = new ArrayList<>();
         String email = user.getEmail();
 
@@ -684,23 +684,26 @@ public class JobPostingService {
         }
 
         // ------------------------------------------
-        // 3. 공고 정렬:
-        // 1순위: 진행중(RECRUITING) 위로, 마감(CLOSED) 아래로
-        // 2순위: 같은 상태라면 최신 등록일(createdAt) 내림차순
+        // 3. 공고 정렬 로직 (요청에 따른 정렬)
         // ------------------------------------------
         groupedList.sort((a, b) -> {
+            // "applicantCount" 정렬 (기본값) : 지원자 많은 순 (DESC)
+            if ("applicantCount".equalsIgnoreCase(sortBy)) {
+                if (a.getApplicantCount() != b.getApplicantCount()) {
+                    return Integer.compare(b.getApplicantCount(), a.getApplicantCount());
+                }
+            }
+
+            // 공통 1순위: 진행중(RECRUITING) 위로, 마감(CLOSED) 아래로
             boolean aIsRecruiting = "RECRUITING".equals(a.getStatus());
             boolean bIsRecruiting = "RECRUITING".equals(b.getStatus());
 
-            if (aIsRecruiting && !bIsRecruiting)
-                return -1;
-            if (!aIsRecruiting && bIsRecruiting)
-                return 1;
+            if (aIsRecruiting && !bIsRecruiting) return -1;
+            if (!aIsRecruiting && bIsRecruiting) return 1;
 
-            if (a.getCreatedAt() == null)
-                return 1;
-            if (b.getCreatedAt() == null)
-                return -1;
+            // 공통 2순위: 최신 등록일(createdAt) 내림차순
+            if (a.getCreatedAt() == null) return 1;
+            if (b.getCreatedAt() == null) return -1;
             return b.getCreatedAt().compareTo(a.getCreatedAt());
         });
 

@@ -78,7 +78,10 @@ public class TokyoGeocodedEntity extends BaseEntity {
 
 	@Column(name = "position_jp", length = 100)
 	private String positionJp;
-
+	
+	@Column(name = "contact_phone_jp", length = 200)
+	private String contactPhoneJp;
+	
 	@Column(name = "job_description_jp", columnDefinition = "TEXT")
 	private String jobDescriptionJp;
 

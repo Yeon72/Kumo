@@ -327,9 +327,8 @@ public class AdminController {
         model.addAttribute("lang", lang);
         model.addAttribute("adminName", "Administrator"); // 나중에 실제 세션값으로 변경
         
-        // 추후에 초기 로그 데이터를 DB에서 가져와서 넘길 수 있습니다.
-        // List<LogDTO> logs = adminService.getRecentLogs();
-        // model.addAttribute("logs", logs);
+        // 로그인 이력 가져와서 전달
+        model.addAttribute("loginLogs", adminService.getRecentLoginLogs());
         
         return "adminView/admin_log";
     }

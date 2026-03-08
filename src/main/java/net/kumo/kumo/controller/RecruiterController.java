@@ -126,7 +126,8 @@ public class RecruiterController {
     }
 
     @GetMapping("ApplicantInfo")
-    public String ApplicantInfo(Model model, Principal principal) {
+    public String ApplicantInfo(Model model, Principal principal,
+                                @RequestParam(defaultValue = "applicantCount") String sortBy) {
         model.addAttribute("currentMenu", "applicants"); // 사이드바 활성화
 
         // 1. 로그인 유저 검증
@@ -138,11 +139,12 @@ public class RecruiterController {
         UserEntity user = ur.findByEmail(loginEmail)
                 .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
 
-        // 2. 🌟 방금 만든 Service 메서드 호출! (실제 DB 데이터 긁어오기)
-        List<JobApplicantGroupDTO> groupedList = jobPostingService.getGroupedApplicantsForRecruiter(user);
+        // 2. 🌟 서비스 메서드 호출 시 정렬 조건 전달
+        List<JobApplicantGroupDTO> groupedList = jobPostingService.getGroupedApplicantsForRecruiter(user, sortBy);
 
         // 3. HTML(Thymeleaf)로 데이터 던져주기
         model.addAttribute("groupedList", groupedList);
+        model.addAttribute("sortBy", sortBy); // 현재 정렬 상태 전달
 
         return "recruiterView/applicantInfo";
     }

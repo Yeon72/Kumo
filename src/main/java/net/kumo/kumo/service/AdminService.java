@@ -13,6 +13,7 @@ import net.kumo.kumo.domain.enums.JobStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,18 @@ public class AdminService {
     // 신고/유저 리포지토리
     private final ReportRepository reportRepo;
     private final UserRepository userRepo;
+    private final LoginHistoryRepository loginHistoryRepo;
+
+    /**
+     * 최근 로그인 로그 50개 가져오기
+     */
+    @Transactional(readOnly = true)
+    public List<LoginHistoryEntity> getRecentLoginLogs() {
+        return loginHistoryRepo.findAll(Sort.by(Sort.Direction.DESC, "attemptTime"))
+                .stream()
+                .limit(50)
+                .collect(Collectors.toList());
+    }
 
     // 전체 유저 가져오기 (DTO 사용)
     @Transactional(readOnly = true)

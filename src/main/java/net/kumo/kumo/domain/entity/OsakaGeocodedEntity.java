@@ -77,11 +77,15 @@ public class OsakaGeocodedEntity extends BaseEntity {
 	@Column(name = "company_name_jp", length = 150)
 	private String companyNameJp;
 	
+	
 	@Column(name = "position_jp", length = 100)
 	private String positionJp;
 	
 	@Column(name = "job_description_jp", columnDefinition = "TEXT")
 	private String jobDescriptionJp;
+	
+	@Column(name = "contact_phone_jp", length = 200)
+	private String contactPhoneJp;
 	
 	@Column(name = "wage_jp")
 	private String wageJp;

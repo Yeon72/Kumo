@@ -71,6 +71,8 @@ public abstract class BaseEntity {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+	
+	
 
     /**
      * 공고 상태 관리
@@ -85,6 +87,10 @@ public abstract class BaseEntity {
 
     @Column(name = "view_count")
     private Integer viewCount;
+	
+	
+	
+	
 
     public void addViewCount() {
         if (this.viewCount == null) {

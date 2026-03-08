@@ -100,7 +100,7 @@ public class SeekerService {
                         dto.setWage(job.getWage());
                         dto.setWageJp(job.getWageJp());
                         dto.setContact(job.getContactPhone());
-                        dto.setManager("담당자");
+						dto.setManager(job.getUser().getNickname());
                     });
                 } else if ("OSAKA".equals(source)) {
                     osakaRepo.findById(postId).ifPresent(job -> {
@@ -110,7 +110,7 @@ public class SeekerService {
                         dto.setWage(job.getWage());
                         dto.setWageJp(job.getWageJp());
                         dto.setContact(job.getContactPhone());
-                        dto.setManager("담당자");
+                        dto.setManager(job.getUser().getNickname());
                     });
                 } else if ("TOKYO_NO".equals(source)) {
                     tokyoNoRepo.findById(postId).ifPresent(job -> {

@@ -38,7 +38,7 @@
 				<div class="terminal-title">kumo-server-log</div>
 			</div>
 			<div class="terminal-body">
-				<pre id="logOutput" class="terminal-content"><span id="cursor" class="cursor">_</span></pre>
+				<pre id="logOutput" class="terminal-content"><th:block th:each="log : ${loginLogs}"><span class="cmd">[<span th:text="${#temporals.format(log.attemptTime, 'yyyy-MM-dd HH:mm:ss')}"></span>]</span> <span th:class="${log.isSuccess ? 'info' : 'red'}" th:text="${log.isSuccess ? 'INFO ' : 'FAIL '}"></span><span> - User: </span><span class="cmd" th:text="${log.email}"></span><span> | IP: </span><span th:text="${log.clientIp}"></span><span th:if="${!log.isSuccess}" th:text="${' | Reason: ' + log.failReason}"></span><br/></th:block><span id="cursor" class="cursor">_</span></pre>
 			</div>
 		</div>
 	</div>
