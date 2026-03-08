@@ -124,58 +124,60 @@
          ============================================================ -->
     <script th:inline="javascript">
       /* <![CDATA[ */
-        (function () {
-          if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      (function () {
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
-          const theme = localStorage.getItem('theme');
-          if (theme === 'dark') {
-            const root = document.documentElement;
-            root.classList.add('dark-mode');
+        const theme = localStorage.getItem('theme');
+        const root = document.documentElement;
 
-            // 🌟 [개선] 헤더는 살리고 나머지만 숨기는 스타일 주입
-            document.write(
-              '<style id="anti-flicker-css">' +
-              '  *:not(.no-prevent-transition) { transition: none !important; }' +
-              '  html, body { background-color: #121212 !important; color: #FFFFFF !important; margin: 0; padding: 0; }' +
+        if (theme === 'dark') {
+          root.classList.add('dark-mode');
+          // 🌙 다크모드 방어막 (사장님 원본 완벽 유지)
+          document.write(
+            '<style id="anti-flicker-css">' +
+            '  *:not(.no-prevent-transition) { transition: none !important; }' +
+            '  html, body { background-color: #121212 !important; color: #FFFFFF !important; margin: 0; padding: 0; }' +
+            '  body > *:not(header):not(.authenticated-header):not(.custom-header):not(script):not(style) { ' +
+            '    opacity: 0 !important; visibility: hidden !important; ' +
+            '  }' +
+            '  .btn-light-blue, .authenticated-header, .custom-header {' +
+            '    background-color: transparent !important;' +
+            '    border-bottom: 1px solid #2d2d2d !important;' +
+            '    display: flex !important;' +
+            '    opacity: 1 !important; visibility: visible !important;' +
+            '  }' +
+            '  .authenticated-header *, .custom-header * { color: #FFFFFF !important; border-color: #2d2d2d !important; }' +
+            '</style>'
+          );
+        } else {
+          // ☀️ 라이트모드 방어막 (배경색 변경 없이 본문만 숨겨서 환영 애니메이션 깨짐 방지)
+          document.write(
+            '<style id="anti-flicker-css">' +
+            '  body > *:not(header):not(.authenticated-header):not(.custom-header):not(script):not(style) { ' +
+            '    opacity: 0 !important; visibility: hidden !important; ' +
+            '  }' +
+            '</style>'
+          );
+        }
 
-              // 🌟 [포인트] body 바로 밑의 자식들 중 헤더가 아닌 것들을 숨깁니다.
-              // 만약 헤더가 div 등으로 감싸져 있다면 그 div에도 클래스를 주어야 안 숨겨집니다.
-              '  body > *:not(header):not(.authenticated-header):not(.custom-header):not(script):not(style) { ' +
-              '    opacity: 0 !important; visibility: hidden !important; ' +
-              '  }' +
-              '  .btn-light-blue, .authenticated-header, .custom-header {' +
-              '    background-color: transparent !important;' +
-              '    border-bottom: 1px solid #2d2d2d !important;' +
-              '    display: flex !important;' +
-              '    opacity: 1 !important; visibility: visible !important;' +
-              '  }' +
-              '  .authenticated-header *, .custom-header * { color: #FFFFFF !important; border-color: #2d2d2d !important; }' +
-              '</style>'
-            );
+        // 🌟 공통: HTML 로딩이 끝나자마자 0.05초 만에 방어막 해제 (1.5초 딜레이 원천 차단!)
+        window.addEventListener('DOMContentLoaded', function () {
+          setTimeout(function () {
+            const flickerStyle = document.getElementById('anti-flicker-css');
+            if (flickerStyle) flickerStyle.remove();
+          }, 50);
+        });
 
-            // 🌟 [추가] 망토를 벗기는 '타이머' (DOM이 로드되면 0.05초 뒤에 숨김 해제)
-            window.addEventListener('DOMContentLoaded', function () {
-              setTimeout(function () {
-                const flickerStyle = document.getElementById('anti-flicker-css');
-                if (flickerStyle) {
-                  // 부드럽게 나타나게 하고 싶다면 스타일을 지우기 전에 opacity를 1로 줄 수도 있습니다.
-                  flickerStyle.remove();
-                }
-              }, 50); // 0.05초의 찰나 뒤에 본문을 보여줍니다.
-            });
-          }
+        window.kumoMsgs = {
+          scheduleTitle: /*[[#{main.calendar.schedule_detail}]]*/ ' 일정',
+          noSchedule: /*[[#{main.calendar.no_schedule}]]*/ '일정이 없습니다.'
+        };
+      })();
 
-          window.kumoMsgs = {
-            scheduleTitle: /*[[#{main.calendar.schedule_detail}]]*/ ' 일정',
-            noSchedule: /*[[#{main.calendar.no_schedule}]]*/ '일정이 없습니다.'
-          };
-        })();
-
-        // 알림 전용 번역 메시지 객체 생성
-          window.NOTI_MSG = {
-            deleteAllConfirm: /*[[#{noti.delete.all.confirm}]]*/ '모든 알림을 삭제하시겠습니까?'
-          };
-        /* ]]> */
+      window.NOTI_MSG = {
+        deleteAllConfirm: /*[[#{noti.delete.all.confirm}]]*/ '모든 알림을 삭제하시겠습니까?'
+      };
+      /* ]]> */
     </script>
 
     <!-- 나머지 헤더 로직은 외부 JS로 분리 -->

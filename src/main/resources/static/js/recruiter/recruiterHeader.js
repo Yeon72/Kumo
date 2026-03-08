@@ -16,15 +16,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // 🌟 사장님의 원본 복구 로직 (이상한 transition 꼼수 다 뺐습니다!)
   requestAnimationFrame(() => {
     window.scrollTo(0, 0);
     body.style.opacity = "1";
     body.style.visibility = "visible";
 
     // position: fixed인 헤더는 body와 별도로 명시적 복구
-    const header = document.querySelector(
-      ".authenticated-header, .custom-header",
-    );
+    const header = document.querySelector(".authenticated-header, .custom-header");
     if (header) {
       header.style.opacity = "1";
       header.style.visibility = "visible";
@@ -36,9 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 50);
 
     setTimeout(() => {
-      const preventTransition = document.getElementById(
-        "prevent-load-transition",
-      );
+      const preventTransition = document.getElementById("prevent-load-transition");
       if (preventTransition) preventTransition.remove();
     }, 400);
   });
@@ -63,6 +60,10 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!isDark) html.style.cssText = "";
     });
   }
+
+  /* ==============================
+     이 아래부터는 사장님의 원래 코드 (드롭다운, 알림 기능 등) 그대로 유지!
+     ============================== */
 
   /* ==============================
        2. 드롭다운 통합 관리
