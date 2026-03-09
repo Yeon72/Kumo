@@ -108,6 +108,8 @@ const MapManager = {
         const map = AppState.map;
 
         map.addListener("idle", () => {
+            console.log("Map idle event triggered. ignoreIdle:", AppState.ignoreIdle, "isFilterMode:", AppState.isFilterMode);
+            
             if(AppState.ignoreIdle || AppState.isFilterMode){
                 return;
             }
@@ -118,9 +120,11 @@ const MapManager = {
                 const bounds = map.getBounds();
 
                 if (AppState.lastBounds && bounds.equals(AppState.lastBounds)) {
+                    console.log("Bounds same as last. Skipping load.");
                     return;
                 }
 
+                console.log("Loading jobs for new bounds...");
                 AppState.lastBounds = bounds;
                 JobService.loadJobs(bounds);
 
@@ -237,7 +241,18 @@ const MapManager = {
     changeRegion: function(regionCode) {
         if (!AppState.map) return;
 
+        console.log("Changing region to:", regionCode);
+        
+        // 🌟 중요: 지역 이동 시 필터 모드와 위치 모드를 해제하여 오필터링 방지
+        AppState.isFilterMode = false;
+        AppState.isLocationMode = false;
         AppState.ignoreIdle = true;
+        
+        // UI 탭 상태도 '탐색'으로 변경
+        $('.nav-item').removeClass('active');
+        $('.nav-item[data-tab="explore"]').addClass('active');
+        $('#sheetTitle').text(MapMessages.titleExplore);
+
         let targetPos;
         let targetZoom = 10;
 
@@ -252,23 +267,42 @@ const MapManager = {
         AppState.map.panTo(targetPos);
         AppState.map.setZoom(targetZoom);
 
-        setTimeout(() => {
+        // 지도가 멈출 때까지 기다렸다가 ignoreIdle 해제
+        google.maps.event.addListenerOnce(AppState.map, "idle", () => {
+            console.log("Region change completed. Resetting ignoreIdle.");
             AppState.ignoreIdle = false;
             const bounds = AppState.map.getBounds();
             AppState.lastBounds = bounds;
             JobService.loadJobs(bounds);
-        }, 800);
+        });
+        
+        // 안전장치
+        setTimeout(() => {
+            if (AppState.ignoreIdle) {
+                console.warn("Safety timeout: resetting ignoreIdle after region change.");
+                AppState.ignoreIdle = false;
+            }
+        }, 2000);
     },
 
     moveToJobLocation: function(lat, lng) {
         if (!AppState.map || !lat || !lng) return;
 
+        console.log("Moving to job location:", lat, lng);
+        
+        // 🌟 특정 공고로 이동 시에도 필터링 해제
+        AppState.isFilterMode = false;
+        AppState.isLocationMode = false;
+        $('.nav-item').removeClass('active');
+        $('.nav-item[data-tab="explore"]').addClass('active');
+        
         AppState.ignoreIdle = true;
         const targetPos = { lat: parseFloat(lat), lng: parseFloat(lng) };
         AppState.map.panTo(targetPos);
         AppState.map.setZoom(18);
 
         google.maps.event.addListenerOnce(AppState.map, "idle", function() {
+            console.log("Move to job location completed. Resetting ignoreIdle.");
             setTimeout(() => {
                 AppState.lastBounds = AppState.map.getBounds();
                 AppState.ignoreIdle = false;
@@ -284,6 +318,14 @@ const MapManager = {
                 }
             }, 100);
         });
+
+        // 안전장치
+        setTimeout(() => {
+            if (AppState.ignoreIdle) {
+                console.warn("Safety timeout: resetting ignoreIdle after moving to job.");
+                AppState.ignoreIdle = false;
+            }
+        }, 2000);
     },
 };
 
@@ -294,11 +336,13 @@ const JobService = {
     loadJobs: function(bounds) {
         if (!AppState.map) return;
 
+        console.log("JobService.loadJobs called with bounds:", bounds.toString());
         $('#listBody').html(`<tr><td colspan="7" class="msg-box">${MapMessages.loading}</td></tr>`);
 
         const params = JobService.prepareParams(bounds);
 
         if (AppState.currentXhr && AppState.currentXhr.readyState !== 4) {
+            console.log("Aborting previous AJAX request.");
             AppState.currentXhr.abort();
         }
 
@@ -308,12 +352,15 @@ const JobService = {
             data: params,
             dataType: 'json',
             success: function(data) {
+                console.log("Jobs loaded successfully. Count:", data ? data.length : 0);
                 JobService.processData(data);
             },
             error: function(xhr, status, error) {
                 if (status !== 'abort') {
                     console.error("AJAX Error:", error);
                     $('#listBody').html(`<tr><td colspan="7" class="msg-box">${MapMessages.loadFail}</td></tr>`);
+                } else {
+                    console.log("AJAX request was aborted.");
                 }
             }
         });
