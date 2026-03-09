@@ -122,7 +122,7 @@ async function updateAppStatus(status) {
 }
 
 // =========================================================================
-// 3. 플로팅 채팅방 관련 로직 (복구 완료! 🚀)
+// 3. 플로팅 채팅방 관련 로직
 // =========================================================================
 function actionChat() {
     if (!currentSeekerId || !currentJobId || !currentJobSource) {
@@ -130,10 +130,15 @@ function actionChat() {
         return;
     }
 
-    // 🌟 1. 현재 사장님(부모 창)이 보고 있는 언어를 가져옵니다 (없으면 kr)
-    const currentLang = new URLSearchParams(window.location.search).get('lang') || 'kr';
+    // 🌟 [핵심 수정] URL 창이 아니라, 최상단 HTML 태그에 적용된 진짜 언어값을 읽어옵니다.
+    let currentLang = document.documentElement.lang || 'ko';
 
-    // 🌟 2. URL 맨 끝에 &lang=${currentLang} 를 붙여서 완벽하게 넘겨줍니다!
+    // 백엔드에서 한국어를 'kr'로 처리하도록 설계하셨으므로, 'ko'를 'kr'로 변환해 줍니다.
+    if (currentLang === 'ko') {
+        currentLang = 'kr';
+    }
+
+    // 🌟 URL 맨 끝에 &lang=${currentLang} 를 붙여서 완벽하게 넘겨줍니다!
     const chatUrl = `/chat/create?seekerId=${currentSeekerId}&jobPostId=${currentJobId}&jobSource=${currentJobSource}&lang=${currentLang}`;
 
     const chatContainer = document.getElementById('floatingChatContainer');
