@@ -45,8 +45,8 @@
                             <tr th:each="h : ${history}">
                                 <td style="min-width: 200px;">
                                     <a class="job-title-link"
-                                        th:href="@{/map/jobs/detail(id=${h.targetPostId}, source=${h.targetSource})}"
-                                        th:text="${h.title}">공고 제목</a>
+                                       th:href="@{/map/jobs/detail(id=${h.targetPostId}, source=${h.targetSource}, lang=${#locale.language})}"
+                                       th:text="${h.title}">공고 제목</a>
                                     <span class="status-badge" th:classappend="'status-' + ${h.status.toLowerCase()}"
                                         th:text="#{${'status.' + h.status.toLowerCase()}}">상태</span>
                                 </td>

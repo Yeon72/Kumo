@@ -256,13 +256,9 @@
             </form>
           </div>
         </div>
+        <footer th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"></footer>
       </main>
     </div>
-
-    <div
-      th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"
-    ></div>
-
     <script
       th:src="@{'https://maps.googleapis.com/maps/api/js?key=' + ${googleMapsKey} + '&language=ja'}"
     ></script>
