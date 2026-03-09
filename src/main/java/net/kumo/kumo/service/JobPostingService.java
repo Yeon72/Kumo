@@ -353,6 +353,7 @@ public class JobPostingService {
                     .id(o.getId()) // 🌟 [추가] 오사카 테이블의 진짜 id
                     .datanum(o.getDatanum())
                     .title(o.getTitle())
+							.titleJp(o.getTitleJp())
                     .regionType("오사카") // 라벨링
                     .wage(displayWage)
                     .wageJp(o.getWageJp())
@@ -376,6 +377,7 @@ public class JobPostingService {
                     .id(t.getId()) // 🌟 [추가] 도쿄 테이블의 진짜 id
                     .datanum(t.getDatanum())
                     .title(t.getTitle())
+					.titleJp(t.getTitleJp())
                     .regionType("도쿄") // 라벨링
                     .wage(displayWage)
                     .wageJp(t.getWageJp())
@@ -462,10 +464,15 @@ public class JobPostingService {
                     .orElseThrow(() -> new IllegalArgumentException("공고를 찾을 수 없습니다."));
             dto.setDatanum(e.getDatanum());
             dto.setTitle(e.getTitle());
+			dto.setTitleJp(e.getTitleJp());
             dto.setPosition(e.getPosition());
+			dto.setPositionJp(e.getPositionJp());
             dto.setContactPhone(e.getContactPhone());
+			dto.setContactPhoneJp(e.getContactPhoneJp());
             dto.setJobDescription(e.getJobDescription());
+			dto.setJobDescriptionJp(e.getJobDescriptionJp());
             dto.setNotes(e.getNotes());
+			dto.setNotesJp(e.getNotesJp());
             dto.setSalaryType(e.getSalaryType());
             dto.setSalaryAmount(e.getSalaryAmount());
             if (e.getCompany() != null)
@@ -476,10 +483,15 @@ public class JobPostingService {
                     .orElseThrow(() -> new IllegalArgumentException("공고를 찾을 수 없습니다."));
             dto.setDatanum(e.getDatanum());
             dto.setTitle(e.getTitle());
+			dto.setTitleJp(e.getTitleJp());
             dto.setPosition(e.getPosition());
+			dto.setPositionJp(e.getPositionJp());
             dto.setContactPhone(e.getContactPhone());
+			dto.setContactPhoneJp(e.getContactPhoneJp());
             dto.setJobDescription(e.getJobDescription());
+			dto.setJobDescriptionJp(e.getJobDescriptionJp());
             dto.setNotes(e.getNotes());
+			dto.setNotesJp(e.getNotesJp());
             dto.setSalaryType(e.getSalaryType());
             dto.setSalaryAmount(e.getSalaryAmount());
             if (e.getCompany() != null)
@@ -632,6 +644,7 @@ public class JobPostingService {
                         .jobId(job.getId())
                         .source("OSAKA")
                         .jobTitle(job.getTitle())
+								.jobTitleJp(job.getTitleJp())
                         .status(job.getStatus() != null ? job.getStatus().name() : "RECRUITING")
                         .createdAt(job.getCreatedAt())
                         .applicantCount(appResponses.size())
@@ -675,6 +688,7 @@ public class JobPostingService {
                         .jobId(job.getId())
                         .source("TOKYO")
                         .jobTitle(job.getTitle())
+								.jobTitleJp(job.getTitleJp())
                         .status(job.getStatus() != null ? job.getStatus().name() : "RECRUITING")
                         .createdAt(job.getCreatedAt())
                         .applicantCount(appResponses.size())

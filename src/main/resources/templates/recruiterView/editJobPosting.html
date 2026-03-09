@@ -39,7 +39,7 @@
 
                         <div class="form-group mb-4">
                             <label class="form-label" th:text="#{job.edit.label.title}">제목</label>
-                            <input type="text" name="title" class="form-control kumo-input" th:value="${job.title}"
+                            <input type="text" name="title" class="form-control kumo-input" th:value="${#locale.language == 'ja' ? job.titleJp : job.title}"
                                 required />
                         </div>
 
@@ -47,19 +47,19 @@
                             <div class="col-md-6">
                                 <label class="form-label" th:text="#{job.edit.label.position}">업무</label>
                                 <input type="text" name="position" class="form-control kumo-input"
-                                    th:value="${job.position}" />
+                                    th:value="${#locale.language == 'ja' ? job.positionJp : job.position}" />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" th:text="#{job.edit.label.desc}">업무 상세</label>
                                 <input type="text" name="jobDescription" class="form-control kumo-input"
-                                    th:value="${job.jobDescription}" th:placeholder="#{job.edit.placeholder.desc}" />
+                                    th:value="${#locale.language == 'ja' ? job.jobDescriptionJp : job.jobDescription}" th:placeholder="#{job.edit.placeholder.desc}" />
                             </div>
                         </div>
 
                         <div class="form-group mb-4">
                             <label class="form-label" th:text="#{job.edit.label.contact}">연락처</label>
                             <input type="text" name="contactPhone" class="form-control kumo-input"
-                                th:value="${job.contactPhone}" th:placeholder="#{job.edit.placeholder.contact}"
+                                th:value="${#locale.language == 'ja' ? job.contactPhoneJp : job.contactPhone}" th:placeholder="#{job.edit.placeholder.contact}"
                                 required />
                         </div>
 
@@ -88,7 +88,7 @@
                         <div class="form-group mb-5">
                             <label class="form-label" th:text="#{job.edit.label.body}">상세정보</label>
                             <textarea name="body" class="form-control kumo-input" rows="6"
-                                th:text="${job.body}"></textarea>
+                                th:text="${#locale.language == 'ja' ? job.notesJp : job.notes}"></textarea>
                         </div>
 
                         <div class="d-flex justify-content-center gap-3 mb-5 mt-2">

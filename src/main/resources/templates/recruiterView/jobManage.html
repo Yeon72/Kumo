@@ -82,7 +82,8 @@
               <tr th:each="job : ${jobList}" th:classappend="${job.status == 'CLOSED'} ? 'job-closed-row' : ''">
                 <td>
                   <div class="job-title-cell">
-                    <span class="job-name text-truncate-custom" th:text="${job.title}">공고 제목</span>
+                    <span class="job-name text-truncate-custom" th:if="${#locale.language == 'ko'}" th:text="${job.title}">공고 제목</span>
+                      <span class="job-name text-truncate-custom" th:if="${#locale.language == 'ja'}" th:text="${job.titleJp}">  공고 제목</span>
                   </div>
                 </td>
                 <td>
@@ -106,7 +107,7 @@
                 </td>
                 <td>
                   <button th:if="${job.status == 'RECRUITING'}" type="button" class="btn-gear"
-                    th:onclick="openJobModal([[${job.id}]], [[${job.datanum}]], [[${job.regionType}]], [[${job.title}]], [[${job.status}]])">
+                    th:onclick="openJobModal([[${job.id}]], [[${job.datanum}]], [[${job.regionType}]], [[${job.title}]], [[${job.titleJp}]], [[${job.status}]])">
                     <i class="bi bi-gear-fill"></i>
                   </button>
 
@@ -183,7 +184,7 @@
     const regionTokyo = /*[[#{region.tokyo}]]*/ '도쿄';
     const regionOsaka = /*[[#{region.osaka}]]*/ '오사카';
 
-    function openJobModal(id, datanum, regionType, title) {
+    function openJobModal(id, datanum, regionType, title, titleJp) {
       let sourceEn = '';
       let displayRegion = ''; // 화면에 띄울 다국어 지역명
 
@@ -198,7 +199,9 @@
 
       // 🌟 모달창 안에 다국어 지역명 꽂아주기!
       document.getElementById('modalRegionBadge').innerText = displayRegion;
-      document.getElementById('modalJobTitle').innerText = title;
+      
+      // 🌟 일본어일 때 일본어 제목 출력
+      document.getElementById('modalJobTitle').innerText = (langCode === 'ja') ? titleJp : title;
 
       document.getElementById('btnViewJob').onclick = () => {
         location.href = `/map/jobs/detail?id=${id}&source=${sourceEn}&lang=${langCode}`;

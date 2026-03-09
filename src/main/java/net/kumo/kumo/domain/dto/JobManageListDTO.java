@@ -15,6 +15,7 @@ public class JobManageListDTO {
     private Long id;
     private Long datanum;
     private String title;
+	private String titleJp;
     private String position; // 🌟 추가! (이게 있어야 메인에 직무가 나옴)
     private String regionType;
     private String wage;
