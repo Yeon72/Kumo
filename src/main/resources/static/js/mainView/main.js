@@ -107,23 +107,18 @@ const MapManager = {
     bindMapEvents: function() {
         const map = AppState.map;
 
-        map.addListener("idle", () => {
-            console.log("Map idle event triggered. ignoreIdle:", AppState.ignoreIdle, "isFilterMode:", AppState.isFilterMode);
-            
+        // 🌟 지도의 경계가 변경되거나 이동이 멈췄을 때 호출되는 공통 함수
+        const triggerFetch = (delay) => {
             if(AppState.ignoreIdle || AppState.isFilterMode){
                 return;
             }
 
-
-            // 기존에 돌고 있던 타이머 무조건 리셋
             clearTimeout(AppState.debounceTimer);
 
-            // 전달받은 delay 시간 뒤에 실행
             AppState.debounceTimer = setTimeout(() => {
                 const bounds = map.getBounds();
                 if (!bounds) return;
 
-                // 중복 호출 방지
                 if (AppState.lastBounds && bounds.equals(AppState.lastBounds)) {
                     console.log("Bounds same as last. Skipping load.");
                     return;
@@ -132,22 +127,16 @@ const MapManager = {
                 console.log("Loading jobs for new bounds...");
                 AppState.lastBounds = bounds;
                 JobService.loadJobs(bounds);
-
             }, delay);
         };
 
-        // 1. [최후의 보루] 마우스 휠 버그 방지용 (1초 타이머)
-        // 클러스터 줌인 애니메이션(약 0.8초)이 끝날 때까지 기다려주기 위해 1000ms를 줍니다.
-        map.addListener("bounds_changed", () => {
-            triggerFetch(1000);
-        });
-
-        // 2. [메인 로직] 지도가 정상적으로 완전히 멈췄을 때 (0.1초 타이머)
-        // 멈추자마자 아주 빠릿빠릿하게 리스트와 마커를 갱신합니다.
+        // 지도가 이동을 멈췄을 때 즉시 갱신 (0.1초)
         map.addListener("idle", () => {
+            console.log("Map idle event triggered.");
             triggerFetch(100);
         });
 
+        // 클릭 시 카드 닫기
         map.addListener("click", () => {
             UIManager.closeJobCard();
         });
