@@ -90,8 +90,9 @@
 
                         <div class="form-group mb-5">
                             <label class="form-label" th:text="#{job.edit.label.body}">상세정보</label>
-                            <textarea name="body" class="form-control kumo-input" rows="6"
-                                th:text="${(#locale.language == 'ja' and job.notesJp != null and job.notesJp != '') ? job.notesJp : job.notes}"></textarea>
+
+                            <textarea name="notes" class="form-control kumo-input" rows="6"
+                                      th:utext="${(#locale.language == 'ja' and job.notesJp != null and job.notesJp != '') ? job.notesJp : job.notes}"></textarea>
                         </div>
 
                         <div class="d-flex justify-content-center gap-3 mb-5 mt-2">
