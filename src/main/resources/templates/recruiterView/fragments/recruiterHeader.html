@@ -134,7 +134,7 @@
           root.classList.add('dark-mode');
           // 🌙 다크모드 방어막 (사장님 원본 완벽 유지)
           document.write(
-            '<style id="anti-flicker-css">' +
+             '<style id="anti-flicker-css">' +
             '  *:not(.no-prevent-transition) { transition: none !important; }' +
             '  html, body { background-color: #121212 !important; color: #FFFFFF !important; margin: 0; padding: 0; }' +
             '  body > *:not(header):not(.authenticated-header):not(.custom-header):not(script):not(style) { ' +
@@ -147,6 +147,8 @@
             '    opacity: 1 !important; visibility: visible !important;' +
             '  }' +
             '  .authenticated-header *, .custom-header * { color: #FFFFFF !important; border-color: #2d2d2d !important; }' +
+            // ✅ 추가
+            '  .btn-delete { background-color: rgba(255,100,100,0.15) !important; color: #ff6b6b !important; border-color: rgba(255,100,100,0.3) !important; }' +
             '</style>'
           );
         } else {

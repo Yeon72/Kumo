@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -67,6 +69,7 @@ public class SeekerService {
     private final TokyoNoGeocodedRepository tokyoNoRepo; // 🌟 추가
     private final OsakaNoGeocodedRepository osakaNoRepo; // 🌟 추가
     private final JobPostingRepository jobPostingRepo;
+    private final MessageSource messageSource;
 
     /**
      * 구직자의 지원 내역 가져오기
@@ -100,7 +103,7 @@ public class SeekerService {
                         dto.setWage(job.getWage());
                         dto.setWageJp(job.getWageJp());
                         dto.setContact(job.getContactPhone());
-						dto.setManager(job.getUser().getNickname());
+                        dto.setManager(job.getUser().getNickname());
                     });
                 } else if ("OSAKA".equals(source)) {
                     osakaRepo.findById(postId).ifPresent(job -> {
@@ -119,7 +122,8 @@ public class SeekerService {
                         dto.setLocation(job.getAddress());
                         dto.setWage(job.getWage());
                         dto.setContact(job.getContactPhone());
-                        dto.setManager("담당자");
+                        dto.setManager(messageSource.getMessage("apply.history.manager", null,
+                                LocaleContextHolder.getLocale()));
                     });
                 } else if ("OSAKA_NO".equals(source)) {
                     osakaNoRepo.findById(postId).ifPresent(job -> {
@@ -128,7 +132,8 @@ public class SeekerService {
                         dto.setLocation(job.getAddress());
                         dto.setWage(job.getWage());
                         dto.setContact(job.getContactPhone());
-                        dto.setManager("담당자");
+                        dto.setManager(messageSource.getMessage("apply.history.manager", null,
+                                LocaleContextHolder.getLocale()));
                     });
                 } else if ("KUMO".equals(source)) {
                     jobPostingRepo.findById(postId).ifPresent(job -> {
@@ -142,7 +147,7 @@ public class SeekerService {
                 }
             } catch (Exception e) {
                 log.error("지원 내역 상세 정보 로드 실패 (Source: {}, PostID: {}): {}", source, postId, e.getMessage());
-                dto.setTitle("삭제된 공고입니다.");
+                dto.setTitle(messageSource.getMessage("apply.history.deleted", null, LocaleContextHolder.getLocale()));
             }
 
             history.add(dto);

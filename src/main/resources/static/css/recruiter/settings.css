@@ -741,3 +741,7 @@ body.dark-mode .custom-modal-input {
   border-color: #333;
   color: #fff;
 }
+
+.dashboard-footer {
+  margin-top: 50px !important;
+}

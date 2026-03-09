@@ -47,64 +47,64 @@
                 </div>
             </th:block>
 
-            <div th:if="${strSenderId != strUserId}" class="msg-row other">
+            <div th:unless="${#strings.equals(msg.senderId, userId)}" class="msg-row other">
                 <img th:src="${opponentProfileImg}" class="profile-img" style="object-fit: cover;">
 
                 <th:block th:if="${msg.messageType == 'TEXT' or msg.messageType == 'TALK'}">
                     <div class="msg-bubble" th:text="${msg.content}">내용</div>
                 </th:block>
 
-                    <th:block th:if="${msg.messageType == 'IMAGE'}">
-                        <img th:src="${msg.content}" class="chat-image"
-                             style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
-                             onclick="openImageModal(this.src)">
-                    </th:block>
+                <th:block th:if="${msg.messageType == 'IMAGE'}">
+                    <img th:src="${msg.content}" class="chat-image"
+                         style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
+                         onclick="openImageModal(this.src)">
+                </th:block>
 
-                    <th:block th:if="${msg.messageType == 'FILE'}">
-                        <div class="file-bubble" th:data-url="${msg.content}"
-                             onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
-                            <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
-                            <div class="file-info-box">
-                                <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
-                                <div class="file-display-name"></div>
-                                <div class="file-display-sub" th:text="#{chat.room.file.open}">파일 열기</div>
-                            </div>
+                <th:block th:if="${msg.messageType == 'FILE'}">
+                    <div class="file-bubble" th:data-url="${msg.content}"
+                         onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
+                        <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+                        <div class="file-info-box">
+                            <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
+                            <div class="file-display-name"></div>
+                            <div class="file-display-sub" th:text="#{chat.room.file.open}">파일 열기</div>
                         </div>
-                    </th:block>
+                    </div>
+                </th:block>
 
+                <span class="msg-time" th:text="${msg.createdAt}"></span>
+            </div>
+
+            <div th:if="${#strings.equals(msg.senderId, userId)}" class="msg-row me">
+                <div class="msg-info">
+                    <span class="unread-count" th:if="${msg.isRead == false}">1</span>
                     <span class="msg-time" th:text="${msg.createdAt}"></span>
                 </div>
 
-                <div th:if="${strSenderId == strUserId}" class="msg-row me">
-                    <div class="msg-info">
-                        <span class="unread-count" th:if="${msg.isRead == false}">1</span>
-                        <span class="msg-time" th:text="${msg.createdAt}"></span>
-                    </div>
+                <th:block th:if="${msg.messageType == 'TEXT' or msg.messageType == 'TALK'}">
+                    <div class="msg-bubble" th:text="${msg.content}">내용</div>
+                </th:block>
 
-                    <th:block th:if="${msg.messageType == 'TEXT' or msg.messageType == 'TALK'}">
-                        <div class="msg-bubble" th:text="${msg.content}">내용</div>
-                    </th:block>
+                <th:block th:if="${msg.messageType == 'IMAGE'}">
+                    <img th:src="${msg.content}" class="chat-image"
+                         style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
+                         onclick="openImageModal(this.src)">
+                </th:block>
 
-                    <th:block th:if="${msg.messageType == 'IMAGE'}">
-                        <img th:src="${msg.content}" class="chat-image"
-                             style="max-width: 200px; border-radius: 10px; margin-top: 5px;"
-                             onclick="openImageModal(this.src)">
-                    </th:block>
-
-                    <th:block th:if="${msg.messageType == 'FILE'}">
-                        <div class="file-bubble" th:data-url="${msg.content}"
-                             onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
-                            <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
-                            <div class="file-info-box">
-                                <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
-                                <div class="file-display-name"></div>
-                                <div class="file-display-sub" th:text="#{chat.room.file.open}">파일 열기</div>
-                            </div>
+                <th:block th:if="${msg.messageType == 'FILE'}">
+                    <div class="file-bubble" th:data-url="${msg.content}"
+                         onclick="window.open(this.getAttribute('data-url'))" style="cursor: pointer;">
+                        <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+                        <div class="file-info-box">
+                            <div class="raw-file-name" style="display: none;" th:text="${msg.content}"></div>
+                            <div class="file-display-name"></div>
+                            <div class="file-display-sub" th:text="#{chat.room.file.open}">파일 열기</div>
                         </div>
-                    </th:block>
-                </div>
+                    </div>
+                </th:block>
+            </div>
 
-            </th:block> </th:block>
+        </th:block>
     </div>
 
     <script>

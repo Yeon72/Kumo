@@ -267,3 +267,7 @@ body.dark-mode .kumo-btn-edit:hover {
   background-color: #92ccff !important;
   box-shadow: 0 8px 25px rgba(125, 180, 230, 0.4) !important;
 }
+
+.dashboard-footer {
+  margin-top: 50px;
+}
