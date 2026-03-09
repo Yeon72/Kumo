@@ -194,6 +194,7 @@ body {
 
 /* 자기소개 박스 */
 .self-intro-box {
+
     background: #fcfdfe;
     padding: 25px;
     border-radius: 20px;
@@ -202,6 +203,9 @@ body {
     line-height: 1.9;
     color: #4e5968;
     white-space: pre-wrap;
+        /* 🌟 줄바꿈(\n)을 그대로 인식해서 보여주는 마법의 CSS */
+        word-break: break-all;
+        /* 너무 긴 단어가 밖으로 삐져나가지 않게 꺾어줌 */
     transition: background-color 0.3s, border-color 0.3s;
 }
 
