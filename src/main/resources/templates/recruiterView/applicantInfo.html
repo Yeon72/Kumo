@@ -67,7 +67,7 @@
                                                   th:text="#{app.info.status.recruiting}">진행중</span>
                                         <span class="badge bg-secondary" th:if="${jobGroup.status != 'RECRUITING'}"
                                               th:text="#{app.info.status.closed}">마감</span>
-                                        <span class="title-font" th:text="${#locale.language == 'ja' ? jobGroup.jobTitleJp : jobGroup.jobTitle}">공고 제목</span>
+                                        <span class="title-font" th:text="${(#locale.language == 'ja' and jobGroup.jobTitleJp != null and jobGroup.jobTitleJp != '') ? jobGroup.jobTitleJp : jobGroup.jobTitle}">공고 제목</span>
                                     </div>
                                     <div class="text-muted font-sm">
                                         <i class="bi bi-people-fill me-1"></i>
@@ -132,7 +132,7 @@
                                                         th:data-name="${app.seekerName}"
                                                         th:data-contact="${app.seekerContact}"
                                                         th:data-email="${app.seekerEmail}"
-                                                        th:data-job="${#locale.language == 'ja' ? jobGroup.jobTitleJp : jobGroup.jobTitle}"
+                                                        th:data-job="${(#locale.language == 'ja' and jobGroup.jobTitleJp != null and jobGroup.jobTitleJp != '') ? jobGroup.jobTitleJp : jobGroup.jobTitle}"
                                                         th:text="#{app.info.btn.view}">열람</button>
                                             </td>
                                         </tr>

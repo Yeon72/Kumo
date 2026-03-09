@@ -82,8 +82,8 @@
               <tr th:each="job : ${jobList}" th:classappend="${job.status == 'CLOSED'} ? 'job-closed-row' : ''">
                 <td>
                   <div class="job-title-cell">
-                    <span class="job-name text-truncate-custom" th:if="${#locale.language == 'ko'}" th:text="${job.title}">공고 제목</span>
-                      <span class="job-name text-truncate-custom" th:if="${#locale.language == 'ja'}" th:text="${job.titleJp}">  공고 제목</span>
+                    <span class="job-name text-truncate-custom" 
+                          th:text="${(#locale.language == 'ja' and job.titleJp != null and job.titleJp != '') ? job.titleJp : job.title}">공고 제목</span>
                   </div>
                 </td>
                 <td>
@@ -200,8 +200,9 @@
       // 🌟 모달창 안에 다국어 지역명 꽂아주기!
       document.getElementById('modalRegionBadge').innerText = displayRegion;
       
-      // 🌟 일본어일 때 일본어 제목 출력
-      document.getElementById('modalJobTitle').innerText = (langCode === 'ja') ? titleJp : title;
+      // 🌟 일본어일 때 일본어 제목 출력 (없으면 기본 제목)
+      const finalTitle = (langCode === 'ja' && titleJp && titleJp.trim() !== '') ? titleJp : title;
+      document.getElementById('modalJobTitle').innerText = finalTitle;
 
       document.getElementById('btnViewJob').onclick = () => {
         location.href = `/map/jobs/detail?id=${id}&source=${sourceEn}&lang=${langCode}`;
