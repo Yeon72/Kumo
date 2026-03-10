@@ -289,7 +289,7 @@ body.dark-mode {
 .notify-item.unread { background-color: rgba(66, 165, 245, 0.08); } /* 안 읽은 알림 */
 
 .notify-content { flex: 1; }
-.notify-text { font-size: 13px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; }
+.notify-text { font-size: 13px; color: var(--text-main); margin-bottom: 4px; line-height: 1.4; margin-left: 10px;}
 .notify-time { font-size: 11px; color: var(--text-sub); }
 
 /* 삭제 버튼 */
