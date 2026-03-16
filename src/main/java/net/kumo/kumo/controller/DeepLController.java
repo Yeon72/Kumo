@@ -11,6 +11,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * DeepL 외부 API를 활용하여 클라이언트의 번역 요청(Tagengo)을 중계하는 API Controller 클래스입니다.
+ */
 @RestController
 @RequestMapping("/api/translate")
 public class DeepLController {
@@ -21,6 +24,12 @@ public class DeepLController {
     @Value("${deepl.api.url}")
     private String apiUrl;
 
+    /**
+     * 텍스트와 목표 언어 코드를 수신하여 DeepL API로 전송한 뒤 번역 결과를 반환합니다.
+     *
+     * @param request 번역할 텍스트 및 타겟 언어 정보가 담긴 DTO
+     * @return 번역 결과가 포함된 응답 객체 (에러 발생 시 500 상태 코드 반환)
+     */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TranslationResponseDTO> translate(@RequestBody TranslationRequestDTO request) {
 
@@ -40,23 +49,15 @@ public class DeepLController {
         try {
             TranslationResponseDTO response = restTemplate.postForObject(apiUrl, entity, TranslationResponseDTO.class);
             return ResponseEntity.ok(response);
-            
-        // =================================================================
-        // ★★★ 여기가 핵심입니다! 가짜 로그들 사이에서 진짜 범인을 잡아내는 덫! ★★★
-        // =================================================================
+
         } catch (org.springframework.web.client.HttpStatusCodeException e) {
-            System.out.println("\n==================================================");
-            System.out.println("🚨 [범인 검거] DeepL API가 번역을 거절했습니다!");
-            System.out.println("거절 사유: " + e.getResponseBodyAsString());
-            System.out.println("상태 코드: " + e.getStatusCode());
-            System.out.println("==================================================\n");
+            System.out.println("[DeepL API Error] 통신 상태 코드 이상 및 번역 거부 처리");
+            System.out.println("Detail: " + e.getResponseBodyAsString());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            
+
         } catch (Exception e) {
-            System.out.println("\n==================================================");
-            System.out.println("🚨 [범인 검거] 스프링 내부에서 오류가 발생했습니다!");
-            System.out.println("에러 메시지: " + e.getMessage());
-            System.out.println("==================================================\n");
+            System.out.println("[DeepL System Error] 스프링 내부 통신 장애 발생");
+            System.out.println("Detail: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

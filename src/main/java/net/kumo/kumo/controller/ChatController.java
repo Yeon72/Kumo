@@ -30,8 +30,8 @@ import net.kumo.kumo.service.ChatService;
 import net.kumo.kumo.service.MapService;
 
 /**
- * 채팅방 관리 및 웹소켓 메시지 라우팅을 담당하는 컨트롤러입니다.
- * HTTP 요청(채팅방 입장, 파일 업로드 등)과 STOMP 기반의 웹소켓 메시지를 함께 처리합니다.
+ * 실시간 1:1 채팅방 관리 및 웹소켓(STOMP) 메시지 라우팅을 담당하는 Controller 클래스입니다.
+ * 채팅방 생성, 조회, 파일 업로드 및 메시지 송수신 기능을 제공합니다.
  */
 @Controller
 @RequiredArgsConstructor
@@ -47,16 +47,15 @@ public class ChatController {
     private String chatUploadDir;
 
     /**
-     * 공고나 스카우트 제안을 통해 새로운 채팅방을 생성하거나 기존 방으로 리다이렉트합니다.
-     * 언어(lang) 파라미터를 리다이렉트 URL에 포함하여 다국어 상태를 유지합니다.
+     * 특정 공고를 기반으로 새로운 채팅방을 생성하거나 기존 채팅방으로 리다이렉트합니다.
      *
-     * @param targetSeekerId 대상 구직자 ID (옵션)
-     * @param targetRecruiterId 대상 구인자 ID (옵션)
-     * @param jobPostId 대상 공고 ID
-     * @param jobSource 공고 출처 (예: OSAKA, TOKYO)
-     * @param lang 사용자 언어 설정 (기본값: "kr")
-     * @param authUser 현재 로그인된 사용자 정보
-     * @return 생성된 채팅방 입장 URL로의 리다이렉트 문자열
+     * @param targetSeekerId    대상 구직자 식별자 (선택)
+     * @param targetRecruiterId 대상 구인자 식별자 (선택)
+     * @param jobPostId         연결된 공고 식별자
+     * @param jobSource         공고 출처 (예: OSAKA, TOKYO)
+     * @param lang              클라이언트 언어 설정
+     * @param authUser          현재 인증된 사용자 정보
+     * @return 생성 및 조회된 채팅방의 입장 URL 문자열
      */
     @GetMapping("/chat/create")
     public String createRoom(
@@ -88,25 +87,23 @@ public class ChatController {
     }
 
     /**
-     * 특정 채팅방에 입장하여 과거 대화 기록 및 공고 정보를 모델에 담아 반환합니다.
-     * URL을 통해 전달된 파라미터(lang)를 최우선으로 감지하여 다국어 포맷을 적용합니다.
+     * 특정 채팅방에 입장하여 대화 기록 및 상대방 정보를 조회합니다.
      *
-     * @param roomId 입장할 채팅방 ID
-     * @param userId 현재 접속하는 사용자의 ID
-     * @param lang   URL로 전달된 사용자 언어 설정 (기본값: "ko")
-     * @param model  뷰에 전달할 데이터를 담는 모델 객체
-     * @return 채팅방 HTML 뷰 이름
+     * @param roomId 입장할 채팅방 식별자
+     * @param userId 현재 접속하는 사용자 식별자
+     * @param lang   클라이언트 언어 설정
+     * @param model  뷰에 전달할 데이터를 담는 Model 객체
+     * @return 채팅방 뷰 파일명
      */
     @GetMapping("/chat/room/{roomId}")
     public String enterRoom(@PathVariable Long roomId,
                             @RequestParam("userId") Long userId,
-                            @RequestParam(value = "lang", defaultValue = "ko") String lang, // 🌟 파라미터 추가!
+                            @RequestParam(value = "lang", defaultValue = "ko") String lang,
                             Model model) {
 
         ChatRoomEntity room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
 
-        // 🌟 핵심 수정: 느린 쿠키(LocaleContextHolder)를 버리고 확실하게 전달받은 lang 파라미터를 바로 사용!
         String currentLang = lang;
 
         UserEntity opponent = room.getSeeker().getUserId().equals(userId) ? room.getRecruiter() : room.getSeeker();
@@ -129,12 +126,12 @@ public class ChatController {
     }
 
     /**
-     * 로그인된 사용자의 소속된 모든 채팅방 목록 화면을 반환합니다.
+     * 현재 로그인된 사용자가 참여 중인 전체 채팅방 목록을 조회합니다.
      *
-     * @param userId 사용자 ID (명시되지 않을 경우 Security Context에서 추출)
-     * @param authUser 현재 로그인된 사용자 정보
-     * @param model 뷰에 전달할 모델 객체
-     * @return 채팅 목록 HTML 뷰 이름
+     * @param userId   조회할 사용자 식별자
+     * @param authUser 현재 인증된 사용자 정보
+     * @param model    뷰에 전달할 데이터를 담는 Model 객체
+     * @return 채팅 목록 뷰 파일명
      */
     @GetMapping("/chat/list")
     public String chatList(
@@ -163,8 +160,8 @@ public class ChatController {
     /**
      * 채팅창 내에서 전송된 이미지 및 문서 파일을 서버 디렉토리에 저장합니다.
      *
-     * @param file 업로드된 MultipartFile 객체
-     * @return 성공 시 저장된 파일의 URL, 실패 시 에러 메시지를 포함한 ResponseEntity
+     * @param file 업로드할 MultipartFile 객체
+     * @return 성공 시 저장된 파일의 접근 URL을 포함한 ResponseEntity
      */
     @PostMapping("/chat/upload")
     @ResponseBody
@@ -209,10 +206,10 @@ public class ChatController {
     }
 
     /**
-     * 웹소켓을 통해 클라이언트로부터 수신된 채팅 메시지를 저장하고,
-     * 해당 방에 참여 중인 클라이언트 및 로비(목록 갱신용) 구독자들에게 브로드캐스팅합니다.
+     * 클라이언트로부터 수신된 웹소켓 채팅 메시지를 DB에 저장하고,
+     * 동일한 방에 참여 중인 클라이언트 및 목록 갱신을 위해 브로드캐스팅합니다.
      *
-     * @param messageDTO 클라이언트가 전송한 메시지 데이터 객체
+     * @param messageDTO 클라이언트가 전송한 메시지 데이터 DTO
      */
     @MessageMapping("/chat/message")
     public void sendMessage(ChatMessageDTO messageDTO) {
@@ -227,15 +224,15 @@ public class ChatController {
             messagingTemplate.convertAndSend("/sub/chat/user/" + seekerId, savedMessage);
             messagingTemplate.convertAndSend("/sub/chat/user/" + recruiterId, savedMessage);
         } catch (Exception e) {
-            System.out.println("🚨 목록 실시간 갱신용 알림 발송 실패: " + e.getMessage());
+            System.out.println("[ChatSystem] 사용자 채팅 목록 실시간 갱신 브로드캐스팅 실패: " + e.getMessage());
         }
     }
 
     /**
-     * 상대방이 채팅방에 들어왔을 때 전송되는 '읽음' 신호를 처리하고
-     * 같은 방의 클라이언트들에게 브로드캐스팅하여 UI(안 읽음 뱃지 등)를 갱신합니다.
+     * 클라이언트의 메시지 '읽음' 처리 신호를 수신하여
+     * 해당 방의 읽지 않음(Unread) 배지 상태를 갱신합니다.
      *
-     * @param readSignal 클라이언트가 전송한 읽음 신호 DTO
+     * @param readSignal 클라이언트가 전송한 읽음 신호 데이터 DTO
      */
     @MessageMapping("/chat/read")
     public void processRead(ChatMessageDTO readSignal) {
@@ -244,11 +241,10 @@ public class ChatController {
     }
 
     /**
-     * 현재 로그인된 사용자의 읽지 않은 총 메시지 개수를 반환하는 API입니다.
-     * 메인 페이지나 네비게이션 바 등의 전역 알림 표시에 사용됩니다.
+     * 현재 접속된 사용자의 전체 읽지 않은 메시지 개수를 반환합니다.
      *
-     * @param authUser 현재 로그인된 사용자 정보
-     * @return 읽지 않은 메시지 개수 정수값
+     * @param authUser 현재 인증된 사용자 정보
+     * @return 읽지 않은 메시지 개수를 포함한 ResponseEntity
      */
     @GetMapping("/api/chat/unread-count")
     @ResponseBody
@@ -268,10 +264,12 @@ public class ChatController {
     }
 
     /**
-     * [추가됨] 채팅방 나가기 (삭제) API
-     * 프론트엔드에서 넘어오는 /chat/room/exit/{roomId} POST 요청을 처리합니다.
-     * * @param roomId 삭제할 채팅방 ID
-     * @param userId 요청한 사용자 ID
+     * 특정 채팅방을 삭제(나가기) 처리합니다.
+     * ON DELETE CASCADE 설정에 의해 연관된 채팅 메시지도 함께 삭제됩니다.
+     *
+     * @param roomId 삭제할 채팅방 식별자
+     * @param userId 요청을 수행하는 사용자 식별자
+     * @return 처리 성공 여부를 포함한 ResponseEntity
      */
     @PostMapping("/chat/room/exit/{roomId}")
     @ResponseBody
@@ -279,10 +277,7 @@ public class ChatController {
             @PathVariable Long roomId,
             @RequestParam Long userId) {
         try {
-            // 채팅방 엔티티 삭제
-            // (DB 설계 시 ON DELETE CASCADE가 적용되어 있어, 방을 지우면 소속된 메시지도 자동 삭제됩니다.)
             chatRoomRepository.deleteById(roomId);
-
             return ResponseEntity.ok("채팅방이 성공적으로 삭제되었습니다.");
         } catch (Exception e) {
             e.printStackTrace();
