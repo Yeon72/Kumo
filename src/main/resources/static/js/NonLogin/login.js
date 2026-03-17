@@ -1,27 +1,32 @@
 document.addEventListener("DOMContentLoaded", function () {
-    
-    // 🌟 KUMO 전용 작은 알림창 설정
-const KumoSwal = Swal.mixin({
-    width: '340px',
-    padding: '1.2em',
-    customClass: {
-        title: 'kumo-swal-title',
-        popup: 'kumo-swal-popup'
-    },
-    confirmButtonColor: '#7db4e6',
-    cancelButtonColor: '#6c757d',
-    // 다크모드 대응
-    background: document.body.classList.contains('dark-mode') ? '#2a2b2e' : '#fff',
-    color: document.body.classList.contains('dark-mode') ? '#e3e5e8' : '#333'
-});
 
-// 사용 예시
-function alertSns() {
-    KumoSwal.fire({
-        icon: 'info',
-        title: loginMessages.sns_alert
+    /**
+     * 애플리케이션 전용으로 커스터마이징된 SweetAlert2 믹스인(Mixin) 객체입니다.
+     * 다크모드 상태에 따라 배경 및 텍스트 색상이 동적으로 적용됩니다.
+     * @type {Object}
+     */
+    const KumoSwal = Swal.mixin({
+        width: '340px',
+        padding: '1.2em',
+        customClass: {
+            title: 'kumo-swal-title',
+            popup: 'kumo-swal-popup'
+        },
+        confirmButtonColor: '#7db4e6',
+        cancelButtonColor: '#6c757d',
+        background: document.body.classList.contains('dark-mode') ? '#2a2b2e' : '#fff',
+        color: document.body.classList.contains('dark-mode') ? '#e3e5e8' : '#333'
     });
-}
+
+    /**
+     * SNS 로그인 기능 접근 시 서비스 준비 중 메시지를 표시하는 로컬 헬퍼 함수입니다.
+     */
+    function alertSns() {
+        KumoSwal.fire({
+            icon: 'info',
+            title: loginMessages.sns_alert
+        });
+    }
 
     const savedEmail = localStorage.getItem("savedEmail");
     const emailInput = document.querySelector('input[name="email"]');
@@ -44,24 +49,27 @@ function alertSns() {
     });
 
     if (loginForm) {
+        /**
+         * 로그인 폼 제출 시 이벤트를 가로채어 reCAPTCHA 인증 상태를 검증하고,
+         * 비동기(AJAX) 로그인 요청을 수행합니다.
+         * 응답에 따라 아이디 저장 처리 및 에러 팝업/캡차 활성화를 제어합니다.
+         */
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // 🌟 [보안 로직 추가] 캡차 영역이 보이고 있다면, 인증 여부 확인 필수!
             const captchaArea = document.getElementById('captchaArea');
             if (captchaArea && captchaArea.style.display !== 'none') {
                 const recaptchaResponse = grecaptcha.getResponse();
                 if (recaptchaResponse.length === 0) {
-                    const errorMsg = (typeof loginMessages !== 'undefined' && loginMessages.captcha_error) 
-                        ? loginMessages.captcha_error 
+                    const errorMsg = (typeof loginMessages !== 'undefined' && loginMessages.captcha_error)
+                        ? loginMessages.captcha_error
                         : "로봇이 아니라는 것을 증명하기 위해 리캡차를 체크해 주세요.";
                     alert(errorMsg);
-                    return false; // 제출 중단
+                    return false;
                 }
             }
 
             const formData = new URLSearchParams(new FormData(loginForm));
-            // 리캡차 토큰도 함께 전송 (필요 시)
             const recaptchaToken = grecaptcha.getResponse();
             if (recaptchaToken) {
                 formData.append('g-recaptcha-response', recaptchaToken);
@@ -112,21 +120,21 @@ function alertSns() {
         });
     }
 
-    // 입력 시 에러 숨기기
     inputs.forEach(input => {
         input.addEventListener('input', function() {
-            // SweetAlert는 자동으로 닫히므로 별도 처리 불필요
         });
     });
 
-    // URL 파라미터 정리
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('error')) {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 });
 
-// 구글/라인 SNS 버튼 클릭
+/**
+ * 소셜(구글, 라인) 로그인 버튼 클릭 시 호출되는 전역 함수입니다.
+ * 현재 서비스 준비 중임을 알리는 팝업을 렌더링합니다.
+ */
 function alertSns() {
     const isDark = document.body.classList.contains('dark-mode');
     Swal.fire({
@@ -135,8 +143,8 @@ function alertSns() {
         confirmButtonColor: '#7db4e6',
         background: isDark ? '#2a2b2e' : '#fff',
         color: isDark ? '#e3e5e8' : '#333',
-        width: '360px',        // ← 크기 축소
-        padding: '1.5em',      // ← 내부 여백 축소
+        width: '360px',
+        padding: '1.5em',
         toast: false
     });
 }

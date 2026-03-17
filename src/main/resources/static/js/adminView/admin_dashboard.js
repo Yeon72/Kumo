@@ -1,6 +1,11 @@
-// 🌟 HTML에서 넘겨준 전역 변수를 받아서 사용합니다.
+/** * 전역 다국어 설정 변수 (HTML 템플릿에서 주입, 기본값: 'ko')
+ * @type {string}
+ */
 const currentLang = window.CURRENT_LANG || 'ko';
 
+/** * 차트 및 UI 렌더링에 사용되는 다국어 텍스트 객체
+ * @type {Object}
+ */
 const TEXT = {
     barLabel: currentLang === 'ja' ? '登録数' : '등록 수',
     lineLabel: currentLang === 'ja' ? '会員数' : '회원 수',
@@ -10,12 +15,21 @@ const TEXT = {
 let barChart, doughnutChart, lineChart;
 let dashboardData = {};
 
+/**
+ * 다국어(언어) 설정을 변경하고 페이지를 새로고침합니다.
+ *
+ * @param {string} lang 변경할 언어 코드 ('ko', 'ja')
+ */
 function changeLanguage(lang) {
     const url = new URL(window.location.href);
     url.searchParams.set('lang', lang);
     window.location.href = url.toString();
 }
 
+/**
+ * 대시보드 내의 막대(Bar), 도넛(Doughnut), 꺾은선(Line) 차트 인스턴스를 초기화합니다.
+ * Chart.js 라이브러리를 사용합니다.
+ */
 function initCharts() {
     const ctxBar = document.getElementById('barChart').getContext('2d');
     barChart = new Chart(ctxBar, {
@@ -93,6 +107,10 @@ function initCharts() {
     });
 }
 
+/**
+ * 서버로부터 관리자 대시보드 통계 데이터를 비동기 요청하여 가져옵니다.
+ * 데이터를 성공적으로 수신하면 UI 갱신 함수를 호출합니다.
+ */
 async function fetchDashboardData() {
     try {
         const response = await fetch('/admin/data');
@@ -106,6 +124,11 @@ async function fetchDashboardData() {
     }
 }
 
+/**
+ * 응답받은 통계 데이터를 기반으로 화면 내 텍스트 수치 및 차트 데이터를 업데이트합니다.
+ *
+ * @param {Object} data 대시보드 통계 데이터 객체
+ */
 function updateUI(data) {
     document.getElementById('totalUsers').innerText = data.totalUsers.toLocaleString();
     document.getElementById('newUsers').innerText = data.newUsers.toLocaleString();
@@ -128,6 +151,11 @@ function updateUI(data) {
     lineChart.update();
 }
 
+/**
+ * 도넛 차트용 커스텀 범례(Legend) UI를 동적으로 생성하여 렌더링합니다.
+ *
+ * @param {Object} chart 범례를 생성할 대상 Chart.js 인스턴스
+ */
 function generateCustomLegend(chart) {
     const legendContainer = document.getElementById('customLegend');
     legendContainer.innerHTML = '';
@@ -167,7 +195,12 @@ function generateCustomLegend(chart) {
     legendContainer.appendChild(listUl);
 }
 
-// 🌟 HTML에서 넘겨준 btnElement 파라미터를 사용하도록 수정
+/**
+ * 지역 토글 버튼 클릭 시 활성화 상태를 변경하고 해당 지역의 차트 데이터를 갱신합니다.
+ *
+ * @param {string} region 선택된 지역 코드 ('osaka' 또는 'tokyo')
+ * @param {HTMLElement} btnElement 클릭된 버튼 DOM 요소
+ */
 function toggleRegion(region, btnElement) {
     document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
     if (btnElement) {
@@ -176,6 +209,11 @@ function toggleRegion(region, btnElement) {
     updateRegionChart(region);
 }
 
+/**
+ * 선택된 지역에 따라 도넛 차트(구/시별 통계) 데이터를 갱신합니다.
+ *
+ * @param {string} region 지역 코드 ('osaka' 또는 'tokyo')
+ */
 function updateRegionChart(region) {
     let stats = {};
     if (region === 'osaka') {

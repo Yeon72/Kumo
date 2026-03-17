@@ -1,30 +1,33 @@
-/* --- src/main/resources/static/js/chat/floatingChat.js --- */
-
-// 🌟 [1] 모든 JS 파일에서 공통으로 쓸 언어 감지 전역 함수
+/**
+ * 현재 애플리케이션의 다국어(언어) 설정 값을 감지하여 반환하는 전역 함수입니다.
+ * URL 파라미터, HTML lang 속성, 쿠키 값을 순차적으로 확인하여 언어 코드를 결정합니다.
+ *
+ * @returns {string} 감지된 언어 코드 (예: 'ja', 'kr')
+ */
 window.getKumoLang = function() {
-    // 1순위: URL 파라미터 (?lang=ja)
     const urlLang = new URLSearchParams(window.location.search).get('lang');
     if (urlLang) return urlLang;
 
-    // 2순위: HTML 태그의 lang 속성 (<html lang="ja">)
     const htmlLang = document.documentElement.lang;
     if (htmlLang === 'ja') return 'ja';
 
-    // 3순위: 브라우저 쿠키 (이름이 'lang'인 쿠키)
     const cookieLang = document.cookie.split('; ').find(row => row.startsWith('lang='))?.split('=')[1];
     if (cookieLang) return cookieLang;
 
-    // 4순위: 기본값
     return 'kr';
 };
 
-// 1. 최소화 토글
+/**
+ * 플로팅 채팅창의 최소화(Minimize) 상태를 토글합니다.
+ */
 function toggleMinimizeChat() {
     const container = document.getElementById('floatingChatContainer');
     if (container) container.classList.toggle('minimized');
 }
 
-// 2. 창 닫기
+/**
+ * 플로팅 채팅창을 완전히 닫고, 내부 iframe의 소스(src)를 초기화하여 메모리를 확보합니다.
+ */
 function closeFloatingChat() {
     const container = document.getElementById('floatingChatContainer');
     const chatFrame = document.getElementById('floatingChatFrame');
@@ -33,14 +36,16 @@ function closeFloatingChat() {
     if (chatFrame) chatFrame.src = '';
 }
 
-// 3. 전역 채팅 목록 열기 (수정됨)
+/**
+ * 전역 채팅 목록 화면을 플로팅 창의 iframe 내부에 로드하고 화면에 표시합니다.
+ * 현재 클라이언트의 다국어 설정 코드를 URL 파라미터로 함께 전달합니다.
+ */
 function openGlobalChatList() {
     const chatContainer = document.getElementById('floatingChatContainer');
     const chatFrame = document.getElementById('floatingChatFrame');
 
     if (!chatContainer || !chatFrame) return;
 
-    // 🌟 수정된 부분: 위에서 정의한 전역 함수(getKumoLang) 호출
     const currentLang = window.getKumoLang();
 
     chatFrame.src = `/chat/list?lang=${currentLang}`;
@@ -48,7 +53,11 @@ function openGlobalChatList() {
     chatContainer.classList.remove('minimized');
 }
 
-// 4. 마우스 드래그 기능 세팅
+/**
+ * DOMContentLoaded 이벤트 리스너
+ * 플로팅 채팅창 헤더를 마우스로 클릭하여 화면 내에서 자유롭게 드래그 앤 드롭으로
+ * 이동시킬 수 있도록 좌표 계산 및 마우스 이벤트를 바인딩합니다.
+ */
 document.addEventListener('DOMContentLoaded', () => {
     const chatContainer = document.getElementById('floatingChatContainer');
     const chatHeader = document.getElementById('floatingChatHeader');

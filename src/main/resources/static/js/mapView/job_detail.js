@@ -1,6 +1,5 @@
 /**
- * job_detail.js
- * * 공고 상세 페이지에서 사용되는 프론트엔드 로직을 담당합니다.
+ * 공고 상세 페이지에서 사용되는 프론트엔드 비즈니스 로직을 담당합니다.
  * HTML에서 선언된 'isUserLoggedIn'과 'MESSAGES' 객체를 전역으로 활용하며,
  * 다국어(언어) 감지 시 외부 함수의 로드 실패를 대비한 안전장치(Fallback)가 적용되어 있습니다.
  */
@@ -83,7 +82,7 @@ function submitReport() {
 /**
  * 구직자가 공고에 구인 신청(지원)을 수행합니다.
  * 언어 설정에 따른 다국어 알림을 지원하며, 중복 지원 및 서버 에러를 처리합니다.
- * @param {HTMLElement} btnElement 클릭된 지원하기 버튼 요소
+ * * @param {HTMLElement} btnElement 클릭된 지원하기 버튼 요소
  */
 function applyForJob(btnElement) {
     if (!isUserLoggedIn) {
@@ -99,7 +98,6 @@ function applyForJob(btnElement) {
         return;
     }
 
-    // 전역 언어 감지
     const lang = (typeof window.getKumoLang === 'function') ? window.getKumoLang() : 'ko';
     const confirmMsg = lang === 'ja' ? "この求人に応募しますか？" : "이 공고에 지원하시겠습니까?";
 
@@ -120,10 +118,9 @@ function applyForJob(btnElement) {
         body: JSON.stringify(payload)
     })
         .then(async response => {
-            // 서버에서 보낸 메시지는 읽기만 하고 알림창에는 직접 번역된 텍스트를 넣습니다.
             await response.text();
 
-            if (response.ok) { // 200 성공
+            if (response.ok) {
                 alert(lang === 'ja' ? '求人の応募が完了しました。' : '구인 신청이 완료되었습니다.');
 
                 btnElement.disabled = true;
@@ -132,11 +129,11 @@ function applyForJob(btnElement) {
                 btnElement.style.borderColor = '#6c757d';
                 btnElement.style.cursor = 'not-allowed';
 
-            } else if (response.status === 400) { // 400 중복 지원 (MapController에서 IllegalStateException 발생 시)
+            } else if (response.status === 400) {
                 alert(lang === 'ja' ? 'すでに応募した求人です。' : '이미 지원하신 공고입니다.');
-            } else if (response.status === 401) { // 401 비로그인
+            } else if (response.status === 401) {
                 if (confirm(MESSAGES.loginRequired)) location.href = '/login';
-            } else { // 기타 서버 에러
+            } else {
                 alert(lang === 'ja' ? '処理中にエラーが発生しました。' : '처리 중 서버 오류가 발생했습니다.');
             }
         })
@@ -221,7 +218,6 @@ function deleteJob(btnElement) {
         return;
     }
 
-    // 전역 언어 감지 함수가 로드되지 않았을 경우를 대비한 안전장치
     const lang = (typeof window.getKumoLang === 'function') ? window.getKumoLang() : 'kr';
     const confirmMsg = lang === 'ja' ? "本当にこの求人を削除しますか？\n(削除すると元に戻せません)" : "정말로 이 공고를 삭제하시겠습니까?\n(삭제 후 복구할 수 없습니다.)";
 
@@ -229,15 +225,8 @@ function deleteJob(btnElement) {
         return;
     }
 
-    // 삭제 전 CSRF 토큰 확인 로직 추가 (필요 시 주석 해제하여 사용)
-    // const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-    // const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
-    // const headers = {};
-    // if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
-
     fetch(`/map/api/jobs?id=${postId}&source=${source}`, {
         method: 'DELETE',
-        // headers: headers
     })
         .then(async response => {
             const message = await response.text();

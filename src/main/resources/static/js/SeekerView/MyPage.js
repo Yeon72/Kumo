@@ -1,3 +1,9 @@
+/**
+ * DOMContentLoaded 이벤트 리스너
+ * 사용자 마이페이지 내 프로필 이미지 변경 모달의 상태(열기/닫기)를 제어하고,
+ * 로컬 파일 선택 시의 실시간 미리보기 기능과 서버 업로드(비동기) 통신 로직을 바인딩합니다.
+ * 또한, SNS 연동 토글 버튼 클릭 시 알림 팝업 이벤트를 설정합니다.
+ */
 document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById('profileModal');
     const btnOpenModal = document.getElementById('btnOpenModal');
@@ -10,7 +16,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const currentProfileImg = document.getElementById('currentProfileImg');
     const fileNameSpan = document.getElementById('fileName');
 
-    // [1] 프로필 모달 열기 & 초기화 (Seeker 로직 유지: 현재 이미지 미리보기에 반영)
     if (btnOpenModal) {
         btnOpenModal.addEventListener('click', function () {
             modal.style.display = "flex";
@@ -36,12 +41,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnCloseX) btnCloseX.addEventListener('click', closeModal);
     if (btnCancel) btnCancel.addEventListener('click', closeModal);
 
-    // 바깥 클릭 시 닫기
     window.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
 
-    // [2] 파일 선택 시 (미리보기 & 파일명 표시)
     if (fileInput) {
         fileInput.addEventListener('change', function (e) {
             const file = e.target.files[0];
@@ -59,7 +62,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // [3] 서버 전송 (저장 버튼 - Recruiter의 Swal UI 적용)
     if (btnSave) {
         btnSave.addEventListener('click', function () {
             const file = fileInput.files[0];
@@ -78,32 +80,31 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (response.ok) return response.text();
-                throw new Error('FAILED');
-            })
-            .then(newImageUrl => {
-                Swal.fire({
-                    icon: 'success',
-                    title: typeof msg !== 'undefined' ? msg.uploadSuccess : '프로필 사진이 변경되었습니다.'
-                }).then(() => {
-                    if (newImageUrl && currentProfileImg) {
-                        currentProfileImg.src = newImageUrl;
-                    }
-                    closeModal();
+                .then(response => {
+                    if (response.ok) return response.text();
+                    throw new Error('FAILED');
+                })
+                .then(newImageUrl => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: typeof msg !== 'undefined' ? msg.uploadSuccess : '프로필 사진이 변경되었습니다.'
+                    }).then(() => {
+                        if (newImageUrl && currentProfileImg) {
+                            currentProfileImg.src = newImageUrl;
+                        }
+                        closeModal();
+                    });
+                })
+                .catch(err => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: typeof msg !== 'undefined' ? msg.error : '에러 발생',
+                        text: err.message
+                    });
                 });
-            })
-            .catch(err => {
-                Swal.fire({
-                    icon: 'error',
-                    title: typeof msg !== 'undefined' ? msg.error : '에러 발생',
-                    text: err.message
-                });
-            });
         });
     }
 
-    // [4] 소셜 연동 알림 (LINE, Google)
     document.querySelectorAll('.sns-toggle').forEach(toggle => {
         toggle.addEventListener('click', (e) => {
             e.preventDefault();
@@ -121,19 +122,21 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 /**
- * 회원 탈퇴 관련 함수들 (글로벌 스코프)
+ * 회원 탈퇴 진행을 위한 확인 모달 창을 엽니다.
+ * 배경 스크롤을 방지하기 위해 body의 overflow 속성을 조작합니다.
  */
-
-// 1. 모달 열기
 function openDeleteModal() {
     const modal = document.getElementById('deleteAccountModal');
     if (modal) {
         modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // 스크롤 방지
+        document.body.style.overflow = 'hidden';
     }
 }
 
-// 2. 모달 닫기
+/**
+ * 회원 탈퇴 확인 모달 창을 닫고, 내부에 입력된 비밀번호 데이터 및
+ * 에러 메시지 상태, 버튼 활성화 상태를 초기화합니다.
+ */
 function closeDeleteModal() {
     const modal = document.getElementById('deleteAccountModal');
     if (modal) {
@@ -141,9 +144,8 @@ function closeDeleteModal() {
         setTimeout(() => {
             modal.style.display = 'none';
             modal.classList.remove('closing');
-            document.body.style.overflow = ''; // 스크롤 복구
-            
-            // 입력 필드 초기화
+            document.body.style.overflow = '';
+
             document.getElementById('deleteConfirmPw').value = '';
             document.getElementById('deleteConfirmPwCheck').value = '';
             document.getElementById('deleteMismatchMsg').style.display = 'none';
@@ -153,14 +155,16 @@ function closeDeleteModal() {
     }
 }
 
-// 3. 입력 실시간 검증
+/**
+ * 탈퇴 모달 내의 비밀번호 및 비밀번호 확인 입력 필드 값을 실시간으로 비교하여,
+ * 일치 여부에 따라 경고 메시지 노출 및 탈퇴 실행 버튼의 활성화 상태를 제어합니다.
+ */
 function checkDeleteInput() {
     const pw = document.getElementById('deleteConfirmPw').value;
     const pwCheck = document.getElementById('deleteConfirmPwCheck').value;
     const mismatchMsg = document.getElementById('deleteMismatchMsg');
     const btn = document.getElementById('btnConfirmDelete');
 
-    // 둘 다 입력되었을 때만 검사
     if (pw && pwCheck) {
         if (pw === pwCheck) {
             mismatchMsg.style.display = 'none';
@@ -175,7 +179,11 @@ function checkDeleteInput() {
     }
 }
 
-// 4. 탈퇴 실행
+/**
+ * 사용자에게 탈퇴에 대한 최종 확인(SweetAlert2)을 받은 후,
+ * 입력된 비밀번호와 함께 서버에 계정 완전 삭제 비동기 요청을 전송합니다.
+ * 성공 시 로그아웃 엔드포인트로 리다이렉트합니다.
+ */
 function executeDelete() {
     const password = document.getElementById('deleteConfirmPw').value;
     const errorMsg = document.getElementById('deleteErrorMsg');
@@ -201,34 +209,33 @@ function executeDelete() {
                 },
                 body: JSON.stringify({ password: password })
             })
-            .then(async response => {
-                if (response.ok) {
+                .then(async response => {
+                    if (response.ok) {
+                        Swal.fire({
+                            title: typeof delMsg !== 'undefined' ? delMsg.successTitle : '탈퇴 완료',
+                            text: typeof delMsg !== 'undefined' ? delMsg.successText : '그동안 KUMO를 이용해 주셔서 감사합니다.',
+                            icon: 'success',
+                            background: isDark ? '#1e1e1e' : '#fff',
+                            color: isDark ? '#fff' : '#333'
+                        }).then(() => {
+                            window.location.href = '/logout';
+                        });
+                    } else {
+                        const errorText = await response.text();
+                        errorMsg.innerText = errorText || (typeof delMsg !== 'undefined' ? delMsg.errorText : '비밀번호가 일치하지 않거나 오류가 발생했습니다.');
+                        errorMsg.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     Swal.fire({
-                        title: typeof delMsg !== 'undefined' ? delMsg.successTitle : '탈퇴 완료',
-                        text: typeof delMsg !== 'undefined' ? delMsg.successText : '그동안 KUMO를 이용해 주셔서 감사합니다.',
-                        icon: 'success',
+                        title: typeof delMsg !== 'undefined' ? delMsg.errorTitle : '오류',
+                        text: typeof delMsg !== 'undefined' ? delMsg.errorText : '서버와의 통신 중 오류가 발생했습니다.',
+                        icon: 'error',
                         background: isDark ? '#1e1e1e' : '#fff',
                         color: isDark ? '#fff' : '#333'
-                    }).then(() => {
-                        window.location.href = '/logout'; // 홈으로 이동
                     });
-                } else {
-                    const errorText = await response.text();
-                    // 비밀번호 틀림 등의 에러 처리
-                    errorMsg.innerText = errorText || (typeof delMsg !== 'undefined' ? delMsg.errorText : '비밀번호가 일치하지 않거나 오류가 발생했습니다.');
-                    errorMsg.style.display = 'block';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    title: typeof delMsg !== 'undefined' ? delMsg.errorTitle : '오류',
-                    text: typeof delMsg !== 'undefined' ? delMsg.errorText : '서버와의 통신 중 오류가 발생했습니다.',
-                    icon: 'error',
-                    background: isDark ? '#1e1e1e' : '#fff',
-                    color: isDark ? '#fff' : '#333'
                 });
-            });
         }
     });
 }

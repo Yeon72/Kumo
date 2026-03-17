@@ -1,15 +1,15 @@
 document.addEventListener("DOMContentLoaded", function() {
 
-    /* ==============================
-       1. 다크모드 및 기본 설정
-       ============================== */
+    /**
+     * 사용자 테마(다크모드/라이트모드) 초기화 및 토글 이벤트를 설정합니다.
+     * 로컬 스토리지(localStorage) 값을 참조하여 초기 상태를 결정합니다.
+     */
     const body = document.body;
     const html = document.documentElement;
     const theme = localStorage.getItem('theme');
     const toggleBtn = document.getElementById('darkModeBtn');
     const icon = document.getElementById('darkModeIcon');
 
-    // 로컬 스토리지 테마 적용
     if (theme === 'dark') {
         body.classList.add('dark-mode');
         html.classList.add('dark-mode');
@@ -37,9 +37,10 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    /* ==============================
-       2. 드롭다운 통합 관리
-       ============================== */
+    /**
+     * 헤더 영역의 드롭다운 메뉴(언어 변경, 프로필, 알림) 동작을 제어합니다.
+     * 클릭 시 활성화 상태를 토글하며, 알림 메뉴 오픈 시 데이터를 비동기로 로드합니다.
+     */
     const dropdownConfigs = [
         { btnId: 'langBtn', menuId: 'langMenu' },
         { btnId: 'profileBtn', menuId: 'profileMenu' },
@@ -55,68 +56,61 @@ document.addEventListener("DOMContentLoaded", function() {
                 e.stopPropagation();
                 const isAlreadyOpen = menu.classList.contains('show');
 
-                // 모든 드롭다운 닫기
                 document.querySelectorAll('.notify-dropdown, .lang-dropdown, .profile-dropdown')
-                        .forEach(m => m.classList.remove('show'));
+                    .forEach(m => m.classList.remove('show'));
 
-                // 방금 클릭한 게 닫혀있었다면 열기
                 if (!isAlreadyOpen) {
                     menu.classList.add('show');
                     if (config.btnId === 'notifyBtn') {
                         const nList = document.getElementById('notifyList');
                         const exBtn = document.getElementById('expandBtn');
-                        if(nList) nList.classList.remove('expanded'); 
-                        
+                        if(nList) nList.classList.remove('expanded');
+
                         const span = exBtn ? exBtn.querySelector('span') : null;
                         const icon = exBtn ? exBtn.querySelector('i') : null;
                         if(span && exBtn) span.innerText = exBtn.getAttribute('data-more') || "더 보기";
                         if(icon) icon.className = 'fa-solid fa-chevron-down';
-                        
-                        loadNotifications(); // 알림창 열 때 데이터 로드
+
+                        loadNotifications();
                     }
                 }
             });
         }
     });
 
-    // 화면 클릭 시 닫기
     document.addEventListener('click', () => {
         document.querySelectorAll('.notify-dropdown, .lang-dropdown, .profile-dropdown')
-                .forEach(m => m.classList.remove('show'));
+            .forEach(m => m.classList.remove('show'));
     });
 
-    // 메뉴 내부 클릭 시 닫힘 방지
     document.querySelectorAll('.notify-dropdown, .lang-dropdown, .profile-dropdown')
-            .forEach(menu => {
-                menu.addEventListener('click', (e) => e.stopPropagation());
-            });
+        .forEach(menu => {
+            menu.addEventListener('click', (e) => e.stopPropagation());
+        });
 
 
-    /* ==============================
-       3. 알림 시스템 로직
-       ============================== */
+    /**
+     * 알림 시스템의 DOM 엘리먼트 및 초기 상태를 설정합니다.
+     */
     const notifyList = document.getElementById('notifyList');
     const notifyBadge = document.querySelector('.notify-badge');
     const expandBtn = document.getElementById('expandBtn');
     const markAllReadBtn = document.getElementById('markAllReadBtn');
     const deleteAllBtn = document.getElementById('deleteAllBtn');
 
-    // "알림 없음" 요소를 미리 복제해둠
     let emptyTemplate = null;
     const originalEmpty = document.getElementById('notifyEmpty');
     if (originalEmpty) {
         emptyTemplate = originalEmpty.cloneNode(true);
     }
 
-    // 초기 뱃지 로드
     updateBadgeCount();
 
-    // [3-1] 더 보기 / 접기 버튼
     if (expandBtn) {
         expandBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             if (!notifyList) return;
-            
+
             const isExpanded = notifyList.classList.toggle('expanded');
             const span = this.querySelector('span');
             const icon = this.querySelector('i');
@@ -133,7 +127,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // [3-2] 모두 읽음
     if (markAllReadBtn) {
         markAllReadBtn.addEventListener('click', () => {
             fetch('/api/notifications/read-all', { method: 'PATCH' })
@@ -146,7 +139,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // [3-3] 전체 삭제
     if (deleteAllBtn) {
         deleteAllBtn.addEventListener('click', () => {
             const confirmMsg = deleteAllBtn.getAttribute('data-confirm') || "모든 알림을 삭제하시겠습니까?";
@@ -161,7 +153,9 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // [3-4] 알림 로드 및 렌더링
+    /**
+     * 서버로부터 수신된 알림 목록을 비동기 요청하여 렌더링합니다.
+     */
     function loadNotifications() {
         console.log("알림 로드 시도...");
         fetch('/api/notifications')
@@ -169,12 +163,12 @@ document.addEventListener("DOMContentLoaded", function() {
             .then(data => {
                 console.log("받은 알림 데이터:", data);
                 if (!notifyList) return;
-                
-                notifyList.innerHTML = ''; 
+
+                notifyList.innerHTML = '';
 
                 if (!data || !Array.isArray(data) || data.length === 0) {
                     renderEmptyState();
-                    if(expandBtn) expandBtn.style.display = 'none'; 
+                    if(expandBtn) expandBtn.style.display = 'none';
                 } else {
                     data.forEach(n => {
                         notifyList.insertAdjacentHTML('beforeend', createNotificationHTML(n));
@@ -188,15 +182,24 @@ document.addEventListener("DOMContentLoaded", function() {
             .catch(err => console.error("알림 로드 실패:", err));
     }
 
+    /**
+     * 알림 내역이 없을 경우 출력할 빈 상태(Empty State) UI를 렌더링합니다.
+     */
     function renderEmptyState() {
         notifyList.innerHTML = '';
         if (emptyTemplate) {
             const emptyClone = emptyTemplate.cloneNode(true);
-            emptyClone.style.display = 'flex'; 
+            emptyClone.style.display = 'flex';
             notifyList.appendChild(emptyClone);
         }
     }
 
+    /**
+     * 알림 데이터 객체를 기반으로 HTML 마크업 문자열을 생성합니다.
+     *
+     * @param {Object} notif 렌더링할 알림 데이터 객체
+     * @returns {string} 생성된 알림 아이템 HTML 문자열
+     */
     function createNotificationHTML(notif) {
         const isRead = notif.read || notif.isRead;
         const readClass = isRead ? '' : 'unread';
@@ -214,6 +217,9 @@ document.addEventListener("DOMContentLoaded", function() {
         `;
     }
 
+    /**
+     * 미열람 알림 개수를 서버로부터 조회하여 알림 뱃지 UI를 갱신합니다.
+     */
     function updateBadgeCount() {
         fetch('/api/notifications/unread-count')
             .then(res => res.json())
@@ -231,15 +237,24 @@ document.addEventListener("DOMContentLoaded", function() {
     window.refreshBadge = updateBadgeCount;
 });
 
-/* ==============================
-   4. 전역 유틸리티 함수
-   ============================== */
+/**
+ * 다국어 설정을 변경하고 페이지를 새로고침합니다.
+ *
+ * @param {string} lang 변경할 언어 코드 ('ko', 'ja')
+ */
 window.changeLang = function(lang) {
     const url = new URL(window.location.href);
     url.searchParams.set('lang', lang);
     window.location.href = url.toString();
 };
 
+/**
+ * 단일 알림 항목을 삭제하는 비동기 요청을 수행합니다.
+ *
+ * @param {Event} event 클릭 이벤트 객체
+ * @param {string|number} id 삭제할 알림의 고유 식별자
+ * @param {HTMLElement} btn 클릭된 삭제 버튼 요소
+ */
 window.deleteNotification = function(event, id, btn) {
     event.stopPropagation();
     fetch(`/api/notifications/${id}`, { method: 'DELETE' })
@@ -248,13 +263,20 @@ window.deleteNotification = function(event, id, btn) {
                 const item = btn.closest('.notify-item');
                 item.remove();
                 if (document.getElementById('notifyList').querySelectorAll('.notify-item').length === 0) {
-                     window.refreshBadge();
+                    window.refreshBadge();
                 }
                 window.refreshBadge();
             }
         });
 };
 
+/**
+ * 알림 클릭 시 읽음 처리를 수행한 후 해당 알림의 대상 URL로 이동합니다.
+ *
+ * @param {string} url 이동할 대상 경로
+ * @param {string|number} id 읽음 처리할 알림 식별자
+ * @param {HTMLElement} el 클릭된 알림 요소
+ */
 window.readAndGo = function(url, id, el) {
     if (!el.classList.contains('unread')) {
         location.href = url;
@@ -265,6 +287,12 @@ window.readAndGo = function(url, id, el) {
         .catch(() => location.href = url);
 };
 
+/**
+ * 지정된 날짜 문자열을 현재 시간과 비교하여 경과 시간(예: '방금 전', '시간 전')으로 포맷팅합니다.
+ *
+ * @param {string} dateString 포맷팅할 기준 날짜 문자열
+ * @returns {string} 다국어가 적용된 경과 시간 텍스트
+ */
 window.timeAgo = function(dateString) {
     if (!dateString) return "";
     const diff = Math.floor((new Date() - new Date(dateString)) / 1000);
@@ -273,8 +301,8 @@ window.timeAgo = function(dateString) {
     const isTextJA = headerTitle && headerTitle.innerText.trim() === '通知';
 
     const isJA = document.documentElement.lang === 'ja' ||
-                 location.href.includes('lang=ja') ||
-                 isTextJA;
+        location.href.includes('lang=ja') ||
+        isTextJA;
 
     const i18n = isJA
         ? { now: "今", min: "分前", hr: "時間前", day: "日前" }

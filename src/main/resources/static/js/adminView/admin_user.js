@@ -1,8 +1,15 @@
-// 🌟 HTML에서 선언한 타임리프 전역 변수 가져오기
+/**
+ * 전역 다국어 설정 변수 (HTML 템플릿에서 주입, 기본값: 'ko')
+ * @type {string}
+ */
 const currentLang = window.CURRENT_LANG || 'ko';
 
+/**
+ * DOMContentLoaded 이벤트 리스너
+ * 백엔드에서 전달된 탭 상태를 초기화하고 사용자 통계 데이터를 호출하며,
+ * 전체 선택 체크박스 이벤트를 바인딩합니다.
+ */
 document.addEventListener('DOMContentLoaded', () => {
-    // 백엔드에서 내려준 탭 상태 (기본은 all)
     const activeTab = window.ACTIVE_TAB || 'all';
     switchTab(activeTab);
 
@@ -16,6 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+/**
+ * 활성화된 탭 버튼 및 탭 콘텐츠 화면을 전환합니다.
+ *
+ * @param {string} tabName 전환할 대상 탭의 식별자
+ */
 function switchTab(tabName) {
     document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -29,12 +41,15 @@ function switchTab(tabName) {
     }
 }
 
-// 언어 변경 시 탭 상태도 URL에 유지
+/**
+ * 다국어(언어) 설정을 변경하고 페이지를 새로고침하며, 현재 열려있는 탭 상태를 URL 파라미터로 유지합니다.
+ *
+ * @param {string} lang 변경할 언어 코드
+ */
 function changeLanguage(lang) {
     const url = new URL(window.location.href);
     url.searchParams.set('lang', lang);
 
-    // 현재 열려있는 탭 파악
     const activeTabEl = document.querySelector('.tab-content.active');
     if(activeTabEl) {
         url.searchParams.set('tab', activeTabEl.id.replace('tab-content-', ''));
@@ -43,14 +58,18 @@ function changeLanguage(lang) {
     window.location.href = url.toString();
 }
 
-// 구인자 승인 로직 (기존 유저 정보 수정 API를 재활용하여 상태만 ACTIVE로 변경)
+/**
+ * 특정 구인자의 가입을 승인(상태를 ACTIVE로 변경)하는 API 요청을 전송합니다.
+ *
+ * @param {string|number} userId 승인할 구인자의 고유 식별자
+ */
 function approveRecruiter(userId) {
     const msg = currentLang === 'ja' ? "この求人者を承認しますか？" : "이 구인자의 가입을 승인하시겠습니까?";
     if(confirm(msg)) {
         const payload = {
             userId: userId,
-            role: "RECRUITER", // 권한 유지
-            status: "ACTIVE"   // INACTIVE -> ACTIVE 로 변경
+            role: "RECRUITER",
+            status: "ACTIVE"
         };
 
         fetch('/admin/user/edit', {
@@ -60,7 +79,6 @@ function approveRecruiter(userId) {
         }).then(response => {
             if(response.ok) {
                 alert(currentLang === 'ja' ? "承認されました。" : "승인 완료되었습니다.");
-                // 리로드 시 승인 탭 유지
                 const url = new URL(window.location.href);
                 url.searchParams.set('tab', 'approval');
                 window.location.href = url.toString();
@@ -71,7 +89,9 @@ function approveRecruiter(userId) {
     }
 }
 
-// 통계 호출 함수
+/**
+ * 서버로부터 사용자 통계 데이터를 비동기 요청하여 가져온 후 UI를 갱신합니다.
+ */
 async function fetchUserStats() {
     try {
         const response = await fetch('/admin/user/stats');
@@ -87,6 +107,13 @@ async function fetchUserStats() {
     }
 }
 
+/**
+ * 사용자 정보 수정을 위한 모달 창을 열고, 기존 데이터를 폼에 세팅합니다.
+ *
+ * @param {string|number} id 사용자 고유 식별자
+ * @param {string} currentRole 현재 부여된 권한 (예: SEEKER, RECRUITER)
+ * @param {string} currentStatus 현재 계정 상태 (예: ACTIVE, INACTIVE)
+ */
 function openEditModal(id, currentRole, currentStatus) {
     document.getElementById('editUserId').value = id;
     document.getElementById('editRole').value = currentRole;
@@ -94,10 +121,16 @@ function openEditModal(id, currentRole, currentStatus) {
     document.getElementById('editModal').style.display = 'flex';
 }
 
+/**
+ * 사용자 정보 수정 모달 창을 닫습니다.
+ */
 function closeEditModal() {
     document.getElementById('editModal').style.display = 'none';
 }
 
+/**
+ * 폼에 입력된 데이터를 바탕으로 사용자 권한 및 상태 수정 요청(API)을 전송합니다.
+ */
 function submitEdit() {
     const userId = document.getElementById('editUserId').value;
     const newRole = document.getElementById('editRole').value;
@@ -130,6 +163,11 @@ function submitEdit() {
     }
 }
 
+/**
+ * 특정 사용자 계정에 대한 삭제 요청(API)을 전송합니다.
+ *
+ * @param {string|number} id 삭제할 사용자의 고유 식별자
+ */
 function deleteUser(id) {
     if(confirm(currentLang === 'ja' ? "本当に削除しますか？" : "정말 삭제하시겠습니까?")) {
         fetch('/admin/user/delete', {
@@ -150,22 +188,20 @@ function deleteUser(id) {
     }
 }
 
-// ==========================================================
-// 구인자 심사 모달 로직
-// ==========================================================
-
-// 1. 모달 열기 및 데이터 세팅
+/**
+ * 구인자 심사(가입 승인) 처리를 위한 모달 창을 열고 데이터를 세팅합니다.
+ *
+ * @param {HTMLElement} btn 클릭된 버튼 DOM 요소 (데이터 속성 포함)
+ */
 function openApprovalModal(btn) {
     const id = btn.getAttribute('data-id');
     const name = btn.getAttribute('data-name');
     const email = btn.getAttribute('data-email');
     const date = btn.getAttribute('data-date');
-    const evidencesStr = btn.getAttribute('data-evidences'); // 쉼표로 연결된 URL 문자열
+    const evidencesStr = btn.getAttribute('data-evidences');
 
-    // ID 저장
     document.getElementById('approveUserId').value = id;
 
-    // 기본 정보 세팅
     const labelName = currentLang === 'ja' ? '名前' : '이름';
     const labelEmail = currentLang === 'ja' ? 'メール' : '이메일';
     const labelDate = currentLang === 'ja' ? '加入日' : '가입일';
@@ -176,7 +212,6 @@ function openApprovalModal(btn) {
         <b>${labelDate}:</b> ${date}
     `;
 
-    // 증빙서류 리스트 세팅
     const evidenceBox = document.getElementById('approveEvidenceList');
     evidenceBox.innerHTML = '';
 
@@ -195,16 +230,19 @@ function openApprovalModal(btn) {
         evidenceBox.innerHTML = `<div style="padding:15px; background:#f8f9fa; border-radius:8px; text-align:center; color:#999; font-size:13px; border: 1px dashed #ccc;">${noDataMsg}</div>`;
     }
 
-    // 모달 띄우기
     document.getElementById('approvalModal').style.display = 'flex';
 }
 
-// 2. 모달 닫기
+/**
+ * 구인자 심사 모달 창을 닫습니다.
+ */
 function closeApprovalModal() {
     document.getElementById('approvalModal').style.display = 'none';
 }
 
-// 3. 모달에서 [승인] 버튼 클릭 시
+/**
+ * 심사 모달에서 승인 버튼 클릭 시, 해당 구인자의 상태를 활성화(ACTIVE)하는 요청을 전송합니다.
+ */
 function approveFromModal() {
     const userId = document.getElementById('approveUserId').value;
     const msg = currentLang === 'ja' ? "この求人者を承認しますか？" : "이 구인자의 가입을 승인하시겠습니까?";
@@ -213,7 +251,7 @@ function approveFromModal() {
         const payload = {
             userId: userId,
             role: "RECRUITER",
-            status: "ACTIVE"   // 상태를 활성화로 변경
+            status: "ACTIVE"
         };
 
         fetch('/admin/user/edit', {
@@ -233,7 +271,9 @@ function approveFromModal() {
     }
 }
 
-// 4. 모달에서 [거절] 버튼 클릭 시 (계정 삭제)
+/**
+ * 심사 모달에서 거절 버튼 클릭 시, 해당 구인자의 가입을 거절하고 계정을 완전 삭제하는 요청을 전송합니다.
+ */
 function rejectFromModal() {
     const userId = document.getElementById('approveUserId').value;
     const msg = currentLang === 'ja' ? "本当に拒否(削除)しますか？" : "가입을 거절하고 계정을 삭제하시겠습니까?";
