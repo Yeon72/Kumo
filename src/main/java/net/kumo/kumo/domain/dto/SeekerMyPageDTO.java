@@ -1,17 +1,19 @@
 package net.kumo.kumo.domain.dto;
 
-
 import lombok.*;
 import net.kumo.kumo.domain.entity.Enum;
-import net.kumo.kumo.domain.entity.ProfileImageEntity;
 import net.kumo.kumo.domain.entity.UserEntity;
 
 import java.time.LocalDate;
 
+/**
+ * 구직자(Seeker) 마이페이지의 개인 프로필 및 계정 정보를
+ * 화면에 렌더링하기 위해 사용되는 DTO 클래스입니다.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter // <-- [이게 필수입니다!] 타임리프가 값을 꺼내갈 수 있게 해줌
+@Getter
 @Setter
 @Builder
 public class SeekerMyPageDTO {

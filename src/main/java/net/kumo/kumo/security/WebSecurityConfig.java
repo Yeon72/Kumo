@@ -15,92 +15,81 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 애플리케이션의 웹 보안 정책(Spring Security), 정적 리소스 핸들링,
+ * URL별 접근 권한 및 인증/인가 필터 체인을 전역적으로 설정하는 Configuration 클래스입니다.
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class WebSecurityConfig implements WebMvcConfigurer {
 
-	@Value("${file.upload.dir}")
-	private String uploadDir;
+    @Value("${file.upload.dir}")
+    private String uploadDir;
 
-	@Override
-	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // uploadDir 맨 뒤에 / 가 없으면 붙여주는 안전 장치
+    private final AjaxAuthenticationSuccessHandler successHandler;
+    private final AjaxAuthenticationFailureHandler failureHandler;
+    private final RecaptchaFilter recaptchaFilter;
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String path = uploadDir.endsWith("/") ? uploadDir : uploadDir + "/";
 
-		registry.addResourceHandler("/uploads/**")
-				.addResourceLocations("file:///" + uploadDir);
-	}
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:///" + path);
+    }
 
-	private final AjaxAuthenticationSuccessHandler successHandler;
-	private final AjaxAuthenticationFailureHandler failureHandler;
-	private final RecaptchaFilter recaptchaFilter; // 🌟 리캡차 필터 주입
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
 
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http
-				// 1. CSRF 보안 설정
-				.csrf(AbstractHttpConfigurer::disable)
+                .addFilterBefore(recaptchaFilter, UsernamePasswordAuthenticationFilter.class)
 
-				// 🌟 [추가] 리캡차 필터를 로그인 필터 앞에 배치
-				.addFilterBefore(recaptchaFilter, UsernamePasswordAuthenticationFilter.class)
-
-				// 2. 권한 설정 (authorizeHttpRequests -> 람다식)
-				.authorizeHttpRequests((auth) -> auth
-						// (1) 정적 리소스: css, js, images 등
-						// .requestMatchers("/css/**", "/js/**", "/images/**", "/error").permitAll()
-                        // 업로드 이미지 부분 추가
+                .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/error", "/uploads/**").permitAll()
 
-						// (2) 로그인 없이 접근 가능한 페이지
-						.requestMatchers("/map/api/**").permitAll()
-						.requestMatchers("/", "/login", "/signup", "/join", "/join/**", "/info").permitAll()
-						.requestMatchers("/map_non_login_view", "/FindId", "/FindPw", "/findIdProc", "/nickname",
-								"/changePw", "/map/main", "/map/job-list-view")
-						.permitAll()
+                        .requestMatchers("/map/api/**").permitAll()
+                        .requestMatchers("/", "/login", "/signup", "/join", "/join/**", "/info").permitAll()
+                        .requestMatchers("/map_non_login_view", "/FindId", "/FindPw", "/findIdProc", "/nickname",
+                                "/changePw", "/map/main", "/map/job-list-view").permitAll()
 
-						// (3) 권한별 접근 제한 (ADMIN은 두 곳 모두 접근 가능)
-						.requestMatchers("/Recruiter/**").hasAnyRole("RECRUITER", "ADMIN")
-						.requestMatchers("/Seeker/**").hasAnyRole("SEEKER", "ADMIN")
+                        .requestMatchers("/Recruiter/**").hasAnyRole("RECRUITER", "ADMIN")
+                        .requestMatchers("/Seeker/**").hasAnyRole("SEEKER", "ADMIN")
 
-						// (4) API 접근 권한
-						.requestMatchers("/api/check/**", "/api/**", "/api/mail/**").permitAll()
-						.requestMatchers("/api/notifications/**").hasAnyRole("SEEKER", "RECRUITER", "ADMIN")
+                        .requestMatchers("/api/check/**", "/api/**", "/api/mail/**").permitAll()
+                        .requestMatchers("/api/notifications/**").hasAnyRole("SEEKER", "RECRUITER", "ADMIN")
 
-						// (5) 그 외 모든 요청은 인증 필요
-						.anyRequest().hasAnyRole("SEEKER", "RECRUITER", "ADMIN"))
+                        .anyRequest().hasAnyRole("SEEKER", "RECRUITER", "ADMIN"))
 
-				// 3. 로그인 설정
-				.formLogin((form) -> form
-						.loginPage("/login")
-						.loginProcessingUrl("/loginProc")
-						.usernameParameter("email")
-						.passwordParameter("password")
-						.successHandler(successHandler)
-						.failureHandler(failureHandler)
-						.permitAll())
+                .formLogin((form) -> form
+                        .loginPage("/login")
+                        .loginProcessingUrl("/loginProc")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
+                        .successHandler(successHandler)
+                        .failureHandler(failureHandler)
+                        .permitAll())
 
-				// 4. 로그아웃 설정
-				.logout((logout) -> logout
-						.logoutUrl("/logout")
-						.logoutSuccessUrl("/")
-						.invalidateHttpSession(true)
-						.deleteCookies("JSESSIONID"))
-				
-				
-				// 5. 채팅창 팝업 출력관련 (iframe 허용)
-				.headers((headers) -> headers
-						.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-				); // 🌟 여기에 세미콜론(;) 추가!
+                .logout((logout) -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID"))
 
-		return http.build();
-	}
+                .headers((headers) -> headers
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+                );
 
-	// 비밀번호 암호화 빈
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-//		return new BCryptPasswordEncoder();
-		return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
-		
-	}
+        return http.build();
+    }
+
+    /**
+     * 비밀번호 암호화 인코더 빈을 등록합니다.
+     * (현재는 마이그레이션 또는 테스트 목적으로 평문 기반의 NoOpPasswordEncoder를 사용합니다.)
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
+    }
 }

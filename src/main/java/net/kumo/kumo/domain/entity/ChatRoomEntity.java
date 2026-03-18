@@ -21,6 +21,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 1:1 매칭 채팅을 위한 채팅방(ChatRoom) 세션 정보와
+ * 참여자, 최신 메시지 스냅샷 등을 관리하는 엔티티 클래스입니다.
+ */
 @Entity
 @Table(name = "chat_rooms")
 @Getter
@@ -36,14 +40,13 @@ public class ChatRoomEntity {
     @Column(name = "id")
     private Long id;
 
-    // 🌟 변경된 코드 (이 두 줄을 추가하세요!)
+    /** 대화의 시발점이 된 타겟 구인 공고 식별자 */
     @Column(name = "target_post_id", nullable = false)
     private Long targetPostId;
 
+    /** 대상 공고 데이터 출처 지역 (예: OSAKA) */
     @Column(name = "target_source", nullable = false, length = 20)
     private String targetSource;
-
-    // ==========================================
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seeker_id", nullable = false)
@@ -53,13 +56,14 @@ public class ChatRoomEntity {
     @JoinColumn(name = "recruiter_id", nullable = false)
     private UserEntity recruiter;
 
-    // 채팅 목록에서 최신 메시지를 보여주기 위한 컬럼
+    /** 채팅 목록 렌더링을 위해 캐싱된 가장 최근 메시지 내용 */
     @Column(length = 1000)
     private String lastMessage;
 
     private LocalDateTime lastMessageAt;
 
-    @CreationTimestamp // 🌟 저장 시점에 자동으로 현재 시간 주입!
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
 }

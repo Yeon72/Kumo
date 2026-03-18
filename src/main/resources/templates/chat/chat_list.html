@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-
     <title th:text="#{chat.list.title}">KUMO - 채팅</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap"
@@ -26,6 +25,8 @@
             noLogin: /*[[#{chat.list.msg.noLogin}]]*/ '로그인 정보(userId)를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.'
         };
     </script>
+
+    <script defer th:src="@{/js/chat/chat_list.js(v='1.0')}"></script>
 </head>
 
 <body>
@@ -33,12 +34,9 @@
 <div class="mobile-container">
     <div class="chat-header"
          style="position: relative; display: flex; justify-content: space-between; align-items: center;">
-
         <img th:src="@{/images/chatLogo.png}" class="header-logo" alt="KUMO"
              style="position: absolute; left: 50%; transform: translateX(-50%);">
-
         <i class="fa-solid fa-magnifying-glass header-icon" id="searchIcon" style="cursor: pointer;"></i>
-
     </div>
 
     <div id="searchBar" class="search-container">
@@ -47,15 +45,15 @@
 
     <div class="tab-menu">
         <button class="tab-btn active" data-filter="all" onclick="filterRooms('all', this)"
-            th:text="#{chat.list.tab.all}">전체</button>
+                th:text="#{chat.list.tab.all}">전체</button>
         <button class="tab-btn" data-filter="unread" onclick="filterRooms('unread', this)"
-            th:text="#{chat.list.tab.unread}">읽지않음</button>
+                th:text="#{chat.list.tab.unread}">읽지않음</button>
         <button class="tab-btn" data-filter="read" onclick="filterRooms('read', this)"
-            th:text="#{chat.list.tab.read}">읽음</button>
+                th:text="#{chat.list.tab.read}">읽음</button>
     </div>
 
     <div class="chat-list">
-        <div th:each="room : ${chatRooms}" th:data-unread="${room.hasUnread}" 
+        <div th:each="room : ${chatRooms}" th:data-unread="${room.hasUnread}"
              th:data-room-id="${room.roomId}" class="chat-item"
              th:onclick="|enterRoom(${room.roomId})|">
             <div class="avatar-wrapper">
@@ -101,8 +99,5 @@
 
 <input type="hidden" id="currentUserId" th:value="${userId}" />
 
-<script th:src="@{/js/chat/chat_list.js(v='1.0')}"></script>
-
 </body>
-
 </html>

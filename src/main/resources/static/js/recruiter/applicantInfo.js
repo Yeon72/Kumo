@@ -1,11 +1,17 @@
+/**
+ * 지원자 관리 모달 및 플로팅 채팅에서 참조할 전역 상태 변수입니다.
+ */
 let currentAppId = null;
 let currentSeekerId = null;
 let currentJobId = null;
 let currentJobSource = null;
 
-// =========================================================================
-// 1. 모달창 데이터 불러오기 (이력서 렌더링)
-// =========================================================================
+/**
+ * 지원자 목록에서 선택한 인재의 기본 정보를 모달에 세팅하고,
+ * 서버로부터 상세 이력서 데이터를 비동기 조회하여 렌더링을 준비합니다.
+ *
+ * @param {HTMLElement} btn 클릭된 이력서 열람 버튼 DOM 요소
+ */
 async function loadResumeData(btn) {
     currentAppId = btn.getAttribute('data-app-id');
     currentSeekerId = btn.getAttribute('data-seeker-id');
@@ -30,17 +36,23 @@ async function loadResumeData(btn) {
     }
 }
 
+/**
+ * 전달받은 이력서 데이터 객체를 HTML 마크업으로 변환하여 지정된 컨테이너에 삽입합니다.
+ *
+ * @param {Object} data 서버로부터 응답받은 이력서 상세 데이터
+ * @param {HTMLElement} container 렌더링된 HTML이 삽입될 DOM 요소
+ */
 function renderResume(data, container) {
     let html = '';
-    
+
     if (data.profile) {
         html += `<div class="resume-section"><h5><i class="bi bi-person-lines-fill me-2"></i>${appMsg.labelIntro} (<span class="text-primary">${data.profile.careerType || appMsg.notEntered}</span>)</h5><p class="text-secondary mb-0" style="line-height: 1.6; white-space: pre-wrap;">${data.profile.selfPr || appMsg.notEntered}</p></div>`;
     }
-    
+
     if (data.condition) {
         html += `<div class="resume-section"><h5><i class="bi bi-check2-square me-2"></i>${appMsg.labelCondition}</h5><div class="spec-item"><span class="label">${appMsg.labelJob}</span> ${data.condition.desiredJob || appMsg.notEntered}</div><div class="spec-item"><span class="label">${appMsg.labelSalary}</span> ${data.condition.salaryType || ''} ${data.condition.desiredSalary || appMsg.notEntered}</div></div>`;
     }
-    
+
     html += `<div class="resume-section"><h5><i class="bi bi-briefcase-fill me-2"></i>${appMsg.labelCareer}</h5>`;
     if (data.careers && data.careers.length > 0) {
         data.careers.forEach(c => {
@@ -78,9 +90,11 @@ function renderResume(data, container) {
     container.innerHTML = html;
 }
 
-// =========================================================================
-// 2. 합격/불합격 처리 (비동기)
-// =========================================================================
+/**
+ * 지원자의 합격 또는 불합격 상태를 서버에 전송하고, 성공 시 UI 테이블의 상태 뱃지를 즉시 갱신합니다.
+ *
+ * @param {string} status 적용할 지원 상태 코드 ('PASSED' 또는 'FAILED')
+ */
 async function updateAppStatus(status) {
     if (!currentAppId) return;
 
@@ -121,24 +135,22 @@ async function updateAppStatus(status) {
     }
 }
 
-// =========================================================================
-// 3. 플로팅 채팅방 관련 로직
-// =========================================================================
+/**
+ * 선택한 지원자와 1:1 대화를 나눌 수 있는 플로팅 채팅방을 활성화합니다.
+ * 현재 HTML 문서의 다국어 설정을 파악하여 채팅방 프레임 로드 시 URL 파라미터로 전달합니다.
+ */
 function actionChat() {
     if (!currentSeekerId || !currentJobId || !currentJobSource) {
         Swal.fire({ icon: 'error', title: appMsg.errorTitle, text: appMsg.chatError });
         return;
     }
 
-    // 🌟 [핵심 수정] URL 창이 아니라, 최상단 HTML 태그에 적용된 진짜 언어값을 읽어옵니다.
     let currentLang = document.documentElement.lang || 'ko';
 
-    // 백엔드에서 한국어를 'kr'로 처리하도록 설계하셨으므로, 'ko'를 'kr'로 변환해 줍니다.
     if (currentLang === 'ko') {
         currentLang = 'kr';
     }
 
-    // 🌟 URL 맨 끝에 &lang=${currentLang} 를 붙여서 완벽하게 넘겨줍니다!
     const chatUrl = `/chat/create?seekerId=${currentSeekerId}&jobPostId=${currentJobId}&jobSource=${currentJobSource}&lang=${currentLang}`;
 
     const chatContainer = document.getElementById('floatingChatContainer');
@@ -155,20 +167,30 @@ function actionChat() {
     }
 }
 
+/**
+ * 플로팅 채팅창의 최소화 상태를 토글합니다.
+ */
 function toggleMinimizeChat() {
     const container = document.getElementById('floatingChatContainer');
     container.classList.toggle('minimized');
 }
 
+/**
+ * 플로팅 채팅창을 숨기고, 내부 iframe의 소스를 지워 웹소켓 연결 등을 정리합니다.
+ */
 function closeFloatingChat() {
     const container = document.getElementById('floatingChatContainer');
     const chatFrame = document.getElementById('floatingChatFrame');
 
     container.style.display = 'none';
-    chatFrame.src = ''; // 웹소켓 연결 해제
+    chatFrame.src = '';
 }
 
-// 플로팅 창 마우스 드래그 이벤트 등록
+/**
+ * DOMContentLoaded 이벤트 리스너
+ * 플로팅 채팅창 헤더에 마우스 다운/무브/업 이벤트를 바인딩하여
+ * 화면 내에서 자유롭게 드래그 앤 드롭으로 이동할 수 있는 기능을 제공합니다.
+ */
 document.addEventListener('DOMContentLoaded', () => {
     const chatContainer = document.getElementById('floatingChatContainer');
     const chatHeader = document.getElementById('floatingChatHeader');

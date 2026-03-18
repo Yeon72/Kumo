@@ -23,6 +23,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 외부 크롤링 데이터가 아닌, 시스템 내부에서 구인자가 직접 작성하여
+ * 등록한 로컬 구인 공고(Job Posting) 데이터를 관리하는 엔티티 클래스입니다.
+ */
 @Entity
 @Table(name = "job_postings")
 @Getter
@@ -32,11 +36,12 @@ import lombok.Setter;
 @Builder
 public class JobPostingEntity {
 
-    // 🌟 [내부 Enum 정의] 파일 따로 만들지 말고 여기에 몰아넣기
+    /** 자체 공고 전용 급여 지급 기준 열거형 */
     public enum SalaryType {
         HOURLY, MONTHLY, DAILY, SALARY
     }
 
+    /** 자체 공고 모집 상태 열거형 */
     public enum JobStatus {
         RECRUITING, CLOSED
     }
@@ -46,12 +51,12 @@ public class JobPostingEntity {
     @Column(name = "job_post_id")
     private Long jobPostId;
 
-    // 작성자 (User)
+    /** 공고를 작성한 사용자(구인자) 매핑 */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    // 🌟 [추가됨] 회사 정보 (이게 있어야 선택한 회사가 저장됩니다!)
+    /** 공고가 연결된 대상 사업장(회사) 정보 매핑 */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private CompanyEntity company;
@@ -68,7 +73,7 @@ public class JobPostingEntity {
     @Lob
     private String description;
 
-    // 급여 종류 (Enum 매핑)
+    /** 설정된 급여 지급 유형 (DB에는 문자열로 저장됨) */
     @Column(name = "salary_type")
     @Enumerated(EnumType.STRING)
     private SalaryType salaryType;
@@ -82,31 +87,37 @@ public class JobPostingEntity {
     private Double latitude;
     private Double longitude;
 
-    // 🌟 [변경됨] String -> Enum (오타 방지 및 로직 처리를 위해 변경 추천)
+    /** 공고 진행 상태 (기본값: RECRUITING) */
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "ENUM('RECRUITING', 'CLOSED') DEFAULT 'RECRUITING'")
     private JobStatus status;
 
-    // [수정 후] 시간까지 저장할 수 있도록 LocalDateTime으로 변경
+    /** 공고 모집 마감 기한 */
     @Column(name = "deadline")
     private LocalDateTime deadline;
 
     @Column(name = "view_count")
     private Integer viewCount;
 
-    /* write_time 역할을 하는 생성 시간 (숫자가 아닌 날짜 타입으로) */
+    /** 공고 데이터 최초 생성(등록) 일시 */
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt; // 🌟 DB 컬럼 타입을 DATETIME 또는 TIMESTAMP로 자동 설정합니다.
+    private LocalDateTime createdAt;
 
-    // 기본값 자동 세팅
+    /**
+     * 엔티티가 영속화(Persist)되기 전, 누락된 필수 필드들의
+     * 기본값을 자동으로 초기화하는 콜백 메서드입니다.
+     */
     @PrePersist
     public void prePersist() {
-        if (this.viewCount == null)
+        if (this.viewCount == null) {
             this.viewCount = 0;
-        if (this.status == null)
+        }
+        if (this.status == null) {
             this.status = JobStatus.RECRUITING;
-        if (this.salaryType == null)
+        }
+        if (this.salaryType == null) {
             this.salaryType = SalaryType.HOURLY;
+        }
     }
 }

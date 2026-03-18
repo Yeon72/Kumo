@@ -3,43 +3,51 @@ package net.kumo.kumo.domain.dto.projection;
 import net.kumo.kumo.domain.enums.JobStatus;
 import org.springframework.beans.factory.annotation.Value;
 
+/**
+ * 구인 공고 요약 정보를 조회하기 위한 JPA Projection 인터페이스입니다.
+ */
 public interface JobSummaryView {
 
     Long getId();
-    String getImgUrls(); // 이미지 원본
-    
-    // ==========================================
-    // 🌟 [핵심 추가] 작성자 ID와 진짜 이름(닉네임) 가져오기!
-    // ==========================================
+    String getImgUrls();
+
+    /**
+     * 공고 작성자(구인자)의 식별자를 반환합니다.
+     */
     Long getUserId();
-    
-    // target(공고 엔티티)에 연결된 user가 있으면 nickname을 가져오고, 없으면 null 반환
+
+    /**
+     * 공고 엔티티와 연관된 작성자의 닉네임을 반환합니다.
+     *
+     * @return 작성자 닉네임 (연관된 유저가 없을 경우 null 반환)
+     */
     @Value("#{target.user != null ? target.user.nickname : null}")
     String getManagerName();
-    
-    // 🌟 [추가] 상태값을 가져오기 위해 선언! (이제 빨간 줄이 사라집니다)
+
+    /**
+     * 구인 공고의 현재 모집 상태를 반환합니다.
+     */
     JobStatus getStatus();
 
-    // --- 🇰🇷 한국어 원본 데이터 ---
     String getTitle();
     String getCompanyName();
-    String getAddress(); // 공통 주소
+    String getAddress();
     String getContactPhone();
     String getWage();
     String getWriteTime();
 
-    // --- 🇯🇵 일본어 원본 데이터 ---
-    // 리포지토리가 이 값들을 DB에서 퍼와야 하므로 반드시 있어야 합니다!
     String getTitleJp();
     String getCompanyNameJp();
     String getWageJp();
-    // String getAddressJp(); // 필요하다면 추가 (엔티티에 필드가 있어야 함)
 
-    // --- 좌표 ---
     Double getLat();
     Double getLng();
 
-    // 썸네일 자르는 것 정도는 유틸리티 성격이라 여기에 둬도 괜찮
+    /**
+     * 다중 이미지 URL 문자열 중 첫 번째 이미지를 썸네일 URL로 추출하여 반환합니다.
+     *
+     * @return 썸네일 이미지 URL 문자열
+     */
     default String getThumbnailUrl() {
         String urls = getImgUrls();
         if (urls == null || urls.isBlank()) {
@@ -47,7 +55,4 @@ public interface JobSummaryView {
         }
         return urls.split(",")[0].trim();
     }
-
-    // ★ 삭제: default String getLocalizedTitle(...)
-    // 이유:JobResponse DTO 생성자에서 처리하기 때문입니다.
 }

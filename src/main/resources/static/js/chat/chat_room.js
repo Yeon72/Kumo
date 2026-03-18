@@ -1,18 +1,24 @@
+/**
+ * 웹소켓 통신 및 DOM 엘리먼트 전역 변수
+ */
 var stompClient = null;
 var roomId = document.getElementById("roomId").value;
 var myId = document.getElementById("myId").value;
 var msgArea = document.getElementById("msgArea");
 var lastChatDate = null;
 
-// 현재 HTML의 lang 속성(ko 또는 ja)을 가져와서 날짜 포맷에 사용합니다.
+/**
+ * 현재 HTML의 lang 속성에 따라 날짜 포맷 로케일을 설정합니다.
+ * @type {string}
+ */
 const currentLang = document.documentElement.lang === 'ja' ? 'ja-JP' : 'ko-KR';
 
-// ==========================================================
-// 🌟 [추가] 부모 창(메인 사이트) 다크모드 실시간 동기화
-// ==========================================================
+/**
+ * 부모 창(메인 사이트)의 다크모드 클래스 변경 상태를 감지하여
+ * 현재 iframe 화면(채팅방)의 다크모드를 실시간으로 동기화합니다.
+ */
 function syncDarkMode() {
     try {
-        // 부모 창의 body에 'dark-mode' 클래스가 있는지 확인
         if (window.parent.document.body.classList.contains('dark-mode')) {
             document.body.classList.add('dark-mode');
         } else {
@@ -23,30 +29,27 @@ function syncDarkMode() {
     }
 }
 
-// 1. 채팅창이 처음 켜질 때 즉시 다크모드 검사
 syncDarkMode();
 
-// 2. 사용자가 사이트에서 다크모드 토글을 누를 때 '실시간'으로 감지해서 적용
 try {
     const observer = new MutationObserver(syncDarkMode);
-    // 부모 창의 body 클래스가 변하는 것을 감시합니다.
     observer.observe(window.parent.document.body, { attributes: true, attributeFilter: ['class'] });
 } catch (e) {
     console.log("MutationObserver 연결 실패 (단독 실행 모드)");
 }
-// ==========================================================
 
 connect();
 
-// ==========================================
-// 1. 강철 멘탈 자동 재연결 기능이 추가된 connect()
-// ==========================================
+/**
+ * 서버의 웹소켓 엔드포인트에 접속하고 채팅방 토픽을 구독합니다.
+ * 입장 시 자동으로 읽음 처리 신호를 전송하며, 연결이 끊어질 경우 자동 재연결을 시도합니다.
+ */
 function connect() {
     var socket = new SockJS('/ws-stomp');
     stompClient = Stomp.over(socket);
 
     stompClient.connect({}, function (frame) {
-        console.log('✅ [LIVE] 웹소켓 방 입장 완료: ' + frame);
+        console.log('[WebSocket] 방 입장 완료: ' + frame);
 
         stompClient.subscribe('/sub/chat/room/' + roomId, function (messageOutput) {
             showMessage(JSON.parse(messageOutput.body));
@@ -54,35 +57,33 @@ function connect() {
 
         scrollToBottom();
 
-        // 방에 입장하고 0.3초 뒤에 "나 다 읽었어!" 신호 자동 발송
         setTimeout(sendReadSignal, 300);
 
     }, function (error) {
-        // 🌟 다국어 변수 적용
-        console.error('❌ [LIVE] ' + (window.CHAT_LANG ? window.CHAT_LANG.reconnecting : '웹소켓 연결 끊김! 재연결 시도...'), error);
+        console.error('[WebSocket] ' + (window.CHAT_LANG ? window.CHAT_LANG.reconnecting : '웹소켓 연결 끊김! 재연결 시도...'), error);
         setTimeout(connect, 3000);
     });
 }
 
-// ==========================================
-// 3. 메모리 누수 방지용 수동 탈출 함수 (신규 추가)
-// ==========================================
+/**
+ * 메모리 누수 방지를 위해 웹소켓 연결을 안전하게 수동 해제합니다.
+ */
 function disconnect() {
     if (stompClient !== null && stompClient.connected) {
         stompClient.disconnect(function () {
-            console.log("🛑 [LIVE] 방 탈출 성공! 웹소켓 연결 안전하게 해제됨 (메모리 누수 방지)");
+            console.log("[WebSocket] 연결 안전하게 해제됨 (메모리 누수 방지)");
         });
     }
 }
 
-// 브라우저 탭 닫기, 새로고침 시 무조건 파이프 끊기
 window.addEventListener('beforeunload', disconnect);
 
 let baseInputHeight = 0;
 
-// ==========================================================
-// ★ 1. 완벽하게 고정된 전송 함수 ★
-// ==========================================
+/**
+ * 사용자가 입력한 메시지를 웹소켓을 통해 서버로 전송합니다.
+ * 전송 후 텍스트 영역의 크기를 기본값으로 초기화합니다.
+ */
 function sendMessage() {
     var msgInput = document.getElementById("msgInput");
     var messageContent = msgInput.value.trim();
@@ -105,22 +106,24 @@ function sendMessage() {
     }
 }
 
-// ==========================================
-// ★ 꼬인 부분 완벽하게 풀린 showMessage 완성본 ★
-// ==========================================
+/**
+ * 수신된 채팅 메시지 데이터를 DOM에 렌더링합니다.
+ * 메시지 타입(TEXT, IMAGE, FILE, READ)에 따라 UI를 다르게 구성하며,
+ * 날짜 변경 시 다국어 포맷이 적용된 구분선(Divider)을 삽입합니다.
+ *
+ * @param {Object} message 렌더링할 메시지 데이터 객체
+ */
 function showMessage(message) {
     if (message.messageType === 'READ') {
         if (message.senderId != myId) {
             document.querySelectorAll('.unread-count').forEach(el => el.remove());
-            console.log("👀 상대방이 메시지를 읽었습니다. '1' 삭제 완료!");
+            console.log("[Chat] 상대방이 메시지를 읽음 처리했습니다.");
         }
         return;
     }
 
-    // 🌟 [수정됨] 날짜 구분선 다국어 자동 포맷팅 (JS 내장 기능 사용)
     var today = new Date();
     var dateOptions = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-    // 한국어면 "2026년 3월 6일 금요일", 일본어면 "2026年3月6日 金曜日" 형태로 자동 출력됩니다.
     var currentDate = today.toLocaleDateString(currentLang, dateOptions);
 
     if (lastChatDate !== currentDate) {
@@ -135,7 +138,6 @@ function showMessage(message) {
     var div = document.createElement('div');
     var timeString = message.createdAt;
 
-    // 🌟 [수정됨] '파일 열기' 텍스트 다국어 변수 사용
     var openFileText = window.CHAT_LANG ? window.CHAT_LANG.openFile : '파일 열기';
 
     var finalContentHtml = "";
@@ -169,13 +171,11 @@ function showMessage(message) {
         finalContentHtml = `<div class="msg-bubble">${message.content}</div>`;
     }
 
-    // chat_room.js 내부 showMessage 함수 하단부
     if (isMe) {
         div.className = "msg-row me";
         div.innerHTML = `<span class="msg-time">${timeString}</span><span class="unread-count">1</span>${finalContentHtml}`;
     } else {
         div.className = "msg-row other";
-        // 🌟 하드코딩된 dog_profile.jpg 대신 hidden input에서 가져온 주소 사용
         var oppImgUrl = document.getElementById("opponentImg").value;
         div.innerHTML = `<img src="${oppImgUrl}" class="profile-img" style="object-fit: cover;">${finalContentHtml}<span class="msg-time">${timeString}</span>`;
     }
@@ -190,6 +190,11 @@ function showMessage(message) {
     }
 }
 
+/**
+ * 텍스트 입력 영역(textarea)의 내용 길이에 맞춰 높이를 동적으로 조절합니다.
+ *
+ * @param {HTMLElement} textarea 조절 대상 텍스트 영역 요소
+ */
 function autoResize(textarea) {
     if (baseInputHeight === 0) {
         baseInputHeight = textarea.scrollHeight;
@@ -219,6 +224,11 @@ function autoResize(textarea) {
     window.scrollTo(0, scrollY);
 }
 
+/**
+ * Shift 키 조합 없이 Enter 키 입력 시 메시지를 전송하도록 제어합니다.
+ *
+ * @param {KeyboardEvent} e 키보드 이벤트 객체
+ */
 function handleEnter(e) {
     if (e.isComposing || e.keyCode === 229) return;
     if (e.key === 'Enter') {
@@ -229,6 +239,9 @@ function handleEnter(e) {
     }
 }
 
+/**
+ * 이미지 파일을 서버에 업로드하고, 성공 시 이미지 URL을 포함한 메시지를 전송합니다.
+ */
 function uploadImage() {
     var fileInput = document.getElementById('fileInput');
     var file = fileInput.files[0];
@@ -242,7 +255,6 @@ function uploadImage() {
             .then(response => response.text())
             .then(imageUrl => {
                 if (imageUrl.includes("실패")) {
-                    // 🌟 다국어 변수 적용
                     alert(window.CHAT_LANG ? window.CHAT_LANG.uploadFail : "사진 업로드 실패");
                     return;
                 }
@@ -258,6 +270,9 @@ function uploadImage() {
     }
 }
 
+/**
+ * 문서 파일을 서버에 업로드하고, 성공 시 파일 URL을 포함한 메시지를 전송합니다.
+ */
 function uploadFile() {
     var fileInput = document.getElementById('docFileInput');
     var file = fileInput.files[0];
@@ -273,7 +288,6 @@ function uploadFile() {
             .then(response => response.text())
             .then(fileUrl => {
                 if (fileUrl.includes("실패")) {
-                    // 🌟 다국어 변수 적용
                     alert(window.CHAT_LANG ? window.CHAT_LANG.uploadFail : "파일 업로드 실패");
                     return;
                 }
@@ -291,6 +305,10 @@ function uploadFile() {
     }
 }
 
+/**
+ * 채팅창의 스크롤을 최하단으로 부드럽게 이동시킵니다.
+ * 렌더링 딜레이를 고려하여 두 번 호출됩니다.
+ */
 function scrollToBottom() {
     setTimeout(function () {
         msgArea.scrollTop = msgArea.scrollHeight;
@@ -321,6 +339,11 @@ function openSubMenu(type) {
     if (type === 'template') openTemplateMenu();
 }
 
+/**
+ * 선택된 템플릿 텍스트를 입력창에 삽입하고 포커스를 줍니다.
+ *
+ * @param {string} text 삽입할 템플릿 문자열
+ */
 function insertText(text) {
     const inputField = document.getElementById('msgInput');
     if (inputField) {
@@ -331,6 +354,9 @@ function insertText(text) {
     closeTemplateMenu();
 }
 
+/**
+ * 상대방의 메시지를 열람했음을 알리는 READ 신호를 웹소켓으로 발송합니다.
+ */
 function sendReadSignal() {
     if (stompClient && stompClient.connected) {
         var readMessage = {
@@ -348,25 +374,26 @@ function sendReadSignal() {
     });
 });
 
-let isTranslating = false; // 연타 방지 플래그
+let isTranslating = false;
 
+/**
+ * 채팅방 내 모든 메시지를 분석하여 한글과 일본어를 각각 교차 번역합니다.
+ * 번역 API를 통해 텍스트를 변환하며, 이미 번역된 항목은 제외합니다.
+ */
 async function translateAllMessages() {
-    if (isTranslating) return; // 이미 번역 중이면 무시 (중복 렌더링 완벽 차단)
+    if (isTranslating) return;
 
-    console.log("🚀 [DEBUG] 교차 번역 프로세스 시작");
+    console.log("[Translation] 교차 번역 프로세스 시작");
 
     const bubbles = document.querySelectorAll('.msg-bubble');
 
-    // 🌟 한글을 일본어로 바꿀 대기열과, 일본어를 한글로 바꿀 대기열을 분리합니다.
     const toJapaneseQueue = [];
     const toKoreanQueue = [];
 
     bubbles.forEach(bubble => {
-        // 이미 번역된 텍스트(.translated-text)가 없는 버블만 수집
         if (!bubble.querySelector('.translated-text')) {
 
             let originalText = '';
-            // HTML 태그를 제외한 순수 텍스트만 추출
             bubble.childNodes.forEach(node => {
                 if (node.nodeType === Node.TEXT_NODE) {
                     originalText += node.nodeValue;
@@ -375,14 +402,11 @@ async function translateAllMessages() {
 
             const txt = originalText.trim();
             if (txt) {
-                // 🌟 핵심 로직: 텍스트 안에 한글이 하나라도 있는지 검사
                 const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(txt);
 
                 if (hasKorean) {
-                    // 한글이 있으면 -> 일본어로 번역 요청
                     toJapaneseQueue.push({ text: txt, element: bubble });
                 } else {
-                    // 한글이 없으면(일본어 등) -> 한국어로 번역 요청
                     toKoreanQueue.push({ text: txt, element: bubble });
                 }
             }
@@ -390,16 +414,15 @@ async function translateAllMessages() {
     });
 
     if (toJapaneseQueue.length === 0 && toKoreanQueue.length === 0) {
-        console.log("⚠️ 번역할 메시지가 없습니다.");
+        console.warn("[Translation] 번역할 메시지가 없습니다.");
         return;
     }
 
-    isTranslating = true; // 버튼 잠금
+    isTranslating = true;
 
     try {
-        // 1. 상대방의 일본어 -> 한국어로 번역
         if (toKoreanQueue.length > 0) {
-            console.log(`📡 일본어 -> 한국어 번역 요청 중... (${toKoreanQueue.length}건)`);
+            console.log(`[Translation] 일본어 -> 한국어 번역 요청 중... (${toKoreanQueue.length}건)`);
             const resKO = await fetch('/api/translate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -418,9 +441,8 @@ async function translateAllMessages() {
             }
         }
 
-        // 2. 나의 한국어 -> 일본어로 번역
         if (toJapaneseQueue.length > 0) {
-            console.log(`📡 한국어 -> 일본어 번역 요청 중... (${toJapaneseQueue.length}건)`);
+            console.log(`[Translation] 한국어 -> 일본어 번역 요청 중... (${toJapaneseQueue.length}건)`);
             const resJA = await fetch('/api/translate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -439,18 +461,22 @@ async function translateAllMessages() {
             }
         }
 
-        console.log("🎉 모든 교차 번역이 완료되었습니다!");
+        console.log("[Translation] 모든 교차 번역이 완료되었습니다.");
     } catch (err) {
-        console.error("❌ 번역 중 에러 발생:", err);
+        console.error("[Translation] 번역 중 에러 발생:", err);
         alert(window.CHAT_LANG && window.CHAT_LANG.translateFail ? window.CHAT_LANG.translateFail : "번역 처리 중 문제가 발생했습니다.");
     } finally {
-        isTranslating = false; // 버튼 잠금 해제
+        isTranslating = false;
     }
 }
 
-// 번역된 텍스트를 버블 안에 추가해주는 헬퍼 함수
+/**
+ * 원본 메시지 버블 내부에 번역된 텍스트 엘리먼트를 추가로 렌더링합니다.
+ *
+ * @param {HTMLElement} bubble 대상 메시지 버블 DOM 요소
+ * @param {string} translatedText 번역된 텍스트 문자열
+ */
 function appendTranslation(bubble, translatedText) {
-    // 혹시 모를 중복 렌더링 2차 방어
     if (bubble.querySelector('.translated-text')) return;
 
     const hr = document.createElement('hr');
@@ -476,9 +502,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const translateBtn = document.querySelector('.header-translate-btn');
     if (translateBtn) {
         translateBtn.onclick = translateAllMessages;
-        console.log("✅ [DEBUG] 번역 버튼 이벤트 연결 완료!");
+        console.log("[Init] 번역 버튼 이벤트 연결 완료");
     } else {
-        console.error("❌ [DEBUG] 번역 버튼(.header-translate-btn)을 찾을 수 없습니다.");
+        console.error("[Init] 번역 버튼(.header-translate-btn)을 찾을 수 없습니다.");
     }
 
     document.querySelectorAll('.file-bubble').forEach(bubble => {
@@ -514,9 +540,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // ==========================================
-    // ★ 뒤로가기 버튼 누를 때 웹소켓 안전하게 끊기 ★
-    // ==========================================
     const backBtn = document.querySelector('.header-back-btn');
     if (backBtn) {
         backBtn.addEventListener('click', function () {

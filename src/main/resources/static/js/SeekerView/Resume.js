@@ -1,27 +1,35 @@
+/**
+ * Resume.js
+ * 이력서 작성 및 수정 페이지의 프론트엔드 비즈니스 로직을 담당합니다.
+ * 주요 기능:
+ * 1. 동적 지역(도/현 및 구/시) 선택 연동
+ * 2. 경력/신입 상태에 따른 UI 제어
+ * 3. 학력, 경력, 자격증, 어학 능력 등 폼 필드 동적 복제 및 삭제
+ * 4. 증빙 서류 다중 업로드 및 미리보기 생성
+ * 5. 근무 기간(시작일/종료일) 유효성 검사
+ */
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ==========================================
-    // 1. 도쿄/오사카 지역 변경 로직
-    // ==========================================
+    /**
+     * 사용자가 선택한 상위 지역(도/현)에 따라
+     * 하위 지역(구/시) 셀렉트 박스의 옵션을 동적으로 필터링하여 렌더링합니다.
+     */
     const location1 = document.getElementById('location1');
     const location2 = document.getElementById('location2');
 
     if (location1 && location2) {
         const allOptions = Array.from(location2.querySelectorAll('option'));
-        
-        // 초기 로딩 시 선택되어 있는 값을 저장
+
         const initialValue2 = location2.value;
 
         location1.addEventListener('change', function() {
             const selectedPrefecture = this.value;
             const targetClass = 'ward-' + selectedPrefecture;
-            
+
             location2.innerHTML = '';
             allOptions.forEach(option => {
                 if (option.classList.contains(targetClass)) {
-                    // 복제본을 추가하여 원본(allOptions)은 유지
                     const clone = option.cloneNode(true);
-                    // 기존에 선택되었던 값과 일치하면 다시 선택 상태로 만듦
                     if (clone.value === initialValue2) {
                         clone.selected = true;
                     }
@@ -29,12 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-        
-        // 초기 실행 (기존 데이터가 있을 경우를 고려)
+
         location1.dispatchEvent(new Event('change'));
     }
 
-    // 초기 상태 설정 (경력/신입 토글에 따른 보임/숨김)
+    /**
+     * 초기 로딩 시 경력/신입 토글 상태를 확인하여
+     * 신입인 경우 경력 사항 입력 필드를 비활성화하고 숨깁니다.
+     */
     const initialCareerType = document.getElementById('careerType')?.value;
     if (initialCareerType === 'NEWCOMER') {
         const careerFields = document.getElementById('careerFields');
@@ -46,108 +56,105 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnAddCareerWrapper) btnAddCareerWrapper.style.display = 'none';
     }
 
-    // ==========================================
-// 2. 공통 폼 복사 함수 (Clone 마법)
-// ==========================================
-// 자격증/어학 템플릿 (아이템이 없을 때 사용)
-const i = typeof resumeI18n !== 'undefined' ? resumeI18n : {};
-const TEMPLATES = {
-    certFields: `
-        <div class="form-group row cert-item clonable-item">
-            <label>${i.certLabel || '자격증'}</label>
-            <div class="input-group cert-group">
-                <input type="text" name="certName" class="custom-input" placeholder="${i.certName || ''}" style="flex:1">
-                <input type="text" name="certPublisher" class="custom-input" placeholder="${i.certPublisher || ''}" style="flex:1">
-                <select name="certYear" class="custom-select" style="flex:1">
-                    <option value="" selected disabled>${i.certYear || '취득연도'}</option>
-                    ${Array.from({length: 57}, (_, i) => 2026 - i).map(y => `<option value="${y}">${y}</option>`).join('')}
-                </select>
-                <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-        </div>`,
-    langFields: `
-        <div class="form-group row mt-5 lang-item clonable-item">
-            <label>${i.langLabel || '어학 능력'}</label>
-            <div class="input-group cert-group">
-                <input type="text" name="languageName" class="custom-input" placeholder="${i.langName || ''}" style="flex:1">
-                <div class="toggle-group multi-segment" style="flex:2">
-                    <button type="button" class="toggle-btn active" data-value="ADVANCED">${i.advanced || '상급'}</button>
-                    <button type="button" class="toggle-btn" data-value="INTERMEDIATE">${i.intermediate || '중급'}</button>
-                    <button type="button" class="toggle-btn" data-value="BEGINNER">${i.beginner || '초급'}</button>
-                    <input type="hidden" name="languageLevel" value="ADVANCED">
+    /**
+     * 항목이 모두 삭제되었을 때 복제를 위한 대체 HTML 템플릿 구조입니다.
+     * @constant {Object}
+     */
+    const i = typeof resumeI18n !== 'undefined' ? resumeI18n : {};
+    const TEMPLATES = {
+        certFields: `
+            <div class="form-group row cert-item clonable-item">
+                <label>${i.certLabel || '자격증'}</label>
+                <div class="input-group cert-group">
+                    <input type="text" name="certName" class="custom-input" placeholder="${i.certName || ''}" style="flex:1">
+                    <input type="text" name="certPublisher" class="custom-input" placeholder="${i.certPublisher || ''}" style="flex:1">
+                    <select name="certYear" class="custom-select" style="flex:1">
+                        <option value="" selected disabled>${i.certYear || '취득연도'}</option>
+                        ${Array.from({length: 57}, (_, i) => 2026 - i).map(y => `<option value="${y}">${y}</option>`).join('')}
+                    </select>
+                    <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-        </div>`
-};
+            </div>`,
+        langFields: `
+            <div class="form-group row mt-5 lang-item clonable-item">
+                <label>${i.langLabel || '어학 능력'}</label>
+                <div class="input-group cert-group">
+                    <input type="text" name="languageName" class="custom-input" placeholder="${i.langName || ''}" style="flex:1">
+                    <div class="toggle-group multi-segment" style="flex:2">
+                        <button type="button" class="toggle-btn active" data-value="ADVANCED">${i.advanced || '상급'}</button>
+                        <button type="button" class="toggle-btn" data-value="INTERMEDIATE">${i.intermediate || '중급'}</button>
+                        <button type="button" class="toggle-btn" data-value="BEGINNER">${i.beginner || '초급'}</button>
+                        <input type="hidden" name="languageLevel" value="ADVANCED">
+                    </div>
+                    <button type="button" class="btn-delete-item"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>`
+    };
 
-function cloneField(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
+    /**
+     * 특정 컨테이너 내의 폼 필드를 동적으로 복제하여 추가합니다.
+     * 컨테이너가 비어있을 경우 TEMPLATES 객체에서 마크업을 가져와 생성합니다.
+     *
+     * @param {string} containerId 복제할 아이템이 속한 부모 컨테이너의 식별자
+     */
+    function cloneField(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
 
-    const firstItem = container.querySelector('.clonable-item');
+        const firstItem = container.querySelector('.clonable-item');
 
-    // 🌟 아이템이 없으면 템플릿으로 생성, 있으면 기존처럼 복제
-    if (!firstItem) {
-        if (TEMPLATES[containerId]) {
-            container.insertAdjacentHTML('beforeend', TEMPLATES[containerId]);
+        if (!firstItem) {
+            if (TEMPLATES[containerId]) {
+                container.insertAdjacentHTML('beforeend', TEMPLATES[containerId]);
+            }
+            return;
         }
-        return;
+
+        const clone = firstItem.cloneNode(true);
+        clone.querySelectorAll('input[type="text"], textarea').forEach(input => input.value = '');
+        clone.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+        clone.querySelectorAll('.toggle-group').forEach(group => {
+            group.querySelectorAll('.toggle-btn').forEach((btn, index) => {
+                if (index === 0) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            const hiddenInput = group.querySelector('input[type="hidden"]');
+            const firstBtn = group.querySelector('.toggle-btn');
+            if (hiddenInput && firstBtn) hiddenInput.value = firstBtn.getAttribute('data-value');
+        });
+        container.appendChild(clone);
     }
 
-    const clone = firstItem.cloneNode(true);
-    clone.querySelectorAll('input[type="text"], textarea').forEach(input => input.value = '');
-    clone.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
-    clone.querySelectorAll('.toggle-group').forEach(group => {
-        group.querySelectorAll('.toggle-btn').forEach((btn, index) => {
-            if (index === 0) btn.classList.add('active');
-            else btn.classList.remove('active');
-        });
-        const hiddenInput = group.querySelector('input[type="hidden"]');
-        const firstBtn = group.querySelector('.toggle-btn');
-        if (hiddenInput && firstBtn) hiddenInput.value = firstBtn.getAttribute('data-value');
-    });
-    container.appendChild(clone);
-}
-
-    // ==========================================
-    // 3. 추가 버튼 클릭 이벤트
-    // ==========================================
     document.getElementById('btnAddCareer')?.addEventListener('click', () => cloneField('careerFields'));
     document.getElementById('btnAddCert')?.addEventListener('click', () => cloneField('certFields'));
     document.getElementById('btnAddLang')?.addEventListener('click', () => cloneField('langFields'));
 
-    // ==========================================
-    // 4. 동적 요소 제어 (삭제 버튼 & 토글 버튼)
-    // ==========================================
+    /**
+     * 동적으로 생성된 요소들의 삭제(X) 버튼 및 상태 토글 버튼에 대한 클릭 이벤트를 위임하여 처리합니다.
+     * 토글 상태 변경 시 연동된 hidden input의 값을 동기화합니다.
+     */
     document.addEventListener('click', function(e) {
 
-// A. X 버튼 클릭 시 삭제
-const deleteBtn = e.target.closest('.btn-delete-item');
-if (deleteBtn) {
-    const itemToRemove = deleteBtn.closest('.clonable-item');
-    const container = itemToRemove.parentElement;
-    // 🌟 경력사항만 1개 보호, 자격증/어학은 전부 삭제 가능
-    if (container.id === 'careerFields' && container.querySelectorAll('.clonable-item').length <= 1) return;
-    itemToRemove.remove();
-    return;
-}
+        const deleteBtn = e.target.closest('.btn-delete-item');
+        if (deleteBtn) {
+            const itemToRemove = deleteBtn.closest('.clonable-item');
+            const container = itemToRemove.parentElement;
+            if (container.id === 'careerFields' && container.querySelectorAll('.clonable-item').length <= 1) return;
+            itemToRemove.remove();
+            return;
+        }
 
-        // B. 토글 버튼 클릭 시 동작 (경력/신입, 어학 상/중/초, 공개/비공개 등 모든 토글)
         if (e.target.classList.contains('toggle-btn')) {
             const btn = e.target;
             const group = btn.closest('.toggle-group');
 
-            // 1) 기존 active 지우고 현재 버튼에 추가
             group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // 2) 숨겨진 input 값 업데이트 (이 값이 서버로 전송됨)
             const hiddenInput = group.querySelector('input[type="hidden"]');
             if (hiddenInput) {
                 hiddenInput.value = btn.getAttribute('data-value');
 
-                // 3) [특수 로직] 경력/신입 토글인 경우 입력창 숨김/보임 처리
                 if (hiddenInput.name === 'careerType') {
                     const careerFields = document.getElementById('careerFields');
                     const btnAddCareerWrapper = document.getElementById('btnAddCareer').parentElement;
@@ -166,14 +173,13 @@ if (deleteBtn) {
         }
     });
 
-    // ==========================================
-    // 4-1. 근무 기간 유효성 검사 (시작일 > 종료일 방지)
-    // ==========================================
+    /**
+     * 경력 입력란의 시작 연월과 종료 연월 변경 시 유효성 검사를 수행하는 이벤트 리스너입니다.
+     */
     const careerContainer = document.getElementById('careerFields');
     if (careerContainer) {
         careerContainer.addEventListener('change', function(e) {
             const target = e.target;
-            // 연도 또는 월 선택 상자가 바뀐 경우
             if (target.tagName === 'SELECT' && (target.name.includes('Year') || target.name.includes('Month'))) {
                 const careerItem = target.closest('.career-item');
                 if (careerItem) {
@@ -183,31 +189,35 @@ if (deleteBtn) {
         });
     }
 
+    /**
+     * 선택된 시작일과 종료일을 비교하여 종료일이 시작일보다 과거인지 검사합니다.
+     * 유효하지 않을 경우 경고창을 띄우고 종료일을 시작일과 동일하게 자동 수정합니다.
+     *
+     * @param {HTMLElement} item 검사할 연월 Select 요소가 포함된 부모 DOM 요소
+     */
     function validateCareerDates(item) {
         const sYear = item.querySelector('select[name="startYear"]').value;
         const sMonth = item.querySelector('select[name="startMonth"]').value;
         const eYear = item.querySelector('select[name="endYear"]').value;
         const eMonth = item.querySelector('select[name="endMonth"]').value;
 
-        // 모든 값이 선택되었을 때만 비교
         if (sYear && sMonth && eYear && eMonth) {
-            // 연도*100 + 월 방식으로 숫자를 만들어 크기 비교
             const startDateNum = (parseInt(sYear) * 100) + parseInt(sMonth);
             const endDateNum = (parseInt(eYear) * 100) + parseInt(eMonth);
 
             if (startDateNum > endDateNum) {
                 alert("종료일이 시작일보다 빠를 수 없습니다.\n근무 기간을 확인해주세요.");
-                
-                // 종료일을 시작일과 동일하게 맞춤
+
                 item.querySelector('select[name="endYear"]').value = sYear;
                 item.querySelector('select[name="endMonth"]').value = sMonth;
             }
         }
     }
 
-    // ==========================================
-    // 5. 증빙서류 다중 업로드 & 이미지 미리보기 로직
-    // ==========================================
+    /**
+     * 증빙 서류 업로드 폼의 파일 선택 이벤트와 다중 파일 미리보기 UI를 제어합니다.
+     * 첨부된 파일의 종류(이미지 여부)에 따라 렌더링 방식을 분기합니다.
+     */
     const evidenceFile = document.getElementById('evidenceFile');
     const btnUpload = document.getElementById('btnUpload');
     const fileNameDisplay = document.getElementById('fileNameDisplay');
@@ -216,34 +226,27 @@ if (deleteBtn) {
     if (evidenceFile && btnUpload && fileNameDisplay && previewContainer) {
         const defaultPlaceholder = fileNameDisplay.getAttribute('placeholder') || '선택된 파일 없음';
 
-        // 파일 첨부 버튼 클릭 시 진짜 input(hidden) 클릭 유도
         btnUpload.addEventListener('click', () => {
             evidenceFile.click();
         });
 
-        // 파일이 선택되었을 때
         evidenceFile.addEventListener('change', function() {
-            // 기존 썸네일 초기화
             previewContainer.innerHTML = '';
             previewContainer.style.display = 'none';
 
             const files = this.files;
 
             if (files && files.length > 0) {
-                // 1) 텍스트 창에 파일 개수 또는 이름 표시
                 if (files.length === 1) {
                     fileNameDisplay.value = files[0].name;
                 } else {
-                    // HTML에 숨겨둔 다국어 템플릿 가져와서 {0} 갈아 끼우기
                     const msgTemplate = fileNameDisplay.getAttribute('data-multiple-msg');
                     fileNameDisplay.value = msgTemplate.replace('{0}', files.length);
                 }
 
-                // 🌟 파일이 들어오면 진하게 보이도록 클래스 추가 (하드코딩 컬러 삭제 완료)
                 fileNameDisplay.classList.add('has-file');
                 previewContainer.style.display = 'flex';
 
-                // 미리보기 생성
                 Array.from(files).forEach(file => {
                     if (file.type.startsWith('image/')) {
                         const reader = new FileReader();
@@ -259,7 +262,6 @@ if (deleteBtn) {
                         };
                         reader.readAsDataURL(file);
                     } else {
-                        // 이미지가 아닌 경우 (PDF 등)
                         const fileBox = document.createElement('div');
                         fileBox.textContent = `📄 ${file.name}`;
                         fileBox.style.padding = '10px';
@@ -275,11 +277,9 @@ if (deleteBtn) {
                     }
                 });
             } else {
-                // 취소했을 때 원상복구
                 fileNameDisplay.value = '';
                 fileNameDisplay.setAttribute('placeholder', defaultPlaceholder);
 
-                // 🌟 파일이 없어졌으니 클래스 제거 (잘못된 add 로직 걷어냄)
                 fileNameDisplay.classList.remove('has-file');
             }
         });

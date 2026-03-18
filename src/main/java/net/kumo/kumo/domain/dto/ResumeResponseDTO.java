@@ -6,26 +6,27 @@ import net.kumo.kumo.domain.entity.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+ * 구직자의 이력서 상세 정보를 구인자 또는 구직자 본인에게 렌더링하기 위해
+ * 다수의 엔티티 정보를 통합하여 반환하는 응답 전용 복합 DTO 클래스입니다.
+ */
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
 public class ResumeResponseDTO {
 
-    // 1:1 관계 데이터
     private ProfileDTO profile;
     private ConditionDTO condition;
 
-    // 1:N 관계 데이터 (리스트)
     private List<CareerDTO> careers;
     private EducationDTO educations;
     private List<CertificateDTO> certificates;
     private List<LanguageDTO> languages;
     private List<DocumentDTO> documents;
 
-    // ==========================================
-    // 🌟 내부 정적 클래스 (Nested Static Class) 세팅
-    // ==========================================
-
+    /**
+     * 구직자의 기본 프로필 요약 정보를 담는 내부 DTO 클래스입니다.
+     */
     @Getter @Builder
     public static class ProfileDTO {
         private String careerType;
@@ -34,7 +35,6 @@ public class ResumeResponseDTO {
         public static ProfileDTO from(SeekerProfileEntity entity) {
             if (entity == null) return null;
 
-            // EXPERIENCED -> "경력", NEWCOMER -> "신입" 등으로 변환 로직 추가 가능
             String typeStr = "NEWCOMER".equals(entity.getCareerType()) ? "신입" : "경력";
 
             return ProfileDTO.builder()
@@ -44,6 +44,9 @@ public class ResumeResponseDTO {
         }
     }
 
+    /**
+     * 구직자의 희망 근무 조건을 담는 내부 DTO 클래스입니다.
+     */
     @Getter @Builder
     public static class ConditionDTO {
         private String desiredJob;
@@ -66,6 +69,9 @@ public class ResumeResponseDTO {
         }
     }
 
+    /**
+     * 구직자의 과거 경력 사항(직장 이력) 정보를 담는 내부 DTO 클래스입니다.
+     */
     @Getter @Builder
     public static class CareerDTO {
         private String companyName;
@@ -88,6 +94,9 @@ public class ResumeResponseDTO {
         }
     }
 
+    /**
+     * 구직자의 최종 학력 정보를 담는 내부 DTO 클래스입니다.
+     */
     @Getter @Builder
     public static class EducationDTO {
         private String schoolName;
@@ -99,11 +108,14 @@ public class ResumeResponseDTO {
             return EducationDTO.builder()
                     .schoolName(entity.getSchoolName())
                     .major(entity.getMajor())
-                    .status(entity.getStatus()) // 프론트에서 GRADUATED 등으로 판별
+                    .status(entity.getStatus())
                     .build();
         }
     }
 
+    /**
+     * 구직자의 취득 자격증 정보를 담는 내부 DTO 클래스입니다.
+     */
     @Getter @Builder
     public static class CertificateDTO {
         private String certName;
@@ -120,6 +132,9 @@ public class ResumeResponseDTO {
         }
     }
 
+    /**
+     * 구직자의 어학 능력 정보를 담는 내부 DTO 클래스입니다.
+     */
     @Getter @Builder
     public static class LanguageDTO {
         private String language;
@@ -134,6 +149,9 @@ public class ResumeResponseDTO {
         }
     }
 
+    /**
+     * 구직자가 등록한 포트폴리오 및 증빙 서류 파일의 메타데이터를 담는 내부 DTO 클래스입니다.
+     */
     @Getter @Builder
     public static class DocumentDTO {
         private String fileName;

@@ -22,8 +22,8 @@ import net.kumo.kumo.repository.ChatRoomRepository;
 import net.kumo.kumo.repository.UserRepository;
 
 /**
- * 채팅과 관련된 핵심 비즈니스 로직을 처리하는 서비스 클래스입니다.
- * 채팅방 생성/조회, 메시지 저장/조회, 읽음 처리 등의 기능을 제공합니다.
+ * 1:1 실시간 채팅과 관련된 핵심 비즈니스 로직을 처리하는 서비스 클래스입니다.
+ * 채팅방 세션 생성, 대화 기록 조회, 소켓 메시지 영속화 및 읽음 처리 신호 기능을 제공합니다.
  */
 @Service
 @RequiredArgsConstructor
@@ -36,15 +36,15 @@ public class ChatService {
     private final MessageSource messageSource;
 
     /**
-     * 구직자와 구인자 간의 채팅방을 생성하거나 이미 존재하는 방을 반환합니다.
-     * 동일한 공고(출처 포함)에 대해 이미 채팅방이 있다면 해당 방을 반환합니다.
+     * 구직자와 구인자 간의 채팅방 세션을 생성하거나,
+     * 동일 공고에 대해 이미 열려 있는 기존 채팅방을 반환합니다.
      *
-     * @param seekerId     구직자(Seeker)의 사용자 ID
-     * @param recruiterId  구인자(Recruiter)의 사용자 ID
-     * @param targetPostId 연관된 공고 ID
-     * @param targetSource 공고의 출처 (예: OSAKA, TOKYO 등)
-     * @return 생성되거나 조회된 ChatRoomEntity 객체
-     * @throws IllegalArgumentException 사용자를 찾을 수 없을 때 발생
+     * @param seekerId     참여하는 구직자 계정 식별자
+     * @param recruiterId  참여하는 구인자 계정 식별자
+     * @param targetPostId 대화의 기준이 되는 연관 공고 식별자
+     * @param targetSource 연관 공고의 데이터 출처 지역
+     * @return 생성 혹은 조회된 채팅방 엔티티
+     * @throws IllegalArgumentException 참여 사용자를 찾을 수 없을 때 발생
      */
     public ChatRoomEntity createOrGetChatRoom(Long seekerId, Long recruiterId, Long targetPostId, String targetSource) {
 
@@ -73,10 +73,10 @@ public class ChatService {
     }
 
     /**
-     * 특정 채팅방의 정보를 조회합니다.
+     * 식별자를 기반으로 특정 채팅방 세션의 상세 정보를 조회합니다.
      *
-     * @param roomId 조회할 채팅방 ID
-     * @return 조회된 ChatRoomEntity 객체
+     * @param roomId 조회할 채팅방 식별자
+     * @return 조회된 채팅방 엔티티
      * @throws IllegalArgumentException 채팅방이 존재하지 않을 때 발생
      */
     @Transactional(readOnly = true)
@@ -86,11 +86,11 @@ public class ChatService {
     }
 
     /**
-     * 사용자가 전송한 채팅 메시지를 DB에 저장합니다.
-     * 실시간으로 전송되는 메시지이므로 날짜 포맷은 기본값("kr")으로 처리합니다.
+     * 웹소켓을 통해 실시간으로 수신된 발신자의 개별 채팅 메시지를
+     * 데이터베이스에 영속화(저장)합니다.
      *
-     * @param dto 저장할 메시지 정보가 담긴 DTO
-     * @return 저장 후 변환된 ChatMessageDTO 객체
+     * @param dto 저장할 메시지 페이로드 정보가 담긴 DTO
+     * @return 저장이 완료되어 식별자가 부여된 메시지 DTO
      */
     public ChatMessageDTO saveMessage(ChatMessageDTO dto) {
         ChatRoomEntity room = getChatRoom(dto.getRoomId());
@@ -111,13 +111,13 @@ public class ChatService {
     }
 
     /**
-     * 특정 채팅방의 과거 메시지 기록을 조회하고, 읽음 처리를 수행합니다.
-     * 사용자의 언어 설정에 따라 날짜 포맷이 다르게 적용됩니다.
+     * 특정 채팅방 내부의 누적된 과거 메시지 대화 기록을 전체 조회합니다.
+     * 기록 조회 시, 해당 사용자가 읽지 않은 이전 메시지들에 대해 일괄 읽음 처리를 수행합니다.
      *
-     * @param roomId 채팅방 ID
-     * @param userId 메시지를 읽는 사용자의 ID
-     * @param lang   사용자의 현재 언어 설정 (예: "ko", "ja")
-     * @return 언어 포맷이 적용된 과거 메시지 DTO 리스트
+     * @param roomId 채팅방 식별자
+     * @param userId 기록을 요청한 사용자(본인) 식별자
+     * @param lang   날짜 구분선 생성에 적용할 사용자 언어 코드
+     * @return 포맷팅이 적용된 과거 메시지 DTO 리스트
      */
     public List<ChatMessageDTO> getMessageHistory(Long roomId, Long userId, String lang) {
         chatMessageRepository.markMessagesAsRead(roomId, userId);
@@ -129,11 +129,11 @@ public class ChatService {
     }
 
     /**
-     * 특정 사용자가 참여 중인 모든 채팅방 목록을 조회합니다.
-     * 상대방의 닉네임, 프로필 이미지, 마지막 메시지, 안 읽은 메시지 여부 등을 포함합니다.
+     * 특정 사용자가 참여하고 있는 모든 채팅방 목록을 조회합니다.
+     * 상대방의 정보 및 가장 최근 송수신된 메시지, 미확인 메시지 존재 여부를 함께 제공합니다.
      *
-     * @param userId 조회할 사용자의 ID
-     * @return 채팅방 목록 정보가 담긴 DTO 리스트
+     * @param userId 조회를 요청한 사용자 식별자
+     * @return 로비 화면에 렌더링될 채팅방 요약 DTO 리스트
      */
     @Transactional(readOnly = true)
     public List<ChatRoomListDTO> getChatRoomsForUser(Long userId) {
@@ -157,8 +157,7 @@ public class ChatService {
                     .opponentProfileImg(profileImg)
                     .lastMessage(lastMsg != null ? lastMsg.getContent()
                             : messageSource.getMessage("chat.last.message.empty", null,
-                                    LocaleContextHolder.getLocale()))
-
+                            LocaleContextHolder.getLocale()))
                     .lastTime(
                             lastMsg != null ? lastMsg.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm")) : "")
                     .hasUnread(hasUnreadFlag)
@@ -167,20 +166,22 @@ public class ChatService {
     }
 
     /**
-     * 웹소켓을 통한 실시간 메시지 읽음 신호를 처리합니다.
+     * 웹소켓 연결 중 상대방이 내 메시지를 열람했을 때 발생하는
+     * 실시간 읽음 처리(Read Receipt) 신호를 반영합니다.
      *
-     * @param roomId   채팅방 ID
-     * @param readerId 메시지를 읽은 사용자의 ID
+     * @param roomId   상태를 갱신할 채팅방 식별자
+     * @param readerId 메시지를 읽은 사용자(수신자) 식별자
      */
     public void processLiveReadSignal(Long roomId, Long readerId) {
         chatMessageRepository.markMessagesAsRead(roomId, readerId);
     }
 
     /**
-     * 특정 사용자가 아직 읽지 않은 총 메시지 개수를 반환합니다.
+     * 글로벌 네비게이션 헤더 뱃지 등에 표시하기 위해,
+     * 특정 사용자가 수신한 전체 채팅방의 미확인 메시지 총합을 계산합니다.
      *
-     * @param userId 사용자 ID
-     * @return 안 읽은 메시지 총 개수
+     * @param userId 확인할 사용자 식별자
+     * @return 미확인 채팅 메시지 총 개수
      */
     @Transactional(readOnly = true)
     public int getUnreadMessageCount(Long userId) {
@@ -188,12 +189,12 @@ public class ChatService {
     }
 
     /**
-     * ChatMessageEntity를 ChatMessageDTO로 변환하는 헬퍼 메서드입니다.
-     * 전달받은 언어 파라미터에 따라 채팅창 구분선에 쓰일 날짜 포맷을 다국어로 적용합니다.
+     * DB에서 조회된 메시지 엔티티를 클라이언트 통신 규격에 맞는 DTO로 변환합니다.
+     * 채팅 화면의 날짜 구분선(Divider) 출력을 위해 다국어 일자 포맷을 적용합니다.
      *
-     * @param entity 변환할 메시지 엔티티
-     * @param lang   적용할 언어 코드 (예: "ja", "kr")
-     * @return 변환된 DTO 객체
+     * @param entity 변환할 원본 메시지 엔티티
+     * @param lang   적용할 다국어 언어 코드
+     * @return 변환이 완료된 메시지 DTO
      */
     private ChatMessageDTO convertToDTO(ChatMessageEntity entity, String lang) {
         java.util.Locale locale = "ja".equals(lang) ? java.util.Locale.JAPANESE : java.util.Locale.KOREAN;

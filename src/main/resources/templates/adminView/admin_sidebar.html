@@ -40,14 +40,7 @@
 		        th:classappend="${lang == 'ja' ? 'active' : ''}"
 		        onclick="changeAdminLanguage('ja')">JP</button>
 	</div>
-	
-	<script th:inline="javascript">
-		function changeAdminLanguage(newLang) {
-			// 현재 URL을 가져와서 lang 파라미터만 교체한 뒤 이동합니다.
-			const url = new URL(window.location.href);
-			url.searchParams.set('lang', newLang);
-			window.location.href = url.toString();
-		}
-	</script>
+
+    <script defer th:src="@{/js/adminView/admin_sidebar.js}"></script>
 </aside>
 </html>

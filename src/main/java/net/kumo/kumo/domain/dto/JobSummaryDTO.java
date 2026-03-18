@@ -11,6 +11,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * 구인 공고의 요약 정보(목록 조회용)를 프론트엔드로 전달하기 위한 DTO 클래스입니다.
+ * DB Projection(View) 데이터 및 BaseEntity 데이터를 다국어 포맷으로 변환하여 매핑합니다.
+ */
 @Getter
 @NoArgsConstructor
 public class JobSummaryDTO {
@@ -20,7 +24,6 @@ public class JobSummaryDTO {
     private String title;
     private String status;
 
-    // ★ 필수 필드 확인
     private String position;
     private LocalDate deadline;
 
@@ -33,14 +36,21 @@ public class JobSummaryDTO {
     private LocalDateTime createdAt;
     private Double lat;
     private Double lng;
-    
-    // ==========================================
-    // 🌟 [핵심 추가] 작성자 ID와 진짜 이름(닉네임)을 담을 그릇
-    // ==========================================
+
+    /** 공고 작성자 식별자 */
     private Long userId;
+
+    /** 공고 작성자 닉네임 또는 이름 */
     private String managerName;
 
-    // 1. View 생성자 (바텀 시트용)
+    /**
+     * DB Projection 결과(JobSummaryView)를 기반으로 DTO를 생성합니다.
+     * 주로 지도 바텀 시트 요약 정보 제공용으로 사용됩니다.
+     *
+     * @param view   JPA Projection 조회 결과
+     * @param lang   클라이언트 언어 설정
+     * @param source 데이터 출처 지역
+     */
     public JobSummaryDTO(JobSummaryView view, String lang, String source) {
         this.id = view.getId();
         this.source = source;
@@ -50,8 +60,8 @@ public class JobSummaryDTO {
         this.writeTime = view.getWriteTime();
         this.lat = view.getLat();
         this.lng = view.getLng();
-        this.deadline = null; // 크롤링 데이터는 마감일 없음
-        
+        this.deadline = null; // 크롤링 데이터는 모집 마감일이 존재하지 않음 처리
+
         this.userId = view.getUserId();
         this.managerName = view.getManagerName();
 
@@ -60,11 +70,17 @@ public class JobSummaryDTO {
         this.companyName = (isJp && hasText(view.getCompanyNameJp())) ? view.getCompanyNameJp() : view.getCompanyName();
         this.wage = (isJp && hasText(view.getWageJp())) ? view.getWageJp() : view.getWage();
 
-        // 직무 필드 (없으면 회사명으로 대체)
         this.position = view.getCompanyName();
     }
 
-    // 2. Entity 생성자 (일반 리스트 반환용)
+    /**
+     * 엔티티(BaseEntity) 객체를 기반으로 DTO를 생성합니다.
+     * 주로 일반 공고 리스트 반환용으로 사용됩니다.
+     *
+     * @param entity 공고 기본 엔티티
+     * @param lang   클라이언트 언어 설정
+     * @param source 데이터 출처 지역
+     */
     public JobSummaryDTO(BaseEntity entity, String lang, String source) {
         this.id = entity.getId();
         this.source = source;
@@ -73,11 +89,10 @@ public class JobSummaryDTO {
         this.address = entity.getAddress();
         this.userId = entity.getUserId();
 
-        // DB에 status가 없거나(null), 아직 구현 안 된 경우 기본값 'RECRUITING' 적용
         if (entity.getStatus() != null) {
-            this.status = entity.getStatus().name(); // Enum일 경우 .name()
+            this.status = entity.getStatus().name();
         } else {
-            this.status = "RECRUITING"; // ★ DB가 비어있으면 승인됨으로 간주
+            this.status = "RECRUITING"; // 상태 정보 누락 시 기본값 적용
         }
 
         if (entity.getWriteTime() != null) {
@@ -85,18 +100,18 @@ public class JobSummaryDTO {
         } else if (entity.getCreatedAt() != null) {
             this.writeTime = entity.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         }
+
         this.createdAt = entity.getCreatedAt();
         this.deadline = null;
-        
-        // 🌟 좌표 및 실제 유저 이름(닉네임) 추출
+
         if (entity instanceof OsakaGeocodedEntity osaka) {
-	        this.lat = osaka.getLat();
+            this.lat = osaka.getLat();
             this.lng = osaka.getLng();
             if (osaka.getUser() != null) {
                 this.managerName = osaka.getUser().getNickname();
             }
         } else if (entity instanceof TokyoGeocodedEntity tokyo) {
-	        this.lat = tokyo.getLat();
+            this.lat = tokyo.getLat();
             this.lng = tokyo.getLng();
             if (tokyo.getUser() != null) {
                 this.managerName = tokyo.getUser().getNickname();
@@ -110,8 +125,6 @@ public class JobSummaryDTO {
         this.title = (isJp && hasText(entity.getTitleJp())) ? entity.getTitleJp() : entity.getTitle();
         this.companyName = (isJp && hasText(entity.getCompanyNameJp())) ? entity.getCompanyNameJp() : entity.getCompanyName();
         this.wage = (isJp && hasText(entity.getWageJp())) ? entity.getWageJp() : entity.getWage();
-
-        // ★ 직무 필드 매핑
         this.position = (isJp && hasText(entity.getPositionJp())) ? entity.getPositionJp() : entity.getPosition();
     }
 

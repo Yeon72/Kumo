@@ -8,49 +8,60 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 관리자(Admin) 대시보드의 회원 관리 페이지에서
+ * 개별 회원의 상세 정보 및 상태를 렌더링하기 위한 DTO 클래스입니다.
+ */
 @Getter
 @NoArgsConstructor
 public class UserManageDTO {
-    private Long id;              // user_id
+
+    private Long id;
     private String email;
     private String nickname;
-    private String name;          // 이름 (한자 성+이름)
-    private String role;          // SEEKER, RECRUITER, ADMIN
-    private String status;        // ACTIVE, INACTIVE (isActive 기반)
-    private ProfileImageEntity profileImage;  // 프로필 이미지 경로
-    private String joinedAt;      // 가입일
-    private String lastActive;    // 마지막 활동 (updatedAt 사용)
-    private List<String> evidenceUrls;      // 증빙서류 URL 리스트
+    private String name;
 
+    /** 사용자 권한 (SEEKER, RECRUITER, ADMIN) */
+    private String role;
+
+    /** 사용자 활성화 상태 (ACTIVE, INACTIVE) */
+    private String status;
+
+    /** 사용자 프로필 이미지 정보 */
+    private ProfileImageEntity profileImage;
+
+    private String joinedAt;
+    private String lastActive;
+
+    /** 구인자 회원의 사업자 증빙 서류 URL 목록 */
+    private List<String> evidenceUrls;
+
+    /**
+     * UserEntity를 기반으로 관리자 뷰 렌더링을 위한 UserManageDTO를 생성합니다.
+     * 날짜 포맷팅 및 연관된 증빙 서류 파일의 URL 추출 로직을 포함합니다.
+     *
+     * @param user 매핑할 대상 회원 엔티티 객체
+     */
     public UserManageDTO(UserEntity user) {
         this.id = user.getUserId();
         this.email = user.getEmail();
         this.nickname = user.getNickname();
-
-        // 성명 합치기 (한자 성 + 이름)
         this.name = user.getNameKanjiSei() + " " + user.getNameKanjiMei();
 
-        // Role 매핑 (Enum -> String)
         if (user.getRole() != null) {
             this.role = user.getRole().name();
         } else {
             this.role = "SEEKER";
         }
 
-        // Status 매핑 (boolean isActive -> String)
         this.status = user.isActive() ? "ACTIVE" : "INACTIVE";
 
-        // 프로필 이미지 (없으면 기본값)
         this.profileImage = user.getProfileImage();
-        if (this.profileImage == null) {
-            this.profileImage = new ProfileImageEntity(); // DTO라면 ProfileImageDTO()
-            this.profileImage.setFileUrl("/uploads/default_profile.png");
-        }
-        else if (this.profileImage.getFileUrl() == null || this.profileImage.getFileUrl().isEmpty()) {
+        if (this.profileImage == null || this.profileImage.getFileUrl() == null || this.profileImage.getFileUrl().isEmpty()) {
+            this.profileImage = new ProfileImageEntity();
             this.profileImage.setFileUrl("/uploads/default_profile.png");
         }
 
-        // 날짜 포맷팅
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
         if (user.getCreatedAt() != null) {
@@ -59,19 +70,15 @@ public class UserManageDTO {
             this.joinedAt = "-";
         }
 
-        // 마지막 활동 (Last Fail 혹은 UpdatedAt 등을 활용, 여기선 UpdatedAt 사용)
         if (user.getUpdatedAt() != null) {
             this.lastActive = user.getUpdatedAt().format(formatter);
         } else {
             this.lastActive = "-";
         }
 
-        // 🌟 양방향 매핑 덕분에 이렇게 한 방에 처리 가능!
         if (user.getEvidenceFiles() != null && !user.getEvidenceFiles().isEmpty()) {
             this.evidenceUrls = user.getEvidenceFiles().stream()
-                    // 파일 타입이 "EVIDENCE"인 것만 필터링 (선택 사항)
                     .filter(file -> "EVIDENCE".equals(file.getFileType()))
-                    // 설정해둔 WebMvcConfig 경로 패턴에 맞게 URL 생성
                     .map(file -> "/images/uploadFile/" + file.getFileName())
                     .collect(Collectors.toList());
         }

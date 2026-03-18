@@ -1,3 +1,8 @@
+/**
+ * DOMContentLoaded 이벤트 리스너
+ * 프로필 이미지 변경 모달의 제어(열기/닫기, 파일 미리보기, 서버 업로드) 및
+ * SNS 연동 토글 버튼의 알림 이벤트를 초기화하고 바인딩합니다.
+ */
 document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById('profileModal');
     const btnOpenModal = document.getElementById('btnOpenModal');
@@ -10,7 +15,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const currentProfileImg = document.getElementById('currentProfileImg');
     const fileNameSpan = document.getElementById('fileName');
 
-    // [1] 프로필 모달 열기 & 초기화
     if (btnOpenModal) {
         btnOpenModal.addEventListener('click', function () {
             modal.style.display = "flex";
@@ -24,6 +28,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    /**
+     * 프로필 모달에 닫기 애니메이션 클래스를 부여하고, 지정된 지연 시간 후 화면에서 숨깁니다.
+     */
     const closeModal = () => {
         modal.classList.add('closing');
         setTimeout(() => {
@@ -35,12 +42,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnCloseX) btnCloseX.addEventListener('click', closeModal);
     if (btnCancel) btnCancel.addEventListener('click', closeModal);
 
-    // 바깥 클릭 시 닫기
     window.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
 
-    // [2] 파일 선택 시 (미리보기 & 파일명 표시)
     if (fileInput) {
         fileInput.addEventListener('change', function (e) {
             const file = e.target.files[0];
@@ -57,7 +62,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // [3] 서버 전송 (저장 버튼)
     if (btnSave) {
         btnSave.addEventListener('click', function () {
             const file = fileInput.files[0];
@@ -76,32 +80,31 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (response.ok) return response.text();
-                throw new Error('UPLOAD_FAILED');
-            })
-            .then(newImageUrl => {
-                Swal.fire({
-                    icon: 'success',
-                    title: typeof settingsMsg !== 'undefined' ? settingsMsg.uploadSuccess : '프로필 사진이 업로드 되었습니다.'
-                }).then(() => {
-                    if (newImageUrl && currentProfileImg) {
-                        currentProfileImg.src = newImageUrl;
-                    }
-                    closeModal();
+                .then(response => {
+                    if (response.ok) return response.text();
+                    throw new Error('UPLOAD_FAILED');
+                })
+                .then(newImageUrl => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: typeof settingsMsg !== 'undefined' ? settingsMsg.uploadSuccess : '프로필 사진이 업로드 되었습니다.'
+                    }).then(() => {
+                        if (newImageUrl && currentProfileImg) {
+                            currentProfileImg.src = newImageUrl;
+                        }
+                        closeModal();
+                    });
+                })
+                .catch(err => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: typeof settingsMsg !== 'undefined' ? settingsMsg.uploadFail : '업로드 실패',
+                        text: err.message
+                    });
                 });
-            })
-            .catch(err => {
-                Swal.fire({
-                    icon: 'error',
-                    title: typeof settingsMsg !== 'undefined' ? settingsMsg.uploadFail : '업로드 실패',
-                    text: err.message
-                });
-            });
         });
     }
 
-    // [4] SNS 토글 알림
     document.querySelectorAll('.sns-toggle').forEach(toggle => {
         toggle.addEventListener('click', (e) => {
             e.preventDefault();
@@ -117,14 +120,12 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-}); // ← DOMContentLoaded 끝
-
+});
 
 /**
- * 회원 탈퇴 관련 함수들 (글로벌 스코프)
+ * 회원 탈퇴 진행을 위한 확인 모달 창을 엽니다.
+ * 배경 스크롤을 방지하기 위해 body의 overflow 속성을 조작합니다.
  */
-
-// 1. 모달 열기
 function openDeleteModal() {
     const modal = document.getElementById('deleteAccountModal');
     if (modal) {
@@ -133,7 +134,10 @@ function openDeleteModal() {
     }
 }
 
-// 2. 모달 닫기
+/**
+ * 회원 탈퇴 확인 모달 창을 닫고, 내부에 입력된 비밀번호 데이터 및
+ * 에러 메시지 상태, 버튼 활성화 상태를 초기화합니다.
+ */
 function closeDeleteModal() {
     const modal = document.getElementById('deleteAccountModal');
     if (modal) {
@@ -152,7 +156,10 @@ function closeDeleteModal() {
     }
 }
 
-// 3. 입력 실시간 검증
+/**
+ * 탈퇴 모달 내의 비밀번호 및 비밀번호 확인 입력 필드 값을 실시간으로 비교하여,
+ * 일치 여부에 따라 경고 메시지 노출 및 탈퇴 실행 버튼의 활성화 상태를 제어합니다.
+ */
 function checkDeleteInput() {
     const pw = document.getElementById('deleteConfirmPw').value;
     const pwCheck = document.getElementById('deleteConfirmPwCheck').value;
@@ -173,7 +180,11 @@ function checkDeleteInput() {
     }
 }
 
-// 4. 탈퇴 실행
+/**
+ * 사용자에게 탈퇴에 대한 최종 확인(SweetAlert2)을 받은 후,
+ * 입력된 비밀번호와 함께 서버에 계정 완전 삭제 비동기 요청을 전송합니다.
+ * 성공 시 로그아웃 엔드포인트로 리다이렉트합니다.
+ */
 function executeDelete() {
     const password = document.getElementById('deleteConfirmPw').value;
     const errorMsg = document.getElementById('deleteErrorMsg');
@@ -197,33 +208,33 @@ function executeDelete() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: password })
             })
-            .then(async response => {
-                if (response.ok) {
+                .then(async response => {
+                    if (response.ok) {
+                        Swal.fire({
+                            title: typeof delMsg !== 'undefined' ? delMsg.successTitle : '탈퇴 완료',
+                            text: typeof delMsg !== 'undefined' ? delMsg.successText : '그동안 KUMO를 이용해 주셔서 감사합니다.',
+                            icon: 'success',
+                            background: isDark ? '#2a2b2e' : '#fff',
+                            color: isDark ? '#e3e5e8' : '#333'
+                        }).then(() => {
+                            window.location.href = '/logout';
+                        });
+                    } else {
+                        const errorText = await response.text();
+                        errorMsg.innerText = errorText || (typeof delMsg !== 'undefined' ? delMsg.errorText : '비밀번호가 일치하지 않거나 오류가 발생했습니다.');
+                        errorMsg.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     Swal.fire({
-                        title: typeof delMsg !== 'undefined' ? delMsg.successTitle : '탈퇴 완료',
-                        text: typeof delMsg !== 'undefined' ? delMsg.successText : '그동안 KUMO를 이용해 주셔서 감사합니다.',
-                        icon: 'success',
+                        title: typeof delMsg !== 'undefined' ? delMsg.errorTitle : '오류',
+                        text: typeof delMsg !== 'undefined' ? delMsg.errorText : '서버와의 통신 중 오류가 발생했습니다.',
+                        icon: 'error',
                         background: isDark ? '#2a2b2e' : '#fff',
                         color: isDark ? '#e3e5e8' : '#333'
-                    }).then(() => {
-                        window.location.href = '/logout';
                     });
-                } else {
-                    const errorText = await response.text();
-                    errorMsg.innerText = errorText || (typeof delMsg !== 'undefined' ? delMsg.errorText : '비밀번호가 일치하지 않거나 오류가 발생했습니다.');
-                    errorMsg.style.display = 'block';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    title: typeof delMsg !== 'undefined' ? delMsg.errorTitle : '오류',
-                    text: typeof delMsg !== 'undefined' ? delMsg.errorText : '서버와의 통신 중 오류가 발생했습니다.',
-                    icon: 'error',
-                    background: isDark ? '#2a2b2e' : '#fff',
-                    color: isDark ? '#e3e5e8' : '#333'
                 });
-            });
         }
     });
 }

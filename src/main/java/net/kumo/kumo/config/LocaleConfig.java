@@ -1,4 +1,4 @@
-package net.kumo.kumo.config; // 패키지명 수정됨
+package net.kumo.kumo.config;
 
 import java.time.Duration;
 import java.util.Locale;
@@ -12,44 +12,59 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
+/**
+ * 다국어(i18n) 처리 및 정적 리소스 경로를 설정하는 Configuration 클래스입니다.
+ */
 @Configuration
 public class LocaleConfig implements WebMvcConfigurer {
 
-	@Bean
-	public LocaleResolver localeResolver() {
-		CookieLocaleResolver resolver = new CookieLocaleResolver();
-		resolver.setDefaultLocale(Locale.KOREAN); // 기본 한국어
-		resolver.setCookieName("lang"); // 쿠키 이름
-		resolver.setCookieMaxAge(Duration.ofDays(1)); // 하루 정도
-		return resolver;
-	}
+    /**
+     * 클라이언트의 언어 설정을 유지하기 위한 Cookie 기반 LocaleResolver를 등록합니다.
+     *
+     * @return CookieLocaleResolver 객체 (기본값: KOREAN, 유지기간: 1일)
+     */
+    @Bean
+    public LocaleResolver localeResolver() {
+        CookieLocaleResolver resolver = new CookieLocaleResolver();
+        resolver.setDefaultLocale(Locale.KOREAN);
+        resolver.setCookieName("lang");
+        resolver.setCookieMaxAge(Duration.ofDays(1));
+        return resolver;
+    }
 
-	@Bean
-	public LocaleChangeInterceptor localeChangeInterceptor() {
-		LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
-		interceptor.setParamName("lang"); // URL 파라미터 감지 (?lang=ja)
-		return interceptor;
-	}
+    /**
+     * HTTP 요청의 특정 파라미터 값을 감지하여 언어를 변경하는 Interceptor를 등록합니다.
+     *
+     * @return LocaleChangeInterceptor 객체 (감지 파라미터: "lang")
+     */
+    @Bean
+    public LocaleChangeInterceptor localeChangeInterceptor() {
+        LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
+        interceptor.setParamName("lang");
+        return interceptor;
+    }
 
-	@Override
-	public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(localeChangeInterceptor());
-	}
+    /**
+     * 커스텀 인터셉터를 Spring MVC 인터셉터 레지스트리에 추가합니다.
+     *
+     * @param registry InterceptorRegistry
+     */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(localeChangeInterceptor());
+    }
 
-	// 원우 전용 사진 업로드 오류수정
-	@Override
-	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-		// 1. 사장님 맥북의 실제 저장 위치 (반드시 끝에 /를 붙이세요!)
-		String actualPath = "file:" + System.getProperty("user.home") + "/kumo_uploads/profiles/";
+    /**
+     * 로컬 스토리지에 저장된 사용자 프로필 이미지 등의 정적 리소스 접근 경로를 매핑합니다.
+     *
+     * @param registry ResourceHandlerRegistry
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String actualPath = "file:" + System.getProperty("user.home") + "/kumo_uploads/profiles/";
 
-		// 2. 브라우저가 사용하는 가상 주소 (/upload/profiles/...)
-		// 이 주소로 요청이 오면 actualPath 폴더에서 파일을 찾으라고 명령합니다.
-		registry.addResourceHandler("/upload/profiles/**")
-				.addResourceLocations(actualPath);
-
-		// 캐시 설정 (이미지가 즉시 안 바뀔 때를 대비)
-		registry.addResourceHandler("/upload/profiles/**")
-				.addResourceLocations(actualPath)
-				.setCachePeriod(0); // 0으로 설정하면 즉시 반영됩니다.
-	}
+        registry.addResourceHandler("/upload/profiles/**")
+                .addResourceLocations(actualPath)
+                .setCachePeriod(0); // 이미지 변경 시 브라우저 캐싱을 방지하고 즉시 반영
+    }
 }

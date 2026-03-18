@@ -14,6 +14,10 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kumo.kumo.domain.enums.JobStatus;
 
+/**
+ * 구인 공고(OSAKA, TOKYO 등 지역별 테이블) 엔티티들의
+ * 공통 필드 및 다국어 속성을 정의하는 MappedSuperclass 입니다.
+ */
 @MappedSuperclass
 @Getter
 @Setter
@@ -50,33 +54,37 @@ public abstract class BaseEntity {
     private String address;
 
     private String contactPhone;
+
     private String position;
 
     @Lob
     private String jobDescription;
+
     private String wage;
 
     @Lob
     private String notes;
 
-    // 일본어 필드
+    /* --- 다국어(일본어) 지원 필드 --- */
+
     private String titleJp;
     private String companyNameJp;
     private String positionJp;
+
     @Lob
     private String jobDescriptionJp;
+
     private String wageJp;
+
     @Lob
     private String notesJp;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
-	
-	
 
     /**
-     * 공고 상태 관리
-     * @Enumerated(EnumType.STRING): DB에 숫자가 아닌 "RECRUITING" 문자열로 저장됨
+     * 공고 모집 상태 관리
+     * DB에는 열거형의 이름("RECRUITING", "CLOSED" 등) 문자열로 저장됩니다.
      */
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
@@ -87,11 +95,10 @@ public abstract class BaseEntity {
 
     @Column(name = "view_count")
     private Integer viewCount;
-	
-	
-	
-	
 
+    /**
+     * 공고 조회수를 1씩 증가시키는 비즈니스 로직 메서드입니다.
+     */
     public void addViewCount() {
         if (this.viewCount == null) {
             this.viewCount = 0;

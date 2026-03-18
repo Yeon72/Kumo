@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html lang="ko"xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"> <head>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
     <meta charset="UTF-8">
     <title>Job List</title>
+
     <link rel="stylesheet" th:href="@{/css/mainView/job_list.css}">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script defer th:src="@{/js/mainView/job_list.js}"></script>
 </head>
 <body>
 
@@ -26,105 +30,6 @@
         </tbody>
     </table>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // 1. URL 파라미터 읽기
-        const urlParams = new URLSearchParams(window.location.search);
-
-        const currentLang = urlParams.get('lang') === 'ja' ? 'ja' : 'ko';
-
-        // 지도 좌표 파라미터
-        const apiParams = new URLSearchParams();
-        apiParams.append('minLat', urlParams.get('minLat'));
-        apiParams.append('maxLat', urlParams.get('maxLat'));
-        apiParams.append('minLng', urlParams.get('minLng'));
-        apiParams.append('maxLng', urlParams.get('maxLng'));
-
-        // 언어 설정 (기본값: kr)
-        apiParams.append('lang', currentLang);
-
-        // 2. 헤더 언어 변경 (필요시)
-        if (currentLang === 'ja') {
-            const headers = document.querySelectorAll('#tableHeader th');
-            const jpHeaders = ['タイトル', '会社名', '勤務地', '給与', '連絡先', '担当者', '管理'];
-            headers.forEach((th, idx) => th.innerText = jpHeaders[idx]);
-        }
-
-        // 3. API 호출
-        fetch(`/map/api/jobs?${apiParams.toString()}`)
-            .then(res => res.json())
-            .then(data => renderList(data, currentLang))
-            .catch(err => {
-                console.error(err);
-                document.getElementById('listBody').innerHTML =
-                    `<tr><td colspan="7" class="msg-box">
-                        ${currentLang === 'ja' ? 'データを読み込めませんでした。' : '데이터를 불러오지 못했습니다.'}
-                    </td></tr>`;
-            });
-    });
-
-    // 4. 리스트 렌더링 함수
-    function renderList(jobs, lang) {
-        const tbody = document.getElementById('listBody');
-
-        if (!jobs || jobs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="msg-box">
-                ${lang === 'ja' ? '現在、この地域には求人がありません。' : '현재 이 지역에 공고가 없습니다.'}
-            </td></tr>`;
-            return;
-        }
-
-        let html = '';
-        jobs.forEach(job => {
-
-            const title = job.title;
-            const company = job.companyName;
-            const wage = job.wage;
-
-            // 주소는 별도 JP 필드가 없으면 공통 address 사용
-            // (보통 일본 데이터면 address 컬럼 자체가 일본어일 확률 높음)
-            const address = job.address || '-';
-
-            // 이미지 & 기타
-            const thumb = job.thumbnailUrl || 'https://via.placeholder.com/40';
-            const dateStr = job.writeTime || (lang === 'ja' ? 'ついさっき' : '방금 전');
-            const contact = job.contactPhone || '-';
-
-            html += `
-            <tr>
-                <td>
-                    <span class="title-text">${title}</span>
-                    <span class="badge bg-blue">${lang === 'ja' ? '募集中' : '구인중'}</span>
-                    <span class="badge bg-yellow">${lang === 'ja' ? '急募' : '급구'}</span>
-                </td>
-                <td><a href="#" class="company-text">${company}</a></td>
-                <td><span class="addr-text">${address.split(' ')[0]}</span></td>
-                <td><span class="wage-text">${wage}</span></td>
-                <td style="color:#666; font-size:12px;">${contact}</td>
-                <td>
-                    <div class="profile-wrap">
-                        <img src="${thumb}" class="profile-img">
-                        <div class="profile-info">
-                            <div>Admin</div>
-                            <div>${dateStr}</div>
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <div class="btn-wrap">
-                        <button class="btn">${lang === 'ja' ? '保存' : '찜'}</button>
-                        <button class="btn btn-view" onclick="window.open('/jobs/${job.id}')">
-                            ${lang === 'ja' ? '詳細' : '상세'}
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            `;
-        });
-        tbody.innerHTML = html;
-    }
-</script>
 
 </body>
 </html>

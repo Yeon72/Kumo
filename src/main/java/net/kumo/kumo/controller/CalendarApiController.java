@@ -20,6 +20,9 @@ import net.kumo.kumo.domain.entity.ScheduleEntity;
 import net.kumo.kumo.security.AuthenticatedUser;
 import net.kumo.kumo.service.ScheduleService;
 
+/**
+ * 캘린더 기능(일정 조회, 등록, 수정, 삭제)에 대한 비동기 요청을 처리하는 API Controller 입니다.
+ */
 @RestController
 @RequestMapping("/api/calendar")
 @RequiredArgsConstructor
@@ -28,15 +31,16 @@ public class CalendarApiController {
     private final ScheduleService scheduleService;
 
     /**
-     * 일정 저장
-     * 
-     * @param dto
-     * @param user
-     * @return
+     * 새로운 캘린더 일정을 저장합니다.
+     *
+     * @param dto  저장할 일정 정보를 담은 DTO 객체
+     * @param user 현재 인증된 사용자(구인자) 정보
+     * @return 성공 여부를 나타내는 상태 코드
      */
     @PostMapping("/save")
     public ResponseEntity<?> saveEvent(@RequestBody ScheduleDTO dto,
-            @AuthenticationPrincipal AuthenticatedUser user) {
+                                       @AuthenticationPrincipal AuthenticatedUser user) {
+
         ScheduleEntity entity = new ScheduleEntity();
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
@@ -49,70 +53,61 @@ public class CalendarApiController {
     }
 
     /**
-     * 스케줄 가져오기
-     * 
-     * @param user
-     * @return
+     * 현재 로그인된 사용자의 모든 캘린더 일정을 조회합니다.
+     * FullCalendar 라이브러리 포맷에 맞춘 이벤트 리스트를 반환합니다.
+     *
+     * @param user 현재 인증된 사용자 정보
+     * @return 캘린더 이벤트 맵 객체의 리스트
      */
     @GetMapping("/events")
     public List<Map<String, Object>> getEvents(@AuthenticationPrincipal AuthenticatedUser user) {
-        // 현재 로그인한 리쿠르터의 일정만 가져오기
         return scheduleService.getCalendarEvents(user.getUsername());
     }
 
     /**
-     * 일정 삭제
-     * 
-     * @param id
-     * @param user
-     * @return
+     * 특정 캘린더 일정을 삭제합니다.
+     * 휴지통 영역으로의 드래그 앤 드롭 이벤트를 통해 주로 호출됩니다.
+     *
+     * @param id 삭제할 일정의 식별자(ID)
+     * @return 처리 결과 메시지를 포함한 응답 객체
      */
-    // 쓰레기통으로 드래그 앤 드롭할 때 여기로 도착합니다!
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteCalendarEvent(@PathVariable("id") Long id) {
         try {
-            // 1. 사장님이 만드신 서비스 메서드로 ID 전달 -> DB에서 삭제 완료!
             scheduleService.deleteSchedule(id);
-
-            // 2. 삭제가 무사히 끝나면 화면(프론트엔드)에 "성공" 도장을 찍어 보냅니다.
             return ResponseEntity.ok("일정이 성공적으로 삭제되었습니다.");
-
         } catch (Exception e) {
-            // 혹시라도 삭제 중 에러가 나면 500 에러와 함께 이유를 알려줍니다.
-            return ResponseEntity.status(500).body("삭제 실패: " + e.getMessage());
+            return ResponseEntity.status(500).body("일정 삭제에 실패했습니다: " + e.getMessage());
         }
     }
 
     /**
-     * 일정 수정 (모달창 수정 & 드래그 이동 시 여기로 옵니다!)
-     * * @param dto
-     * 
-     * @param user
-     * @return
+     * 기존에 등록된 캘린더 일정을 수정합니다.
+     * 모달창을 통한 상세 내용 변경 및 캘린더 내 드래그 앤 드롭(기간 변경) 시 호출됩니다.
+     *
+     * @param dto  수정할 내용이 담긴 일정 DTO 객체
+     * @param user 현재 인증된 사용자 정보
+     * @return 처리 결과 상태 코드
      */
     @PostMapping("/update")
     public ResponseEntity<?> updateEvent(@RequestBody ScheduleDTO dto,
-            @AuthenticationPrincipal AuthenticatedUser user) {
+                                         @AuthenticationPrincipal AuthenticatedUser user) {
 
         try {
-            // 🌟 1. 기존 일정 수정이므로, DTO에서 ID를 받아와야 합니다.
-            // (주의: ScheduleDTO에 id 필드(Long id)가 있어야 합니다!)
             ScheduleEntity entity = new ScheduleEntity();
-            entity.setScheduleId(dto.getScheduleId()); // 기존 일정을 덮어쓰기 위해 ID 필수!
+            entity.setScheduleId(dto.getScheduleId());
             entity.setTitle(dto.getTitle());
             entity.setDescription(dto.getDescription());
             entity.setStartAt(LocalDateTime.parse(dto.getStart()));
             entity.setEndAt(LocalDateTime.parse(dto.getEnd()));
             entity.setColorCode(dto.getColor());
 
-            // 🌟 2. 서비스로 넘겨서 DB 업데이트 (JPA의 save는 ID가 있으면 update로 작동합니다)
             scheduleService.saveSchedule(entity, user.getUsername());
 
             return ResponseEntity.ok().build();
 
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("수정 실패: " + e.getMessage());
+            return ResponseEntity.status(500).body("일정 수정에 실패했습니다: " + e.getMessage());
         }
     }
-
 }

@@ -1,6 +1,13 @@
-// [0] 지도 스타일 정의 (Light / Dark)
+/**
+ * 구글 맵(Google Maps) 렌더링에 적용되는 커스텀 테마 스타일 정의 객체입니다.
+ * 사용자 시스템 또는 애플리케이션 테마 설정에 따라 라이트 모드(Light)와 다크 모드(Dark)를 지원합니다.
+ * @constant {Object}
+ */
 const MapStyles = {
-    // ☀️ 라이트 모드 (기존 스타일: 채도 -20)
+    /**
+     * 라이트 모드 맵 렌더링 스타일 (명도 및 채도 최적화 테마)
+     * @type {Array<Object>}
+     */
     light: [
         {
             "featureType": "all",
@@ -150,7 +157,10 @@ const MapStyles = {
         }
     ],
 
-    // 🌙 다크 모드 (작성해주신 JSON)
+    /**
+     * 다크 모드 맵 렌더링 스타일 (야간 및 저조도 환경 최적화 테마)
+     * @type {Array<Object>}
+     */
     dark: [
         {
             "featureType": "landscape",

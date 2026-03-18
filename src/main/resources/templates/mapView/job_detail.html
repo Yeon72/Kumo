@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8" />
     <title th:text="${job.title}">상세 정보</title>
+
     <link rel="stylesheet" th:href="@{/css/NonLoginFragments/NonLoginFooter.css}">
     <link rel="stylesheet" th:href="@{/css/mapView/job_detail.css}">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -14,27 +15,43 @@
     <link rel="stylesheet" th:href="@{/css/recruiter/recruiterHeader.css}" />
     <link rel="stylesheet" th:href="@{/css/AuthenticatedFragments/AuthenticatedHeader.css}">
 
+    <script th:inline="javascript">
+        /* <![CDATA[ */
+        const isUserLoggedIn = /*[[${#authorization.expression('isAuthenticated()')}]]*/ false;
+        const currentLang = (typeof window.getKumoLang === 'function') ? window.getKumoLang() : 'ko';
+
+        const MESSAGES = {
+            loginRequired: /*[[#{job.msg.loginRequired}]]*/ '로그인이 필요합니다.',
+            reportSuccess: /*[[#{job.msg.reportSuccess}]]*/ '신고가 접수되었습니다.',
+            reportError:   /*[[#{job.msg.reportError}]]*/ '신고 처리 중 오류가 발생했습니다.',
+            confirmReport: /*[[#{job.msg.confirmReport}]]*/ '정말 신고하시겠습니까?',
+            selectReportType: /*[[#{job.msg.selectReportType}]]*/ '신고 유형을 선택해주세요.',
+            applyReady:    /*[[#{job.msg.applyReady}]]*/ '지원을 준비 중입니다.',
+            processError:  /*[[#{job.msg.processError}]]*/ '처리 중 오류가 발생했습니다.'
+        };
+        /* ]]> */
+    </script>
+
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script th:src="@{/js/mapView/job_detail.js}"></script>
+
+    <script defer th:src="@{/js/mapView/job_detail.js}"></script>
+
 </head>
 <body>
 
 <div class="map-header-wrapper">
-    <!-- 비로그인 -->
     <div th:replace="~{NonLoginFragments/NonLoginHeader :: headerFragment}" sec:authorize="!isAuthenticated()"></div>
 
-    <!-- 구직자(SEEKER) 로그인 -->
     <div th:replace="~{AuthenticatedFragments/AuthenticatedHeader :: headerFragment}" sec:authorize="hasRole('SEEKER')">
     </div>
 
-    <!-- 구인자(RECRUITER) 로그인 -->
     <header th:replace="~{recruiterView/fragments/recruiterHeader :: headerFragment}"
-        sec:authorize="hasRole('RECRUITER')"></header>
+            sec:authorize="hasRole('RECRUITER')"></header>
 </div>
-    
-    <th:block sec:authorize="hasRole('RECRUITER')">
-        <script th:src="@{/js/recruiter/recruiterHeader.js}"></script>
-    </th:block>
+
+<th:block sec:authorize="hasRole('RECRUITER')">
+    <script defer th:src="@{/js/recruiter/recruiterHeader.js}"></script>
+</th:block>
 
 <div class="container">
     <div class="header-section">
@@ -100,14 +117,12 @@
     <div class="image-gallery" th:if="${job.imgUrls != null and not #strings.isEmpty(job.imgUrls)}">
         <div th:with="pureUrl=${job.imgUrls.replaceAll('[\[\]\s\r\n\t]', '')}">
             <th:block th:each="singleUrl : ${pureUrl.split(',')}">
-
                 <img th:if="${#strings.length(singleUrl) > 3}"
                      th:src="@{|${singleUrl}|}"
                      class="gallery-img"
                      alt="상세 이미지"
                      referrerpolicy="no-referrer"
                      style="display: block; width: 100%; margin-bottom: 15px; border-radius: 8px; min-height: 100px; background-color: #f8f8f8; object-fit: contain;" />
-
             </th:block>
         </div>
     </div>
@@ -149,7 +164,6 @@
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5"
                      stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 21a9 9 0 1 0-8.5-5.6L2 22l6.6-1.6A9 9 0 0 0 12 21z"></path>
-
                     <circle cx="8.5" cy="11.5" r="1" fill="#999" stroke="none"></circle>
                     <circle cx="12" cy="11.5" r="1" fill="#999" stroke="none"></circle>
                     <circle cx="15.5" cy="11.5" r="1" fill="#999" stroke="none"></circle>
@@ -228,67 +242,6 @@
 </div>
 
 <th:block th:replace="~{fragments/floatingChat :: floatingChatFragment}"></th:block>
-
-<script th:inline="javascript">
-    /* <![CDATA[ */
-    // [수정] Spring Security를 이용한 로그인 여부 판별
-    const isUserLoggedIn = /*[[${#authorization.expression('isAuthenticated()')}]]*/ false;
-
-    // 🌟 [수정] 함수가 로드되지 않았을 경우를 대비한 철통 방어 (에러 방지!)
-    const currentLang = (typeof window.getKumoLang === 'function') ? window.getKumoLang() : 'ko';
-
-    // 서버 사이드 다국어 메시지 바인딩
-    const MESSAGES = {
-        loginRequired: /*[[#{job.msg.loginRequired}]]*/ '로그인이 필요합니다.',
-        reportSuccess: /*[[#{job.msg.reportSuccess}]]*/ '신고가 접수되었습니다.',
-        reportError:   /*[[#{job.msg.reportError}]]*/ '신고 처리 중 오류가 발생했습니다.',
-        confirmReport: /*[[#{job.msg.confirmReport}]]*/ '정말 신고하시겠습니까?',
-        selectReportType: /*[[#{job.msg.selectReportType}]]*/ '신고 유형을 선택해주세요.',
-        applyReady:    /*[[#{job.msg.applyReady}]]*/ '지원을 준비 중입니다.',
-        processError:  /*[[#{job.msg.processError}]]*/ '처리 중 오류가 발생했습니다.'
-    };
-    /* ]]> */
-
-    // 채팅 버튼 클릭 시 하늘색으로 토글 후 채팅방으로 이동하는 함수
-    function handleChatClick(btn) {
-        const hasUser = btn.getAttribute('data-has-user') === 'true';
-
-        // 작성자가 없는 공고(크롤링 데이터 등)일 경우 차단
-        if (!hasUser) {
-            alert(currentLang === 'ja' ? '作成者情報がない求人のため、チャットは利用できません。' : '작성자 정보가 없는 공고라 채팅이 불가능합니다.');
-            return;
-        }
-
-        // 버튼에서 데이터 뽑아오기
-        const recruiterId = btn.getAttribute('data-recruiter-id');
-        const jobPostId = btn.getAttribute('data-job-id');
-        const userId = btn.getAttribute('data-user-id');
-        const jobSource = btn.getAttribute('data-source');
-
-        // 버튼 색상 하늘색으로 변경
-        const svg = btn.querySelector('svg');
-        const dots = svg.querySelectorAll('circle');
-        svg.setAttribute('stroke', '#8bbbe5');
-        dots.forEach(dot => dot.setAttribute('fill', '#8bbbe5'));
-
-        // 0.2초 뒤에 플로팅 채팅창 띄우기
-        setTimeout(() => {
-            const chatContainer = document.getElementById('floatingChatContainer');
-            const chatFrame = document.getElementById('floatingChatFrame');
-
-            if (!chatContainer || !chatFrame) {
-                alert(currentLang === 'ja' ? 'チャットモジュールを読み込めません。画面を更新してください。' : "채팅 모듈을 불러올 수 없습니다. 화면을 새로고침해주세요.");
-                return;
-            }
-
-            // 🌟 URL 조립 시 맨 끝에 &lang=${currentLang} 적용
-            chatFrame.src = `/chat/create?recruiterId=${recruiterId}&jobPostId=${jobPostId}&userId=${userId}&jobSource=${jobSource}&lang=${currentLang}`;
-
-            chatContainer.style.display = 'flex';
-            chatContainer.classList.remove('minimized');
-        }, 200);
-    }
-</script>
 
 </body>
 </html>

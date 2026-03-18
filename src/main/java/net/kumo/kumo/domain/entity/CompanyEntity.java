@@ -13,20 +13,27 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * 구인자(Recruiter) 사용자가 등록한 개별 사업장(회사)의
+ * 위치, 소개, 연락처 등을 관리하는 엔티티 클래스입니다.
+ */
 @Entity
 @Table(name = "companies")
 @Data
 public class CompanyEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long companyId;
 
+    /** 이 사업장을 등록/소유한 관리자(Recruiter) 계정 매핑 */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private UserEntity user; // 사장님(리크루터)과 연결
+    private UserEntity user;
 
     private String bizName;
     private String ceoName;
+
     private String zipCode;
     private String addressMain;
     private String addressDetail;
@@ -34,14 +41,15 @@ public class CompanyEntity {
     private String addrCity;
     private String addrTown;
 
-    // 위도: 전체 10자리 중 소수점 아래 8자리
+    /** 정밀한 지도 마커 배치를 위한 위도 (소수점 8자리) */
     @Column(precision = 10, scale = 8)
     private BigDecimal latitude;
 
-    // 경도: 전체 11자리 중 소수점 아래 8자리
+    /** 정밀한 지도 마커 배치를 위한 경도 (소수점 8자리) */
     @Column(precision = 11, scale = 8)
     private BigDecimal longitude;
 
     @Column(columnDefinition = "TEXT")
     private String introduction;
+
 }

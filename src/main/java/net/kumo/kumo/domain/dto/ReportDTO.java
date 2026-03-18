@@ -7,48 +7,65 @@ import lombok.NoArgsConstructor;
 import net.kumo.kumo.domain.entity.ReportEntity;
 import java.time.LocalDateTime;
 
+/**
+ * 사용자 신고 내역을 클라이언트와 송수신하고, 관리자 대시보드에
+ * 렌더링하기 위한 데이터 전송 객체(DTO) 클래스입니다.
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReportDTO {
+
     private Long reportId;
 
-    // 신고자 정보
+    /** 신고자 식별자 (ID) */
     private Long reporterId;
-    private String reporterEmail; // Service에서 채워 넣음
 
-    // 대상 공고 정보
+    /** 신고자 이메일 계정 (Service 계층에서 매핑됨) */
+    private String reporterEmail;
+
+    /** 신고 대상 구인 공고 식별자 */
     private Long targetPostId;
-    private String targetSource;  // 이제 파싱 안 하고 DB 컬럼 값 사용!
-    private String targetPostTitle; // Service에서 채워 넣음
 
-    // 신고 내용
+    /** 신고 대상 공고 출처 (OSAKA, TOKYO 등) */
+    private String targetSource;
+
+    /** 신고 대상 공고 제목 (Service 계층에서 매핑됨) */
+    private String targetPostTitle;
+
+    /** 신고 사유 카테고리 명칭 */
     private String reasonCategory;
-    private String description;   // 파싱 없이 순수 본문 그대로
 
+    /** 상세 신고 내용 (본문) */
+    private String description;
+
+    /** 신고 처리 상태 (접수, 처리중, 완료 등) */
     private String status;
+
     private LocalDateTime createdAt;
 
-    // Entity -> DTO 변환
+    /**
+     * ReportEntity 객체를 기반으로 ReportDTO 객체를 생성하여 반환합니다.
+     * 연관 관계를 통해 필요한 식별자를 안전하게 추출합니다.
+     *
+     * @param entity 변환할 원본 신고 내역 엔티티
+     * @return 매핑이 완료된 ReportDTO 객체
+     */
     public static ReportDTO fromEntity(ReportEntity entity) {
 
-        // 1. 신고자 ID 추출 (Null Safety 처리)
         Long rId = (entity.getReporter() != null) ? entity.getReporter().getUserId() : null;
 
         return ReportDTO.builder()
                 .reportId(entity.getReportId())
                 .reporterId(rId)
-                .reporterEmail("-") // Service에서 채울 예정
-
+                .reporterEmail("-")
                 .targetPostId(entity.getTargetPostId())
-                .targetSource(entity.getTargetSource()) // ★ 핵심: DB 컬럼 값 바로 사용
-                .targetPostTitle("-") // Service에서 채울 예정
-
-                .description(entity.getDescription()) // ★ 핵심: 파싱 로직 제거
+                .targetSource(entity.getTargetSource())
+                .targetPostTitle("-")
+                .description(entity.getDescription())
                 .reasonCategory(entity.getReasonCategory())
-
-                .status(entity.getStatus()) // Enum이든 String이든 그대로 전달
+                .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .build();
     }

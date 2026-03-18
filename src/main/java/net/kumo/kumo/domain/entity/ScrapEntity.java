@@ -6,6 +6,10 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
 
+/**
+ * 사용자가 관심 있는 특정 구인 공고를 즐겨찾기(스크랩)한
+ * 내역을 관리하는 엔티티 클래스입니다.
+ */
 @Entity
 @Table(name = "scraps")
 @Getter
@@ -14,21 +18,25 @@ import java.sql.Timestamp;
 @Builder
 public class ScrapEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long scrapId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long scrapId;
 
-	@Column(nullable = false)
-	private Long userId;
+    /** 스크랩을 수행한 사용자 식별자 */
+    @Column(nullable = false)
+    private Long userId;
 
-	@Column(nullable = false)
-	private Long jobPostId;
+    /** 스크랩 대상 구인 공고 식별자 */
+    @Column(nullable = false)
+    private Long jobPostId;
 
-	@CreationTimestamp
-	@Column(name = "created_at", updatable = false)
-	private Timestamp createdAt;
-	
-	// 기존 컬럼들 밑에 source를 추가해 주세요.
-	@Column(name = "source", length = 20)
-	private String source; // TOKYO, OSAKA 등 출처 저장
+    /** 스크랩 대상 공고의 데이터 출처 (TOKYO, OSAKA 등) */
+    @Column(name = "source", length = 20)
+    private String source;
+
+    /** 스크랩(즐겨찾기 추가) 생성 일시 */
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private Timestamp createdAt;
+
 }

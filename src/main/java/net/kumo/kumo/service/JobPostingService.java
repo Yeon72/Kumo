@@ -42,12 +42,17 @@ import net.kumo.kumo.repository.SeekerProfileRepository;
 import net.kumo.kumo.repository.TokyoGeocodedRepository;
 import net.kumo.kumo.repository.UserRepository;
 
+/**
+ * 구인자가 직접 시스템 내부에 등록하는 로컬 구인 공고(Job Posting)의 생성, 조회, 수정, 삭제 및
+ * 관련 지원자 관리 비즈니스 로직을 총괄하는 서비스 클래스입니다.
+ * 다국어 파싱 및 지역별(도쿄/오사카) 데이터베이스 테이블 분기 처리 로직을 포함합니다.
+ */
 @Service
 @RequiredArgsConstructor
 public class JobPostingService {
 
     private final OsakaGeocodedRepository osakaGeocodedRepository;
-    private final TokyoGeocodedRepository tokyoGeocodedRepository; // 🌟 도쿄 레포지토리 추가
+    private final TokyoGeocodedRepository tokyoGeocodedRepository;
     private final CompanyRepository companyRepository;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
@@ -59,24 +64,24 @@ public class JobPostingService {
     private final SeekerCertificateRepository certificateRepository;
     private final SeekerLanguageRepository languageRepository;
     private final SeekerDocumentRepository documentRepository;
-    private final NotificationService notificationService; // 🌟 알림 서비스 주입
+    private final NotificationService notificationService;
 
-    // application.properties에서 설정한 업로드 경로를 가져옵니다.
     @org.springframework.beans.factory.annotation.Value("${file.upload.dir}")
     private String uploadDir;
 
     /**
-     * 이미지 파일을 실제 폴더에 저장하고 DB에 저장할 웹 경로를 반환합니다.
+     * 클라이언트가 업로드한 이미지 파일을 서버 스토리지에 저장하고, 웹 접근 경로를 반환합니다.
+     *
+     * @param file 업로드된 다중 파트 파일 객체
+     * @return 저장된 파일의 웹 URL 경로 (실패 시 null 반환)
      */
     private String saveImage(MultipartFile file) {
         if (file == null || file.isEmpty()) return null;
 
         try {
-            // 1. 폴더 생성
             java.io.File directory = new java.io.File(uploadDir);
             if (!directory.exists()) directory.mkdirs();
 
-            // 2. 파일명 중복 방지 (UUID)
             String originalName = file.getOriginalFilename();
             String extension = "";
             if (originalName != null && originalName.contains(".")) {
@@ -84,11 +89,9 @@ public class JobPostingService {
             }
             String savedName = java.util.UUID.randomUUID().toString() + extension;
 
-            // 3. 실제 저장
             java.io.File dest = new java.io.File(uploadDir + savedName);
             file.transferTo(dest);
 
-            // 4. WebMvcConfig에서 설정한 웹 접근 경로 반환
             return "/images/uploadFile/" + savedName;
         } catch (java.io.IOException e) {
             e.printStackTrace();
@@ -96,10 +99,17 @@ public class JobPostingService {
         }
     }
 
+    /**
+     * 구인자가 작성한 신규 구인 공고를 데이터베이스에 등록합니다.
+     * 첨부 이미지 저장 및 주소 체계에 따른 도쿄/오사카 지역 분기 처리를 수행합니다.
+     *
+     * @param dto    공고 폼 데이터가 담긴 DTO
+     * @param images 첨부된 다중 이미지 파일 목록
+     * @param user   작성자(구인자) 엔티티
+     */
     @Transactional
     public void saveJobPosting(JobPostingRequestDTO dto, List<MultipartFile> images, UserEntity user) {
 
-        // 1. 단 한 번만! 회사 객체를 가져옵니다. (중복 조회 제거)
         CompanyEntity company = companyRepository.findById(dto.getCompanyId())
                 .orElseThrow(() -> new IllegalArgumentException("회사를 찾을 수 없습니다. ID: " + dto.getCompanyId()));
 
@@ -109,25 +119,22 @@ public class JobPostingService {
         Double lat = company.getLatitude() != null ? company.getLatitude().doubleValue() : 0.0;
         Double lng = company.getLongitude() != null ? company.getLongitude().doubleValue() : 0.0;
 
-        String prefJp = company.getAddrPrefecture(); // 🌟 "東京都" 또는 "大阪府"
+        String prefJp = company.getAddrPrefecture();
         String cityJp = company.getAddrCity();
         String wardJp = company.getAddrTown();
 
-        // 2. 이미지 URL 처리 (실제 저장 포함)
         String imgUrls = "";
         if (images != null && !images.isEmpty()) {
             imgUrls = images.stream()
                     .filter(f -> !f.isEmpty())
-                    .map(this::saveImage) // 🌟 여기서 실제 파일 저장 및 경로 생성
+                    .map(this::saveImage)
                     .filter(java.util.Objects::nonNull)
                     .collect(Collectors.joining(","));
         }
 
-        // 급여 부분 임시 변수
         String salaryType;
         String salaryTypeJp;
 
-        // 급여 기준 별 임시 변수 저장
         switch (dto.getSalaryType()) {
             case "HOURLY" -> { salaryType = "시급"; salaryTypeJp = "時給"; }
             case "DAILY" -> { salaryType = "일급"; salaryTypeJp = "日給"; }
@@ -136,7 +143,6 @@ public class JobPostingService {
             default -> { salaryType = "미정"; salaryTypeJp = "未定"; }
         }
 
-        // 3. 급여 문자열 및 공통 데이터 세팅
         String wage = (dto.getSalaryAmount() != null) ? salaryType + " " + dto.getSalaryAmount() + "엔" : "";
         String wageJp = (dto.getSalaryAmount() != null) ? salaryTypeJp + " " + dto.getSalaryAmount() + "円" : "";
 
@@ -146,7 +152,6 @@ public class JobPostingService {
                 .ofPattern("yy.MM.dd");
         String writeTime = now.format(writeTimeFormatter);
 
-        // 🌟🌟 4. [핵심] 도쿄 vs 오사카 분기 처리 🌟🌟
         if ("東京都".equals(prefJp)) {
             saveToTokyo(dto, user, company, companyName, address, lat, lng, prefJp, cityJp, wardJp, imgUrls, wage,
                     wageJp, datanum, now, writeTime);
@@ -156,12 +161,9 @@ public class JobPostingService {
         }
     }
 
-    // ==========================================
-    // 🚅 오사카 저장 로직 (기존 로직 분리)
-    // ==========================================
     private void saveToOsaka(JobPostingRequestDTO dto, UserEntity user, CompanyEntity company, String companyName,
-            String address, Double lat, Double lng, String prefJp, String cityJp, String wardJp, String imgUrls,
-            String wage, String wageJp, long datanum, LocalDateTime now, String writeTime) {
+                             String address, Double lat, Double lng, String prefJp, String cityJp, String wardJp, String imgUrls,
+                             String wage, String wageJp, long datanum, LocalDateTime now, String writeTime) {
         Integer maxNo = osakaGeocodedRepository.findMaxRowNo();
         Integer nextRowNo = (maxNo == null) ? 1 : maxNo + 1;
 
@@ -178,9 +180,8 @@ public class JobPostingService {
         entity.setCityJp(cityJp);
         entity.setWardJp(wardJp);
 
-        // 🌟 [추가] 수정 시 입력창에 다시 뿌려주기 위해 원본 데이터 저장!
-        entity.setSalaryType(dto.getSalaryType()); // "HOURLY" 등 저장
-        entity.setSalaryAmount(dto.getSalaryAmount()); // 1200 등 저장
+        entity.setSalaryType(dto.getSalaryType());
+        entity.setSalaryAmount(dto.getSalaryAmount());
 
         entity.setRowNo(nextRowNo);
         entity.setDatanum(datanum);
@@ -199,12 +200,9 @@ public class JobPostingService {
         osakaGeocodedRepository.save(entity);
     }
 
-    // ==========================================
-    // 🚅 도쿄 저장 로직 (신규 추가)
-    // ==========================================
     private void saveToTokyo(JobPostingRequestDTO dto, UserEntity user, CompanyEntity company, String companyName,
-            String address, Double lat, Double lng, String prefJp, String cityJp, String wardJp, String imgUrls,
-            String wage, String wageJp, long datanum, LocalDateTime now, String writeTime) {
+                             String address, Double lat, Double lng, String prefJp, String cityJp, String wardJp, String imgUrls,
+                             String wage, String wageJp, long datanum, LocalDateTime now, String writeTime) {
         Integer maxNo = tokyoGeocodedRepository.findMaxRowNo();
         Integer nextRowNo = (maxNo == null) ? 1 : maxNo + 1;
 
@@ -219,9 +217,8 @@ public class JobPostingService {
         entity.setLng(lng);
         entity.setPrefectureJp(prefJp);
 
-        // 🌟 [추가] 수정 시 입력창에 다시 뿌려주기 위해 원본 데이터 저장!
-        entity.setSalaryType(dto.getSalaryType()); // "HOURLY" 등 저장
-        entity.setSalaryAmount(dto.getSalaryAmount()); // 1200 등 저장
+        entity.setSalaryType(dto.getSalaryType());
+        entity.setSalaryAmount(dto.getSalaryAmount());
 
         entity.setRowNo(nextRowNo);
         entity.setDatanum(datanum);
@@ -240,11 +237,7 @@ public class JobPostingService {
         tokyoGeocodedRepository.save(entity);
     }
 
-    // ==========================================
-    // 🗺️ 주소 파싱 로직 (오사카/도쿄 분리)
-    // ==========================================
     private void parseAddressToSixColumnsOsaka(OsakaGeocodedEntity entity, String fullAddress) {
-        // ... (사장님이 쓰시던 기존 parseAddressToSixColumns 코드와 동일하게 넣으시면 됩니다)
         if (fullAddress == null || fullAddress.isBlank())
             return;
         String[] parts = fullAddress.split("\\s+");
@@ -281,7 +274,7 @@ public class JobPostingService {
 
         for (String part : parts) {
             if (part.endsWith("都"))
-                prefJp = part; // 도쿄도는 府가 아니라 都입니다!
+                prefJp = part;
             else if (part.endsWith("市"))
                 cityJp = part;
             else if (part.endsWith("区"))
@@ -289,15 +282,11 @@ public class JobPostingService {
         }
 
         entity.setPrefectureJp(prefJp);
-        // ✅ 수정 (도쿄 엔티티 구조에 맞게 통합!)
-        // 도쿄는 시/구를 wardCityJp 하나로 쓰기로 했었죠!
         entity.setWardCityJp(wardJp != null ? wardJp : cityJp);
 
         if ("東京都".equals(prefJp))
             entity.setPrefectureKr("도쿄도");
-        // 도쿄의 주요 구 번역 세팅
-        // 2. 한국어 세팅 (setWardKr 대신 setWardCityKr 사용!)
-        // 🗺️ 도쿄 23구 전체 번역 매핑 (Map.ofEntries 사용)
+
         if (wardJp != null) {
             Map<String, String> tokyoMap = Map.ofEntries(
                     Map.entry("千代田区", "지요다구"),
@@ -323,26 +312,26 @@ public class JobPostingService {
                     Map.entry("足立区", "아다치구"),
                     Map.entry("葛飾区", "가쓰시카구"),
                     Map.entry("江戸川区", "에도가와구"),
-                    // 필요하다면 도쿄도의 주요 시(市)도 아래처럼 계속 추가할 수 있습니다!
                     Map.entry("八王子市", "하치오지시"),
                     Map.entry("町田市", "마치다시"));
 
-            // 매핑된 한국어 구 이름이 있으면 넣고, 없으면 일본어 원본 그대로 저장!
             entity.setWardCityKr(tokyoMap.getOrDefault(wardJp, wardJp));
         }
     }
 
     /**
-     * 특정 유저(이메일)의 도쿄 + 오사카 공고를 합쳐서 반환 (최신순 정렬)
+     * 특정 사용자(구인자)가 등록한 전체 공고 목록을 지역 구분 없이 통합하여 반환합니다.
+     * 모집 상태(진행중 우선) 및 등록일(최신순)을 기준으로 정렬됩니다.
+     *
+     * @param email 작성자(구인자)의 이메일 계정
+     * @return 통합 및 정렬된 구인 공고 DTO 리스트
      */
     public List<JobManageListDTO> getMyJobPostings(String email) {
         List<JobManageListDTO> result = new java.util.ArrayList<>();
 
-        // 1. 오사카 공고 가져와서 바구니에 담기
         List<OsakaGeocodedEntity> osakaJobs = osakaGeocodedRepository.findByUser_Email(email);
         for (OsakaGeocodedEntity o : osakaJobs) {
 
-            // 🌟 1. 여기서 영어를 한글로 싹 바꿔줍니다!
             String displayWage = o.getWage() != null ? o.getWage()
                     .replace("HOURLY", "시급")
                     .replace("DAILY", "일급")
@@ -350,11 +339,11 @@ public class JobPostingService {
                     .replace("SALARY", "연봉") : "";
 
             result.add(JobManageListDTO.builder()
-                    .id(o.getId()) // 🌟 [추가] 오사카 테이블의 진짜 id
+                    .id(o.getId())
                     .datanum(o.getDatanum())
                     .title(o.getTitle())
-							.titleJp(o.getTitleJp())
-                    .regionType("오사카") // 라벨링
+                    .titleJp(o.getTitleJp())
+                    .regionType("오사카")
                     .wage(displayWage)
                     .wageJp(o.getWageJp())
                     .createdAt(o.getCreatedAt())
@@ -362,11 +351,9 @@ public class JobPostingService {
                     .build());
         }
 
-        // 2. 도쿄 공고 가져와서 바구니에 담기
         List<TokyoGeocodedEntity> tokyoJobs = tokyoGeocodedRepository.findByUser_Email(email);
         for (TokyoGeocodedEntity t : tokyoJobs) {
 
-            // 🌟 1. 여기서 영어를 한글로 싹 바꿔줍니다!
             String displayWage = t.getWage() != null ? t.getWage()
                     .replace("HOURLY", "시급")
                     .replace("DAILY", "일급")
@@ -374,11 +361,11 @@ public class JobPostingService {
                     .replace("SALARY", "연봉") : "";
 
             result.add(JobManageListDTO.builder()
-                    .id(t.getId()) // 🌟 [추가] 도쿄 테이블의 진짜 id
+                    .id(t.getId())
                     .datanum(t.getDatanum())
                     .title(t.getTitle())
-					.titleJp(t.getTitleJp())
-                    .regionType("도쿄") // 라벨링
+                    .titleJp(t.getTitleJp())
+                    .regionType("도쿄")
                     .wage(displayWage)
                     .wageJp(t.getWageJp())
                     .createdAt(t.getCreatedAt())
@@ -386,27 +373,19 @@ public class JobPostingService {
                     .build());
         }
 
-        // 3. 🌟 두 리스트를 합친 후, 등록일(createdAt) 기준 '최신순(내림차순)' 정렬!
         result.sort((a, b) -> {
-            if (a.getCreatedAt() == null)
-                return 1;
-            if (b.getCreatedAt() == null)
-                return -1;
+            if (a.getCreatedAt() == null) return 1;
+            if (b.getCreatedAt() == null) return -1;
             return b.getCreatedAt().compareTo(a.getCreatedAt());
         });
 
         result.sort((a, b) -> {
-            // 1. 상태 기준 정렬: RECRUITING(모집중)이 CLOSED(마감)보다 앞으로 오게 함
             if (!a.getStatus().equals(b.getStatus())) {
-                // RECRUITING 이면 -1(앞으로), CLOSED 이면 1(뒤로)
                 return a.getStatus().equals("RECRUITING") ? -1 : 1;
             }
 
-            // 2. 상태가 같다면 최신 등록일 순으로 정렬
-            if (a.getCreatedAt() == null)
-                return 1;
-            if (b.getCreatedAt() == null)
-                return -1;
+            if (a.getCreatedAt() == null) return 1;
+            if (b.getCreatedAt() == null) return -1;
             return b.getCreatedAt().compareTo(a.getCreatedAt());
         });
 
@@ -414,38 +393,32 @@ public class JobPostingService {
     }
 
     /**
-     * 🌟 [완전 복구] 특정 유저의 공고 삭제 로직 (보안 검증 포함)
-     * 
-     * @param datanum : 공고 고유 번호
-     * @param region  : TOKYO 또는 OSAKA
-     * @param email   : 현재 로그인한 유저의 이메일 (검증용)
+     * 사용자가 등록한 특정 구인 공고를 삭제합니다. (보안 검증 포함)
+     * * @param datanum 삭제할 공고의 고유 번호
+     * @param region  삭제 대상 공고의 소속 지역 (TOKYO 또는 OSAKA)
+     * @param email   삭제를 요청한 사용자의 이메일 계정 (검증용)
+     * @throws IllegalStateException 삭제 권한이 일치하지 않을 때 발생
      */
     @Transactional
     public void deleteMyJobPosting(Long datanum, String region, String email) {
         if ("TOKYO".equalsIgnoreCase(region)) {
-            // 1. 도쿄 테이블에서 데이터 조회
             TokyoGeocodedEntity entity = tokyoGeocodedRepository.findByDatanum(datanum)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 도쿄 공고입니다. (datanum: " + datanum + ")"));
 
-            // 2. [보안 핵심] 작성자와 현재 로그인 유저가 일치하는지 확인
             if (!entity.getUser().getEmail().equals(email)) {
                 throw new IllegalStateException("해당 공고를 삭제할 권한이 없습니다.");
             }
 
-            // 3. 검증 통과 시 삭제
             tokyoGeocodedRepository.delete(entity);
 
         } else if ("OSAKA".equalsIgnoreCase(region)) {
-            // 1. 오사카 테이블에서 데이터 조회
             OsakaGeocodedEntity entity = osakaGeocodedRepository.findByDatanum(datanum)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 오사카 공고입니다. (datanum: " + datanum + ")"));
 
-            // 2. [보안 핵심] 작성자 검증
             if (!entity.getUser().getEmail().equals(email)) {
                 throw new IllegalStateException("해당 공고를 삭제할 권한이 없습니다.");
             }
 
-            // 3. 검증 통과 시 삭제
             osakaGeocodedRepository.delete(entity);
 
         } else {
@@ -454,7 +427,11 @@ public class JobPostingService {
     }
 
     /**
-     * 수정용 공고 데이터 단일 조회
+     * 공고 수정 화면을 렌더링하기 위해 특정 공고의 상세 데이터를 조회합니다.
+     *
+     * @param id     조회할 공고의 식별자(PK)
+     * @param region 조회 대상 공고의 소속 지역 (TOKYO 또는 OSAKA)
+     * @return 렌더링에 사용될 공고 데이터 DTO
      */
     public JobPostingRequestDTO getJobPostingForEdit(Long id, String region) {
         JobPostingRequestDTO dto = new JobPostingRequestDTO();
@@ -464,15 +441,15 @@ public class JobPostingService {
                     .orElseThrow(() -> new IllegalArgumentException("공고를 찾을 수 없습니다."));
             dto.setDatanum(e.getDatanum());
             dto.setTitle(e.getTitle());
-			dto.setTitleJp(e.getTitleJp());
+            dto.setTitleJp(e.getTitleJp());
             dto.setPosition(e.getPosition());
-			dto.setPositionJp(e.getPositionJp());
+            dto.setPositionJp(e.getPositionJp());
             dto.setContactPhone(e.getContactPhone());
-			dto.setContactPhoneJp(e.getContactPhoneJp());
+            dto.setContactPhoneJp(e.getContactPhoneJp());
             dto.setJobDescription(e.getJobDescription());
-			dto.setJobDescriptionJp(e.getJobDescriptionJp());
+            dto.setJobDescriptionJp(e.getJobDescriptionJp());
             dto.setNotes(e.getNotes());
-			dto.setNotesJp(e.getNotesJp());
+            dto.setNotesJp(e.getNotesJp());
             dto.setSalaryType(e.getSalaryType());
             dto.setSalaryAmount(e.getSalaryAmount());
             if (e.getCompany() != null)
@@ -483,15 +460,15 @@ public class JobPostingService {
                     .orElseThrow(() -> new IllegalArgumentException("공고를 찾을 수 없습니다."));
             dto.setDatanum(e.getDatanum());
             dto.setTitle(e.getTitle());
-			dto.setTitleJp(e.getTitleJp());
+            dto.setTitleJp(e.getTitleJp());
             dto.setPosition(e.getPosition());
-			dto.setPositionJp(e.getPositionJp());
+            dto.setPositionJp(e.getPositionJp());
             dto.setContactPhone(e.getContactPhone());
-			dto.setContactPhoneJp(e.getContactPhoneJp());
+            dto.setContactPhoneJp(e.getContactPhoneJp());
             dto.setJobDescription(e.getJobDescription());
-			dto.setJobDescriptionJp(e.getJobDescriptionJp());
+            dto.setJobDescriptionJp(e.getJobDescriptionJp());
             dto.setNotes(e.getNotes());
-			dto.setNotesJp(e.getNotesJp());
+            dto.setNotesJp(e.getNotesJp());
             dto.setSalaryType(e.getSalaryType());
             dto.setSalaryAmount(e.getSalaryAmount());
             if (e.getCompany() != null)
@@ -502,7 +479,12 @@ public class JobPostingService {
     }
 
     /**
-     * 공고 수정
+     * 사용자가 수정한 구인 공고 데이터를 데이터베이스에 반영합니다.
+     *
+     * @param id     수정 대상 공고의 식별자(PK)
+     * @param region 수정 대상 공고의 소속 지역 (TOKYO 또는 OSAKA)
+     * @param dto    수정된 공고 폼 데이터 DTO
+     * @param images 추가로 업로드된 신규 이미지 파일 리스트
      */
     @Transactional
     public void updateJobPosting(Long id, String region, JobPostingRequestDTO dto, List<MultipartFile> images) {
@@ -569,13 +551,20 @@ public class JobPostingService {
         }
     }
 
+    /**
+     * 특정 구인 공고의 모집 상태를 강제로 마감(CLOSED) 처리합니다.
+     * 마감 처리 시, 해당 공고에 지원 중이던 모든 지원자에게 시스템 알림이 발송됩니다.
+     *
+     * @param datanum 마감 처리할 공고의 고유 번호
+     * @param region  해당 공고의 지역 출처
+     */
     @Transactional
     public void closeJobPosting(Long datanum, String region) {
         String title = "";
         if ("TOKYO".equalsIgnoreCase(region)) {
             TokyoGeocodedEntity entity = tokyoGeocodedRepository.findByDatanum(datanum)
                     .orElseThrow(() -> new IllegalArgumentException("공고를 찾을 수 없습니다."));
-            entity.setStatus(JobStatus.CLOSED); // 🌟 상태를 마감으로 변경!
+            entity.setStatus(JobStatus.CLOSED);
             title = entity.getTitle();
         } else {
             OsakaGeocodedEntity entity = osakaGeocodedRepository.findByDatanum(datanum)
@@ -584,11 +573,9 @@ public class JobPostingService {
             title = entity.getTitle();
         }
 
-        // 🌟 [알림 추가] 이 공고에 지원한 모든 지원자에게 마감 알림 발송
         List<ApplicationEntity> applications = applicationRepository
                 .findByTargetSourceAndTargetPostIdOrderByAppliedAtDesc(region.toUpperCase(), datanum);
         for (ApplicationEntity app : applications) {
-            // 이미 처리된 지원자(합격/불합격) 외에 대기 중인 지원자들에게 알림
             if (app.getStatus() == net.kumo.kumo.domain.entity.Enum.ApplicationStatus.APPLIED ||
                     app.getStatus() == net.kumo.kumo.domain.entity.Enum.ApplicationStatus.VIEWED) {
 
@@ -601,17 +588,18 @@ public class JobPostingService {
         }
     }
 
-    // ==========================================
-    // 🌟 [NEW] 지원자 관리 탭 : 내 공고별 지원자 목록 가져오기
-    // ==========================================
+    /**
+     * 구인자의 대시보드(지원자 관리)에 렌더링될 공고별 지원자 요약 목록을 조회합니다.
+     *
+     * @param user   조회를 요청한 구인자 사용자 엔티티
+     * @param sortBy 적용할 정렬 조건 (예: 지원자수 우선 등)
+     * @return 그룹화된 공고 및 지원자 정보 DTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<JobApplicantGroupDTO> getGroupedApplicantsForRecruiter(UserEntity user, String sortBy) {
         List<JobApplicantGroupDTO> groupedList = new ArrayList<>();
         String email = user.getEmail();
 
-        // ------------------------------------------
-        // 1. 오사카 공고 조회 및 지원자 매핑
-        // ------------------------------------------
         List<OsakaGeocodedEntity> osakaJobs = osakaGeocodedRepository.findByUser_Email(email);
         if (!osakaJobs.isEmpty()) {
             List<Long> osakaJobIds = osakaJobs.stream().map(OsakaGeocodedEntity::getId).toList();
@@ -628,14 +616,12 @@ public class JobPostingService {
                 List<ApplicationDTO.ApplicantResponse> appResponses = appsForThisJob.stream()
                         .map(app -> ApplicationDTO.ApplicantResponse.from(app, job.getTitle()))
                         .sorted((a, b) -> {
-                            // 상태별 우선순위: APPLIED(0) → PASSED(1) → FAILED(2)
                             int priorityA = getApplicantPriority(a.getStatus().name());
                             int priorityB = getApplicantPriority(b.getStatus().name());
 
                             if (priorityA != priorityB) {
                                 return Integer.compare(priorityA, priorityB);
                             }
-                            // 같은 상태끼리는 최신 지원순
                             return b.getAppId().compareTo(a.getAppId());
                         })
                         .toList();
@@ -644,7 +630,7 @@ public class JobPostingService {
                         .jobId(job.getId())
                         .source("OSAKA")
                         .jobTitle(job.getTitle())
-								.jobTitleJp(job.getTitleJp())
+                        .jobTitleJp(job.getTitleJp())
                         .status(job.getStatus() != null ? job.getStatus().name() : "RECRUITING")
                         .createdAt(job.getCreatedAt())
                         .applicantCount(appResponses.size())
@@ -653,9 +639,6 @@ public class JobPostingService {
             }
         }
 
-        // ------------------------------------------
-        // 2. 도쿄 공고 조회 및 지원자 매핑
-        // ------------------------------------------
         List<TokyoGeocodedEntity> tokyoJobs = tokyoGeocodedRepository.findByUser_Email(email);
         if (!tokyoJobs.isEmpty()) {
             List<Long> tokyoJobIds = tokyoJobs.stream().map(TokyoGeocodedEntity::getId).toList();
@@ -672,14 +655,12 @@ public class JobPostingService {
                 List<ApplicationDTO.ApplicantResponse> appResponses = appsForThisJob.stream()
                         .map(app -> ApplicationDTO.ApplicantResponse.from(app, job.getTitle()))
                         .sorted((a, b) -> {
-                            // 상태별 우선순위: APPLIED(0) → PASSED(1) → FAILED(2)
                             int priorityA = getApplicantPriority(a.getStatus().name());
                             int priorityB = getApplicantPriority(b.getStatus().name());
 
                             if (priorityA != priorityB) {
                                 return Integer.compare(priorityA, priorityB);
                             }
-                            // 같은 상태끼리는 최신 지원순
                             return b.getAppId().compareTo(a.getAppId());
                         })
                         .toList();
@@ -688,7 +669,7 @@ public class JobPostingService {
                         .jobId(job.getId())
                         .source("TOKYO")
                         .jobTitle(job.getTitle())
-								.jobTitleJp(job.getTitleJp())
+                        .jobTitleJp(job.getTitleJp())
                         .status(job.getStatus() != null ? job.getStatus().name() : "RECRUITING")
                         .createdAt(job.getCreatedAt())
                         .applicantCount(appResponses.size())
@@ -697,25 +678,19 @@ public class JobPostingService {
             }
         }
 
-        // ------------------------------------------
-        // 3. 공고 정렬 로직 (요청에 따른 정렬)
-        // ------------------------------------------
         groupedList.sort((a, b) -> {
-            // "applicantCount" 정렬 (기본값) : 지원자 많은 순 (DESC)
             if ("applicantCount".equalsIgnoreCase(sortBy)) {
                 if (a.getApplicantCount() != b.getApplicantCount()) {
                     return Integer.compare(b.getApplicantCount(), a.getApplicantCount());
                 }
             }
 
-            // 공통 1순위: 진행중(RECRUITING) 위로, 마감(CLOSED) 아래로
             boolean aIsRecruiting = "RECRUITING".equals(a.getStatus());
             boolean bIsRecruiting = "RECRUITING".equals(b.getStatus());
 
             if (aIsRecruiting && !bIsRecruiting) return -1;
             if (!aIsRecruiting && bIsRecruiting) return 1;
 
-            // 공통 2순위: 최신 등록일(createdAt) 내림차순
             if (a.getCreatedAt() == null) return 1;
             if (b.getCreatedAt() == null) return -1;
             return b.getCreatedAt().compareTo(a.getCreatedAt());
@@ -725,10 +700,11 @@ public class JobPostingService {
     }
 
     /**
-     * 지원자 상태별 정렬 우선순위
-     * APPLIED(검토중) = 0 → 맨 위
-     * PASSED(합격) = 1 → 중간
-     * FAILED(불합격) = 2 → 맨 아래
+     * 지원자의 현재 심사 상태에 따른 정렬 우선순위 계수를 반환합니다.
+     * 검토중(APPLIED)은 최상단, 합격(PASSED)은 중간, 불합격(FAILED)은 최하단에 배치됩니다.
+     *
+     * @param status 평가할 상태 문자열
+     * @return 정렬에 사용될 우선순위 정수 (낮을수록 상단)
      */
     private int getApplicantPriority(String status) {
         switch (status) {
@@ -743,60 +719,51 @@ public class JobPostingService {
         }
     }
 
-    // ==========================================
-    // 🌟 [비동기 API] 특정 지원자의 종합 이력서 데이터 조회
-    // ==========================================
+    /**
+     * 특정 구직자의 상세 이력서 데이터를 다수의 연관 엔티티로부터 취합하여 반환합니다.
+     * 데이터베이스 I/O 최적화를 위해 프록시(Proxy) 엔티티 조회를 활용합니다.
+     *
+     * @param seekerId 조회할 구직자(Seeker) 식별자
+     * @return 종합 이력서 데이터가 포함된 응답용 DTO 객체
+     */
     @Transactional(readOnly = true)
     public ResumeResponseDTO getApplicantResumeData(Long seekerId) {
 
-        // 1. 프로필 (1:1) - 없으면 빈 객체 반환을 위해 null 처리
         SeekerProfileEntity profileEntity = seekerProfileRepository.findByUser_UserId(seekerId).orElse(null);
         ResumeResponseDTO.ProfileDTO profileDTO = ResumeResponseDTO.ProfileDTO.from(profileEntity);
 
-        // 2. 희망 조건 (1:1)
         SeekerDesiredConditionEntity conditionEntity = conditionRepository.findByUser_UserId(seekerId).orElse(null);
         ResumeResponseDTO.ConditionDTO conditionDTO = ResumeResponseDTO.ConditionDTO.from(conditionEntity);
 
-        // 3. 경력 (1:N 리스트)
         List<SeekerCareerEntity> careerEntities = careerRepository.findByUser_UserId(seekerId);
         List<ResumeResponseDTO.CareerDTO> careerDTOs = careerEntities.stream()
                 .map(ResumeResponseDTO.CareerDTO::from)
                 .collect(Collectors.toList());
 
-        // 4. 학력 (1:1)
         SeekerEducationEntity eduEntities = educationRepository.findByUser_UserId(seekerId);
         ResumeResponseDTO.EducationDTO eduDTO = null;
         if (eduEntities != null) {
             eduDTO = ResumeResponseDTO.EducationDTO.from(eduEntities);
         }
 
-        // 5. 자격증 (1:N 리스트)
         List<SeekerCertificateEntity> certEntities = certificateRepository.findByUser_UserId(seekerId);
         List<ResumeResponseDTO.CertificateDTO> certDTOs = certEntities.stream()
                 .map(ResumeResponseDTO.CertificateDTO::from)
                 .collect(Collectors.toList());
 
-        // 6. 어학 (1:N 리스트)
         List<SeekerLanguageEntity> langEntities = languageRepository.findByUser_UserId(seekerId);
         List<ResumeResponseDTO.LanguageDTO> langDTOs = langEntities.stream()
                 .map(ResumeResponseDTO.LanguageDTO::from)
                 .collect(Collectors.toList());
 
-        // ==========================================
-        // 🌟 7. 문서 (1:N 리스트) - 특별 처리 구역
-        // ==========================================
-        // DB를 새로 조회(findById)할 필요 없이, ID만 가진 가짜 엔티티(프록시)를 생성합니다.
-        // 이렇게 하면 DB 성능 낭비 없이 DocumentRepository에 UserEntity를 넘겨줄 수 있습니다!
         UserEntity proxyUser = userRepository.getReferenceById(seekerId);
 
-        // 프록시 유저 객체를 그대로 넘겨서 리스트를 조회합니다.
         List<SeekerDocumentEntity> docEntities = documentRepository.findByUser(proxyUser);
 
         List<net.kumo.kumo.domain.dto.ResumeResponseDTO.DocumentDTO> docDTOs = docEntities.stream()
                 .map(net.kumo.kumo.domain.dto.ResumeResponseDTO.DocumentDTO::from)
                 .collect(Collectors.toList());
 
-        // 🌟 이 모든 걸 하나의 큰 상자에 담아서 리턴!
         return net.kumo.kumo.domain.dto.ResumeResponseDTO.builder()
                 .profile(profileDTO)
                 .condition(conditionDTO)
@@ -804,22 +771,26 @@ public class JobPostingService {
                 .educations(eduDTO)
                 .certificates(certDTOs)
                 .languages(langDTOs)
-                .documents(docDTOs) // 특별 처리된 문서 DTO 리스트 장착!
+                .documents(docDTOs)
                 .build();
     }
 
-    // 지원서 상태(합격/불합격) 업데이트
+    /**
+     * 특정 지원 내역(서류 심사)의 상태(합격, 불합격 등)를 갱신합니다.
+     * 결과 갱신과 동시에 지원한 구직자에게 시스템 알림이 자동으로 발송됩니다.
+     *
+     * @param appId  갱신 대상 지원 내역 식별자
+     * @param status 반영할 새로운 상태 Enum 객체
+     */
     @Transactional
     public void updateApplicationStatus(Long appId, net.kumo.kumo.domain.entity.Enum.ApplicationStatus status) {
         ApplicationEntity application = applicationRepository.findById(appId)
                 .orElseThrow(() -> new IllegalArgumentException("지원서를 찾을 수 없습니다."));
         application.setStatus(status);
 
-        // 🌟 [알림 추가] 합격/불합격 상태 변경 시 구직자에게 알림 발송
         if (status == net.kumo.kumo.domain.entity.Enum.ApplicationStatus.PASSED ||
                 status == net.kumo.kumo.domain.entity.Enum.ApplicationStatus.FAILED) {
 
-            // 공고 제목 가져오기
             String jobTitle = "공고";
             if ("TOKYO".equalsIgnoreCase(application.getTargetSource())) {
                 jobTitle = tokyoGeocodedRepository.findById(application.getTargetPostId())

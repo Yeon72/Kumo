@@ -1,11 +1,11 @@
 package net.kumo.kumo.domain.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-
+/**
+ * 구직자(Seeker)가 보유한 자격증 취득 내역을 관리하는 엔티티 클래스입니다.
+ */
 @Entity
 @Table(name = "seeker_certificates")
 @Getter
@@ -14,19 +14,24 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class SeekerCertificateEntity {
-	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long certId;
-	
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", nullable = false)
-	private UserEntity user;
-	
-	@Column(length = 100, nullable = false)
-	private String certName;
-	
-	@Column(length = 4)
-	private String acquisitionYear; // VARCHAR(4)로 수정됨
-	
-	@Column(length = 100)
-	private String issuer;
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long certId;
+
+    /** 자격증 정보를 소유한 구직자 계정 매핑 */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
+
+    /** 취득한 자격증 명칭 */
+    @Column(length = 100, nullable = false)
+    private String certName;
+
+    /** 자격증 취득 연도 (예: "2024") */
+    @Column(length = 4)
+    private String acquisitionYear;
+
+    /** 자격증 발급 기관명 */
+    @Column(length = 100)
+    private String issuer;
 }

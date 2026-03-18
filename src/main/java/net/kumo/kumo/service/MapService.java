@@ -29,6 +29,10 @@ import net.kumo.kumo.repository.TokyoGeocodedRepository;
 import net.kumo.kumo.repository.TokyoNoGeocodedRepository;
 import net.kumo.kumo.repository.UserRepository;
 
+/**
+ * 지도 기반의 구인 공고 검색, 위치별 목록 조회, 상세 정보 열람 및
+ * 구인 신청, 신고 기능 등 핵심 비즈니스 로직을 처리하는 서비스 클래스입니다.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -39,28 +43,34 @@ public class MapService {
     private final OsakaNoGeocodedRepository osakaNoRepo;
     private final TokyoNoGeocodedRepository tokyoNoRepo;
 
-    // 신고 관련 리포지토리
     private final ReportRepository reportRepo;
-    private final UserRepository userRepo; // ★ [추가] 신고자(User) 조회를 위해 필요
+    private final UserRepository userRepo;
 
-    // 공고 신청 리포지토리
     private final ApplicationRepository applicationRepo;
-    private final NotificationService notificationService; // 🌟 알림 서비스 주입
+    private final NotificationService notificationService;
 
-    // --- 1. 지도용 리스트 조회 ---
+    /**
+     * 클라이언트의 지도 뷰포트(위경도 범위) 내에 존재하는 구인 공고 목록을 조회합니다.
+     * 모집 중(RECRUITING)이거나 상태가 명시되지 않은 기존 공고만 필터링하여 반환합니다.
+     *
+     * @param minLat 최소 위도
+     * @param maxLat 최대 위도
+     * @param minLng 최소 경도
+     * @param maxLng 최대 경도
+     * @param lang   다국어 지원을 위한 언어 설정
+     * @return 뷰포트 범위 내에 존재하는 공고 요약 DTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<JobSummaryDTO> getJobListInMap(Double minLat, Double maxLat, Double minLng, Double maxLng,
-            String lang) {
+                                               String lang) {
         List<JobSummaryView> osakaRaw = osakaRepo.findTop300ByLatBetweenAndLngBetween(minLat, maxLat, minLng, maxLng);
         List<JobSummaryDTO> result = new ArrayList<>(osakaRaw.stream()
-                // 🌟 [추가] 상태가 null(기존 데이터)이거나 'RECRUITING'인 것만 필터링!
                 .filter(view -> view.getStatus() == null || "RECRUITING".equals(view.getStatus().name()))
                 .map(view -> new JobSummaryDTO(view, lang, "OSAKA"))
                 .toList());
 
         List<JobSummaryView> tokyoRaw = tokyoRepo.findTop300ByLatBetweenAndLngBetween(minLat, maxLat, minLng, maxLng);
         result.addAll(tokyoRaw.stream()
-                // 🌟 [추가] 도쿄도 마찬가지로 필터링!
                 .filter(view -> view.getStatus() == null || "RECRUITING".equals(view.getStatus().name()))
                 .map(view -> new JobSummaryDTO(view, lang, "TOKYO"))
                 .toList());
@@ -68,13 +78,18 @@ public class MapService {
         return result;
     }
 
-    // --- 2. 상세 페이지 조회 ---
-    // 조회수 증가 포함
+    /**
+     * 특정 구인 공고의 상세 정보를 조회하고, 해당 공고의 누적 조회수를 1 증가시킵니다.
+     *
+     * @param id     조회할 공고의 고유 식별자
+     * @param source 공고의 데이터 출처 지역 (예: OSAKA, TOKYO 등)
+     * @param lang   다국어 지원을 위한 언어 설정
+     * @return 공고 상세 정보가 담긴 DTO
+     */
     @Transactional
     public JobDetailDTO getJobDetail(Long id, String source, String lang) {
         BaseEntity entity = null;
 
-        // 소스에 따라 적절한 리포지토리 선택
         if ("OSAKA".equalsIgnoreCase(source)) {
             entity = osakaRepo.findById(id).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공고입니다."));
         } else if ("TOKYO".equalsIgnoreCase(source)) {
@@ -87,24 +102,23 @@ public class MapService {
             throw new IllegalArgumentException("잘못된 접근입니다 (Source 오류).");
         }
 
-        // ==========================================
-        // 🌟 [핵심] 찾은 엔티티의 조회수를 1 증가시킵니다!
-        // ==========================================
         entity.addViewCount();
-        log.info(String.valueOf(entity.getViewCount()));
+        log.info("조회수 증가 완료: {}", entity.getViewCount());
 
-        // JobDetailDTO 생성자에 source도 함께 전달
         return new JobDetailDTO(entity, lang, source);
     }
 
-    // --- 3. [수정] 신고 등록 ---
+    /**
+     * 특정 구인 공고에 대한 사용자의 신고 내역을 데이터베이스에 등록합니다.
+     * 등록이 완료되면 해당 공고의 작성자(구인자)에게 신고 접수 안내 시스템 알림을 발송합니다.
+     *
+     * @param dto 신고자 및 신고 대상 정보가 담긴 DTO
+     */
     @Transactional
     public void createReport(ReportDTO dto) {
-        // 1. 신고자(User) 조회
         UserEntity reporter = userRepo.findById(dto.getReporterId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        // 2. 엔티티 변환 및 저장
         ReportEntity report = ReportEntity.builder()
                 .reporter(reporter)
                 .targetPostId(dto.getTargetPostId())
@@ -116,7 +130,6 @@ public class MapService {
 
         reportRepo.save(report);
 
-        // 🌟 [알림 추가] 공고 작성자(구인자)에게 신고 접수 및 수정 요청 알림 발송
         String jobTitle = "공고";
         UserEntity recruiter = null;
         if ("OSAKA".equalsIgnoreCase(dto.getTargetSource())) {
@@ -142,12 +155,16 @@ public class MapService {
         }
     }
 
-    // --- 4. 구인 신청(지원하기) 로직 ---
+    /**
+     * 구직자가 특정 구인 공고에 입사 지원을 요청할 때 수행되는 비즈니스 로직입니다.
+     * 중복 지원 여부를 검증한 후, 구직자 본인과 해당 공고의 작성자 양측에 각각 알림을 발송합니다.
+     *
+     * @param seeker 지원을 요청한 구직자 사용자 엔티티
+     * @param dto    지원 대상 공고 정보가 담긴 DTO
+     * @throws IllegalStateException 사용자가 해당 공고에 이미 지원한 내역이 존재할 경우 발생
+     */
     @Transactional
     public void applyForJob(UserEntity seeker, ApplicationDTO.ApplyRequest dto) {
-        // ★ 파라미터 타입 변경됨!
-
-        // 1. 중복 지원 검사
         boolean alreadyApplied = applicationRepo.existsByTargetSourceAndTargetPostIdAndSeeker(
                 dto.getTargetSource(),
                 dto.getTargetPostId(),
@@ -157,17 +174,14 @@ public class MapService {
             throw new IllegalStateException("이미 지원하신 공고입니다.");
         }
 
-        // 2. 지원 내역 엔티티 생성
         ApplicationEntity application = ApplicationEntity.builder()
                 .targetSource(dto.getTargetSource())
                 .targetPostId(dto.getTargetPostId())
                 .seeker(seeker)
                 .build();
 
-        // 3. DB 저장
         applicationRepo.save(application);
 
-        // 🌟 공고 제목 및 작성자 조회 (알림용)
         String jobTitle = "공고";
         UserEntity recruiter = null;
         if ("OSAKA".equalsIgnoreCase(dto.getTargetSource())) {
@@ -184,21 +198,29 @@ public class MapService {
             }
         }
 
-        // 🌟 [알림 추가 1] 구직자 본인에게 '구인 신청 완료' 알림 발송
         notificationService.sendAppCompletedNotification(seeker, jobTitle, dto.getTargetPostId(),
                 dto.getTargetSource());
 
-        // 🌟 [알림 추가 2] 구인자(사장님)에게 '신규 지원자 발생' 알림 발송
         if (recruiter != null) {
             notificationService.sendNewApplicantNotification(recruiter, seeker.getNickname());
         }
     }
 
-    // --- 5. [NEW] 공고 삭제 로직 ---
+    /**
+     * 시스템에 등록된 특정 구인 공고를 완전히 삭제(Hard Delete)합니다.
+     * 관리자 권한을 가졌거나, 공고를 등록한 사용자 본인일 경우에만 삭제가 허용됩니다.
+     *
+     * @implNote 해당 공고와 연관된 지원 내역(Application)이 존재할 경우, 데이터베이스의 외래키 Cascade 제약
+     * 조건이 없으면 무결성 오류가 발생할 수 있으므로 연관 데이터 선행 삭제 처리가 필요할 수 있습니다.
+     *
+     * @param id     삭제할 공고의 고유 식별자
+     * @param source 삭제 대상 공고의 데이터 출처 지역
+     * @param user   삭제 요청을 시도하는 사용자 엔티티
+     * @throws IllegalStateException 삭제 권한이 유효하지 않을 경우 발생
+     */
     @Transactional
     public void deleteJobPost(Long id, String source, UserEntity user) {
 
-        // 1. source를 기반으로 해당 공고 엔티티를 찾기 (BaseEntity 상속 객체)
         BaseEntity entity = null;
 
         if ("OSAKA".equalsIgnoreCase(source)) {
@@ -209,65 +231,52 @@ public class MapService {
             throw new IllegalArgumentException("잘못된 접근입니다 (Source 오류).");
         }
 
-        // 2. 권한 검증 (가장 중요!)
-        // 관리자(ADMIN)이거나, 공고의 작성자 ID와 로그인 유저 ID가 같아야만 삭제 가능
         boolean isAdmin = (user.getRole() == Enum.UserRole.ADMIN);
-
-        // 주의: 크롤링 데이터는 작성자(userId)가 null일 수 있으므로 null 체크 필수
         boolean isRealOwner = (entity.getUserId() != null && entity.getUserId().equals(user.getUserId()));
 
         if (!isAdmin && !isRealOwner) {
             throw new IllegalStateException("해당 공고를 삭제할 권한이 없습니다.");
         }
 
-        // 3. 권한이 확인되면 실제 데이터베이스에서 삭제
         if ("OSAKA".equalsIgnoreCase(source)) {
             osakaRepo.deleteById(id);
         } else if ("TOKYO".equalsIgnoreCase(source)) {
             tokyoRepo.deleteById(id);
         }
-
-        // (참고) 만약 해당 공고에 엮인 지원내역(applications)이 있다면,
-        // 테이블 설계 당시 ON DELETE CASCADE 를 걸어두지 않으셨다면
-        // 여기서 applicationRepo.deleteByTargetSourceAndTargetPostId() 를 먼저 실행해 주셔야 합니다.
     }
 
-    // ==========================================
-    // --- 4. [NEW] 검색 리스트 조회 (JobDetailDTO 반환) ---
-    // ==========================================
-    // ==========================================
-    // --- 4. [NEW] 검색 리스트 조회 (JobDetailDTO 반환) ---
-    // ==========================================
+    /**
+     * 사용자가 입력한 검색 키워드 및 지역 필터 조건에 부합하는 구인 공고 목록을 검색합니다.
+     * 모집 진행 중(RECRUITING)인 공고만을 동적 쿼리(Specification)를 통해 조회하여 반환합니다.
+     *
+     * @param keyword    사용자가 검색한 텍스트 키워드 (제목, 회사명 등)
+     * @param mainRegion 메인 지역 구분 필터 (tokyo 또는 osaka)
+     * @param subRegion  세부 행정구역 지역 구분 필터
+     * @param lang       다국어 지원을 위한 언어 설정
+     * @return 검색 조건에 일치하는 구인 공고 상세 DTO 리스트
+     */
     @Transactional(readOnly = true)
     public List<JobDetailDTO> searchJobsList(String keyword, String mainRegion, String subRegion, String lang) {
 
         List<JobDetailDTO> results = new ArrayList<>();
 
-        // 1. 도쿄 검색
         if ("tokyo".equalsIgnoreCase(mainRegion)) {
-            // 위치 O: 도쿄는 wardCityJp, wardCityKr 컬럼을 확인
             tokyoRepo.findAll(JobSearchSpec.searchConditions(keyword, subRegion, "wardCityJp", "wardCityKr"))
-                    .stream() // 🌟 stream() 열고
-                    .filter(entity -> entity.getStatus() == null || "RECRUITING".equals(entity.getStatus().name())) // 🌟
-                                                                                                                    // 필터
-                                                                                                                    // 추가!
+                    .stream()
+                    .filter(entity -> entity.getStatus() == null || "RECRUITING".equals(entity.getStatus().name()))
                     .forEach(entity -> results.add(new JobDetailDTO(entity, lang, "TOKYO")));
 
-            // 위치 X: address 컬럼에서 확인
             tokyoNoRepo.findAll(JobSearchSpec.searchConditions(keyword, subRegion, "address"))
                     .stream()
                     .filter(entity -> entity.getStatus() == null || "RECRUITING".equals(entity.getStatus().name()))
                     .forEach(entity -> results.add(new JobDetailDTO(entity, lang, "TOKYO_NO")));
         }
-        // 2. 오사카 검색
         else if ("osaka".equalsIgnoreCase(mainRegion)) {
-            // 위치 O: 오사카는 wardJp, wardKr 컬럼을 확인
             osakaRepo.findAll(JobSearchSpec.searchConditions(keyword, subRegion, "wardJp", "wardKr"))
                     .stream()
                     .filter(entity -> entity.getStatus() == null || "RECRUITING".equals(entity.getStatus().name()))
                     .forEach(entity -> results.add(new JobDetailDTO(entity, lang, "OSAKA")));
 
-            // 위치 X: address 컬럼에서 확인
             osakaNoRepo.findAll(JobSearchSpec.searchConditions(keyword, subRegion, "address"))
                     .stream()
                     .filter(entity -> entity.getStatus() == null || "RECRUITING".equals(entity.getStatus().name()))

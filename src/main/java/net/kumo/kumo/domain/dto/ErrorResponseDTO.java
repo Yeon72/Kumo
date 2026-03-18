@@ -6,17 +6,24 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 /**
- * 프론트 엔드로 반환할 공통 에러 응답 포맷
+ * 프론트엔드로 반환되는 전역 예외 처리(Global Exception) 및
+ * 공통 에러 응답(Error Response) 데이터를 담는 DTO 클래스입니다.
  */
 @Getter
-@Builder // 🌟 다시 추가! (GlobalExceptionHandler의 .builder() 에러 해결)
+@Builder
 public class ErrorResponseDTO {
-	
-	// 🌟 @Builder.Default: 빌더 패턴을 쓸 때 이 기본값(now)을 무시하지 말고 꼭 써달라는 롬복의 명령어입니다.
-	@Builder.Default
-	private final LocalDateTime timestamp = LocalDateTime.now();
-	
-	private final int status;       // HTTP 상태 코드 (예: 400, 401, 404)
-	private final String error;     // 에러 종류 (예: "Unauthorized")
-	private final String message;   // 상세 메시지 (예: "로그인이 필요합니다.")
+
+    /** 에러 발생 시간 (기본값: 현재 시간) */
+    @Builder.Default
+    private final LocalDateTime timestamp = LocalDateTime.now();
+
+    /** HTTP 상태 코드 (예: 400, 401, 403, 500 등) */
+    private final int status;
+
+    /** 에러 유형 명칭 (예: "Unauthorized", "Bad Request") */
+    private final String error;
+
+    /** 클라이언트에게 노출될 상세 에러 메시지 */
+    private final String message;
+
 }

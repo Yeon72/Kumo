@@ -31,6 +31,10 @@ import net.kumo.kumo.repository.SeekerProfileRepository;
 import net.kumo.kumo.repository.TokyoGeocodedRepository;
 import net.kumo.kumo.repository.UserRepository;
 
+/**
+ * 구인자(Recruiter) 전용 대시보드 통계 집계, 스카우트 제의 발송,
+ * 이력서 열람 및 프로필 정보 갱신과 같은 핵심 비즈니스 로직을 처리하는 서비스 클래스입니다.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -41,18 +45,21 @@ public class RecruiterService {
     private final ScheduleRepository scheduleRepository;
     private final SeekerProfileRepository seekerProfileRepo;
     private final SeekerService seekerService;
-    private final ScoutOfferRepository scoutOfferRepo; // 🌟 추가
-    private final NotificationRepository notificationRepo; // 🌟 추가
+    private final ScoutOfferRepository scoutOfferRepo;
+    private final NotificationRepository notificationRepo;
     private final OsakaGeocodedRepository osakaGeocodedRepository;
     private final TokyoGeocodedRepository tokyoGeocodedRepository;
     private final ApplicationRepository applicationRepository;
     private final MessageSource messageSource;
 
     /**
-     * 구인자 대시보드 통계 데이터 가져오기
+     * 구인자의 메인 대시보드 렌더링에 필요한 통계 데이터(등록된 총 공고 수, 누적 지원자 수,
+     * 미열람 지원자 수, 주간 지원자 변동 차트 등)를 집계하여 반환합니다.
+     *
+     * @param email 통계를 조회할 구인자 계정(이메일)
+     * @return 대시보드 통계 데이터 DTO
      */
     public net.kumo.kumo.domain.dto.RecruiterDashboardDTO getDashboardStats(String email) {
-        // 1. 공고 정보 가져오기
         List<OsakaGeocodedEntity> osakaJobs = osakaGeocodedRepository.findByUser_Email(email);
         List<TokyoGeocodedEntity> tokyoJobs = tokyoGeocodedRepository.findByUser_Email(email);
 
@@ -60,7 +67,6 @@ public class RecruiterService {
         long totalVisits = osakaJobs.stream().mapToLong(j -> j.getViewCount() != null ? j.getViewCount() : 0).sum()
                 + tokyoJobs.stream().mapToLong(j -> j.getViewCount() != null ? j.getViewCount() : 0).sum();
 
-        // 2. 지원자 정보 조회를 위한 ID 리스트 생성
         List<Long> osakaIds = osakaJobs.stream().map(OsakaGeocodedEntity::getId).toList();
         List<Long> tokyoIds = tokyoJobs.stream().map(TokyoGeocodedEntity::getId).toList();
 
@@ -77,7 +83,6 @@ public class RecruiterService {
                 .filter(a -> a.getStatus() == Enum.ApplicationStatus.APPLIED)
                 .count();
 
-        // 3. 차트용 데이터 (최근 7일)
         java.time.LocalDate today = java.time.LocalDate.now();
         java.util.List<String> labels = new java.util.ArrayList<>();
         java.util.List<Long> data = new java.util.ArrayList<>();
@@ -104,11 +109,15 @@ public class RecruiterService {
     }
 
     /**
-     * 인재에게 스카우트 제의 보내기
+     * 특정 구직자(인재)에게 스카우트 제의를 발송하고, 해당 구직자에게 시스템 수신 알림을 생성합니다.
+     * 중복 제안 방지 로직과 다국어 에러 메시지 처리가 포함되어 있습니다.
+     *
+     * @param recruiterEmail 스카우트 제의를 발송하는 구인자 계정
+     * @param seekerId       제의를 수신할 대상 구직자의 식별자
+     * @throws RuntimeException 대상 사용자를 찾을 수 없거나, 이미 진행 중인 스카우트 제의가 존재할 경우 발생
      */
     @Transactional
     public void sendScoutOffer(String recruiterEmail, Long seekerId) {
-        // 🌟 2. 현재 요청을 보낸 사용자의 언어(Locale) 정보 가져오기
         Locale currentLocale = LocaleContextHolder.getLocale();
 
         UserEntity recruiter = userRepository.findByEmail(recruiterEmail)
@@ -119,14 +128,12 @@ public class RecruiterService {
                 .orElseThrow(() -> new RuntimeException(
                         messageSource.getMessage("error.seeker.notfound", null, currentLocale)));
 
-        // 이미 대기 중인 제안이 있는지 확인 (중복 제안 방지)
         if (scoutOfferRepo.existsByRecruiterAndSeekerAndStatus(recruiter, seeker,
                 ScoutOfferEntity.ScoutStatus.PENDING)) {
             throw new RuntimeException(
                     messageSource.getMessage("error.scout.duplicate", null, currentLocale));
         }
 
-        // 1. 스카우트 제안 저장
         ScoutOfferEntity offer = ScoutOfferEntity.builder()
                 .recruiter(recruiter)
                 .seeker(seeker)
@@ -134,12 +141,11 @@ public class RecruiterService {
                 .build();
         scoutOfferRepo.save(offer);
 
-        // 2. 구직자에게 알림 생성 (기존 로직 완벽합니다!)
         NotificationEntity noti = NotificationEntity.builder()
                 .user(seeker)
                 .notifyType(NotificationType.SCOUT_OFFER)
                 .title("noti.scout.title")
-                .content(recruiter.getNickname()) // 🌟 번역 시 인자로 사용될 사장님 닉네임
+                .content(recruiter.getNickname())
                 .targetUrl("/Seeker/scout")
                 .isRead(false)
                 .build();
@@ -147,19 +153,21 @@ public class RecruiterService {
     }
 
     /**
-     * 스카우트 동의 & 이력서 공개한 인재 목록 불러오기
-     * 
-     * @return
+     * 인재 탐색 페이지 렌더링을 위해, 스카우트 제의 수신에 동의하고 이력서를 공개 상태로 설정한
+     * 전체 구직자 프로필 목록을 조회합니다.
+     *
+     * @return 공개 상태인 구직자 프로필 엔티티 리스트
      */
     public List<SeekerProfileEntity> getScoutedProfiles() {
         return seekerProfileRepo.findByScoutAgreeTrueAndIsPublicTrue();
     }
 
     /**
-     * 특정 인재의 이력서 상세 정보 가져오기
-     * 
-     * @param userId
-     * @return
+     * 인재 탐색 후 열람을 위한 특정 구직자의 전체 이력서 상세 정보를 조회하여 반환합니다.
+     *
+     * @param userId 조회 대상 구직자의 식별자
+     * @return 통합 이력서 데이터 DTO
+     * @throws RuntimeException 대상 구직자를 찾을 수 없을 때 발생
      */
     public ResumeDto getTalentResume(Long userId) {
         UserEntity user = userRepository.findById(userId)
@@ -167,39 +175,43 @@ public class RecruiterService {
         return seekerService.getResume(user.getEmail());
     }
 
+    /**
+     * 주어진 이메일 계정을 기반으로 구인자(본인)의 엔티티 정보를 조회합니다.
+     *
+     * @param email 조회를 요청한 사용자의 이메일 계정
+     * @return 사용자 엔티티
+     * @throws RuntimeException 사용자를 찾을 수 없을 때 발생
+     */
     public UserEntity getCurrentUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
     }
 
     /**
-     * 유저의 프로필 이미지 경로를 업데이트합니다.
-     * 
-     * @param email            유저 식별용 이메일
-     * @param imagePath        저장된 이미지의 웹 접근 경로
-     * @param originalFileName 원본 파일명
-     * @param storedFileName   UUID가 붙은 저장 파일명
-     * @param fileSize         파일 크기
+     * 구인자의 프로필 이미지 정보 및 스토리지 경로를 갱신합니다.
+     * 기존 등록된 이미지가 존재할 경우 Update 로직을, 존재하지 않을 경우 Insert 로직을 분기하여 처리합니다.
+     *
+     * @param email            변경 대상 구인자의 이메일 계정
+     * @param imagePath        이미지 렌더링을 위한 웹 접근 경로 URL
+     * @param originalFileName 클라이언트로부터 업로드된 원본 파일명
+     * @param storedFileName   서버 스토리지에 중복 방지를 위해 생성된 UUID 파일명
+     * @param fileSize         파일의 물리적 크기
      */
     @org.springframework.transaction.annotation.Transactional
     public void updateProfileImage(String email, String imagePath, String originalFileName, String storedFileName,
-            Long fileSize) {
+                                   Long fileSize) {
 
-        // 1. 이메일로 유저 정보를 가져옵니다.
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("해당 이메일을 가진 유저를 찾을 수 없습니다: " + email));
 
-        // 🌟 2. 유저가 이미 가지고 있는 프로필 사진이 있는지 꺼내봅니다.
         ProfileImageEntity existingImage = user.getProfileImage();
 
         if (existingImage != null) {
-            // 🟢 [Case A] 기존 프사가 있는 경우 -> 새로운 정보로 내용물만 덮어쓰기 (UPDATE)
             existingImage.setFileUrl(imagePath);
             existingImage.setOriginalFileName(originalFileName);
             existingImage.setStoredFileName(storedFileName);
             existingImage.setFileSize(fileSize);
         } else {
-            // 🔵 [Case B] 기존 프사가 아예 없는 경우 -> 새로 만들어서 연결해주기 (INSERT)
             ProfileImageEntity newImage = ProfileImageEntity.builder()
                     .fileUrl(imagePath)
                     .originalFileName(originalFileName)
@@ -210,21 +222,19 @@ public class RecruiterService {
             user.setProfileImage(newImage);
         }
 
-        // 3. 변경 사항을 저장합니다. (JPA의 더티 체킹 덕분에 알아서 UPDATE나 INSERT 쿼리가 나갑니다!)
         userRepository.save(user);
     }
 
     /**
-     * 회원정보 수정
-     * 
-     * @param dto
+     * 구인자의 마이페이지 설정에 따라 기본 계정 및 연락처/위치 정보를 갱신합니다.
+     *
+     * @param dto 갱신할 내용이 담긴 폼 DTO
+     * @throws RuntimeException 갱신 대상 사용자를 찾을 수 없을 때 발생
      */
     public void updateProfile(JoinRecruiterDTO dto) {
         UserEntity user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new RuntimeException("해당 이메일을 가진 유저를 찾을 수 없습니다: " + dto.getEmail()));
 
-        // 2. 새 객체를 만들지 말고, 기존 객체의 알맹이(필드)만 쏙쏙 바꿔 입힙니다!
-        // (UserEntity 클래스에 @Setter 나 수정용 메서드가 있어야 합니다.)
         user.setNickname(dto.getNickname());
         user.setZipCode(dto.getZipCode());
         user.setAddressMain(dto.getAddressMain());
@@ -235,34 +245,35 @@ public class RecruiterService {
         user.setLatitude(dto.getLatitude());
         user.setLongitude(dto.getLongitude());
 
-        // 🌟 [최종 검문소] DB에 저장되기 직전, user 객체에 위도/경도가 잘 꽂혀있는지 확인!
-        log.info("👉 DB 저장 직전 Entity 상태: 위도={}, 경도={}", user.getLatitude(), user.getLongitude());
+        log.info("DB 저장 직전 Entity 상태: 위도={}, 경도={}", user.getLatitude(), user.getLongitude());
     }
 
+    /**
+     * 글로벌 네비게이션 헤더 뱃지 등에 표시하기 위해, 특정 구인자가 등록한 전체 공고에
+     * 새롭게 접수된 미확인(APPLIED) 신규 지원자의 총합을 계산합니다.
+     *
+     * @param email 조회를 요청한 구인자 계정
+     * @return 미확인 지원자의 총 개수
+     */
     public long getUnreadCount(String email) {
         long totalUnread = 0;
 
-        // 1. 도쿄 공고 ID들만 숫자 리스트로 추출
         List<TokyoGeocodedEntity> tokyoEntities = tokyoGeocodedRepository.findByUser_Email(email);
         if (tokyoEntities != null && !tokyoEntities.isEmpty()) {
-            // 🌟 엔티티 봉지에서 ID(Long)만 꺼내서 리스트로 만듭니다.
             List<Long> tokyoIds = tokyoEntities.stream()
-                    .map(TokyoGeocodedEntity::getDatanum) // 사장님 엔티티의 ID 필드명 확인!
+                    .map(TokyoGeocodedEntity::getDatanum)
                     .toList();
             totalUnread += applicationRepository.countUnreadBySourceAndPostIds("TOKYO", tokyoIds);
         }
 
-        // 2. 오사카 공고 ID들만 숫자 리스트로 추출
         List<OsakaGeocodedEntity> osakaEntities = osakaGeocodedRepository.findByUser_Email(email);
         if (osakaEntities != null && !osakaEntities.isEmpty()) {
-            // 🌟 여기도 똑같이 ID만 추출!
             List<Long> osakaIds = osakaEntities.stream()
-                    .map(OsakaGeocodedEntity::getDatanum) // 필드명이 다르면 수정해주세요.
+                    .map(OsakaGeocodedEntity::getDatanum)
                     .toList();
             totalUnread += applicationRepository.countUnreadBySourceAndPostIds("OSAKA", osakaIds);
         }
 
         return totalUnread;
     }
-
 }

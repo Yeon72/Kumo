@@ -48,11 +48,16 @@ import net.kumo.kumo.repository.TokyoGeocodedRepository;
 import net.kumo.kumo.repository.TokyoNoGeocodedRepository;
 import net.kumo.kumo.repository.UserRepository;
 
+/**
+ * 구직자(Seeker) 전용 대시보드, 입사 지원 내역 관리, 이력서(Resume) 설정 및
+ * 스카우트 제안 관리와 같은 핵심 비즈니스 로직을 처리하는 서비스 클래스입니다.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class SeekerService {
+
     private final UserRepository userRepository;
     private final ProfileImageRepository profileImageRepository;
     private final SeekerProfileRepository profileRepo;
@@ -66,13 +71,22 @@ public class SeekerService {
     private final ApplicationRepository applicationRepo;
     private final TokyoGeocodedRepository tokyoRepo;
     private final OsakaGeocodedRepository osakaRepo;
-    private final TokyoNoGeocodedRepository tokyoNoRepo; // 🌟 추가
-    private final OsakaNoGeocodedRepository osakaNoRepo; // 🌟 추가
+    private final TokyoNoGeocodedRepository tokyoNoRepo;
+    private final OsakaNoGeocodedRepository osakaNoRepo;
     private final JobPostingRepository jobPostingRepo;
     private final MessageSource messageSource;
 
+    @Value("${file.upload.dir}")
+    private String uploadDir;
+
+    private final String EVIDENCE_FOLDER = "evidenceFiles/";
+
     /**
-     * 구직자의 지원 내역 가져오기
+     * 특정 구직자의 전체 입사 지원 내역을 최신순으로 조회하여 DTO 리스트로 반환합니다.
+     * 원본 공고가 삭제되었거나 조회가 불가능한 경우 다국어 예외 메시지로 대체하여 반환합니다.
+     *
+     * @param email 조회를 요청한 구직자 이메일 계정
+     * @return 상세 공고 정보가 병합된 지원 내역 이력 DTO 리스트
      */
     public List<SeekerApplicationHistoryDTO> getApplicationHistory(String email) {
         UserEntity seeker = userRepository.findByEmail(email)
@@ -90,7 +104,6 @@ public class SeekerService {
                     .status(app.getStatus().name())
                     .build();
 
-            // 🌟 MapService와 동일하게 findById(PK) 기준으로 조회
             String source = app.getTargetSource().toUpperCase();
             Long postId = app.getTargetPostId();
 
@@ -156,7 +169,12 @@ public class SeekerService {
     }
 
     /**
-     * 지원 취소하기
+     * 특정 공고에 대한 구직자의 입사 지원 내역을 취소(삭제) 처리합니다.
+     * 권한 인가를 통해 본인의 지원 내역만 취소할 수 있도록 제한합니다.
+     *
+     * @param appId 취소할 지원 내역의 고유 식별자
+     * @param email 취소를 요청한 사용자의 이메일 계정
+     * @throws RuntimeException 대상 내역이 없거나, 취소 권한이 유효하지 않을 때 발생
      */
     @Transactional
     public void cancelApplication(Long appId, String email) {
@@ -171,7 +189,10 @@ public class SeekerService {
     }
 
     /**
-     * 구직자가 받은 스카우트 제안 목록 불러오기
+     * 특정 구직자가 구인자들로부터 수신한 스카우트 제의(Scout Offer) 전체 목록을 조회합니다.
+     *
+     * @param email 조회를 요청한 구직자 이메일 계정
+     * @return 최신순 정렬된 스카우트 제의 엔티티 리스트
      */
     public List<ScoutOfferEntity> getScoutOffers(String email) {
         UserEntity user = userRepository.findByEmail(email)
@@ -179,35 +200,47 @@ public class SeekerService {
         return scoutOfferRepo.findBySeekerOrderByCreatedAtDesc(user);
     }
 
-    @Value("${file.upload.dir}")
-    private String uploadDir; // application.properties에서 가져옴
-
-    private final String EVIDENCE_FOLDER = "evidenceFiles/";
-
+    /**
+     * 특정 사용자의 마이페이지 기본 프로필 정보를 DTO로 변환하여 조회합니다.
+     *
+     * @param username 조회를 요청한 사용자의 계정(이메일)
+     * @return 구직자 마이페이지용 정보 DTO
+     */
     public SeekerMyPageDTO getDTO(String username) {
         UserEntity userEntity = userRepository.findByEmail(username)
                 .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다. email=" + username));
         return SeekerMyPageDTO.EntityToDto(userEntity);
     }
 
+    /**
+     * 구직자의 프로필 이미지를 갱신하거나 신규로 스토리지에 저장하고 데이터베이스를 갱신합니다.
+     *
+     * @param username 프로필 이미지를 갱신할 구직자 계정(이메일)
+     * @param file     클라이언트가 업로드한 신규 이미지 파일 객체
+     * @return 저장된 이미지 파일의 웹 접근 URL
+     * @throws IOException 스토리지 저장 및 전송 간 I/O 에러 발생 시 처리
+     */
     public String updateProfileImage(String username, MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("업로드할 파일이 없습니다.");
         }
         UserEntity userentity = userRepository.findByEmail(username)
                 .orElseThrow(() -> new IllegalArgumentException("해당유저없음"));
+
         String profileFolder = "profileImage/";
         String absolutePath = uploadDir + profileFolder;
         File folder = new File(absolutePath);
         if (!folder.exists()) {
             folder.mkdirs();
         }
+
         String originalFileName = file.getOriginalFilename();
         String uuid = UUID.randomUUID().toString();
         String saveFileName = uuid + "_" + originalFileName;
         File saveFile = new File(absolutePath, saveFileName);
         file.transferTo(saveFile);
         String fileUrl = "/uploads/" + profileFolder + saveFileName;
+
         ProfileImageEntity existingImage = userentity.getProfileImage();
         if (existingImage != null) {
             existingImage.setOriginalFileName(file.getOriginalFilename());
@@ -216,14 +249,23 @@ public class SeekerService {
             existingImage.setFileSize(file.getSize());
         } else {
             ProfileImageEntity newImage = ProfileImageEntity.builder()
-                    .originalFileName(file.getOriginalFilename()).storedFileName(saveFileName)
-                    .fileUrl(fileUrl).fileSize(file.getSize()).user(userentity).build();
+                    .originalFileName(file.getOriginalFilename())
+                    .storedFileName(saveFileName)
+                    .fileUrl(fileUrl)
+                    .fileSize(file.getSize())
+                    .user(userentity)
+                    .build();
             userentity.setProfileImage(newImage);
             profileImageRepository.save(newImage);
         }
         return fileUrl;
     }
 
+    /**
+     * 구직자의 주소 및 상세 연락처 등 기본 개인정보 프로필을 갱신합니다.
+     *
+     * @param dto 수정 내역이 담긴 구직자 정보 DTO
+     */
     public void updateProfile(JoinSeekerDTO dto) {
         UserEntity user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
@@ -239,6 +281,13 @@ public class SeekerService {
         userRepository.save(user);
     }
 
+    /**
+     * 1:N 구조로 분산된 구직자의 세부 이력서 정보(경력, 학력, 자격증 등)를
+     * 데이터베이스에서 취합하여 단일 DTO 구조로 반환합니다.
+     *
+     * @param username 조회를 요청한 구직자 계정(이메일)
+     * @return 취합된 세부 이력서 DTO
+     */
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResumeDto getResume(String username) {
         UserEntity user = userRepository.findByEmail(username)
@@ -325,21 +374,31 @@ public class SeekerService {
         return dto;
     }
 
+    /**
+     * 구직자가 새롭게 작성한 종합 이력서 폼 데이터를 기반으로, 기존 1:N 이력서 정보들을
+     * 일괄 삭제(Flush)한 후 신규 엔티티들을 재생성하여 데이터베이스에 저장(덮어쓰기)합니다.
+     *
+     * @param dto      신규 등록 및 수정 내역이 담긴 통합 이력서 DTO
+     * @param username 저장을 요청한 사용자 계정(이메일)
+     */
     @Transactional
     public void saveResume(ResumeDto dto, String username) {
         UserEntity user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
         profileRepo.deleteByUser(user);
         conditionRepo.deleteByUser(user);
         educationRepo.deleteByUser(user);
         careerRepo.deleteByUser(user);
         certificateRepo.deleteByUser(user);
         languageRepo.deleteByUser(user);
+
         boolean hasNewFiles = dto.getPortfolioFiles() != null && !dto.getPortfolioFiles().isEmpty()
                 && dto.getPortfolioFiles().stream().anyMatch(f -> !f.isEmpty());
         if (hasNewFiles) {
             seekerDocumentRepository.deleteByUser(user);
         }
+
         profileRepo.flush();
         conditionRepo.flush();
         educationRepo.flush();
@@ -408,12 +467,19 @@ public class SeekerService {
                     seekerDocumentRepository.save(SeekerDocumentEntity.builder().fileName(file.getOriginalFilename())
                             .fileUrl("/uploads/" + EVIDENCE_FOLDER + sfn).user(user).build());
                 } catch (IOException e) {
-                    log.error("저장실패: {}", e.getMessage());
+                    log.error("파일 저장 실패: {}", e.getMessage());
                 }
             }
         }
     }
 
+    /**
+     * 년(YYYY)과 월(MM) 문자열을 결합하여 LocalDate 객체(해당 월의 1일 기준)로 안전하게 파싱합니다.
+     *
+     * @param year  파싱할 연도 문자열
+     * @param month 파싱할 월 문자열
+     * @return 생성된 LocalDate 객체 (예외 발생 시 null)
+     */
     private LocalDate parseDate(String year, String month) {
         try {
             if (year == null || year.isEmpty() || month == null || month.isEmpty())

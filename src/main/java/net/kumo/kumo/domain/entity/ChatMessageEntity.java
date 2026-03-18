@@ -22,6 +22,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import net.kumo.kumo.domain.entity.Enum.MessageType;
 
+/**
+ * 채팅방(ChatRoom) 내에서 송수신되는 개별 메시지의 메타 데이터와
+ * 본문 내용을 관리하는 엔티티 클래스입니다.
+ */
 @Entity
 @Table(name = "chat_messages")
 @Getter
@@ -30,30 +34,33 @@ import net.kumo.kumo.domain.entity.Enum.MessageType;
 @AllArgsConstructor
 @Builder
 public class ChatMessageEntity {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
-	private Long id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "room_id", nullable = false)
-	private ChatRoomEntity room;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "sender_id", nullable = false)
-	private UserEntity sender;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    private ChatRoomEntity room;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "message_type", length = 20)
-	private MessageType messageType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = false)
+    private UserEntity sender;
 
-	@Column(columnDefinition = "TEXT")
-	private String content;
+    /** 메시지 전송 유형 (텍스트, 파일, 이미지 등) */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "message_type", length = 20)
+    private MessageType messageType;
 
-	@Column(name = "is_read")
-	private Boolean isRead;
+    @Column(columnDefinition = "TEXT")
+    private String content;
 
-	@CreationTimestamp
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
+    @Column(name = "is_read")
+    private Boolean isRead;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
 }

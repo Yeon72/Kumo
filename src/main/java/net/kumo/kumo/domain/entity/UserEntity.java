@@ -2,7 +2,6 @@ package net.kumo.kumo.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -11,27 +10,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
+/**
+ * 플랫폼에 가입한 모든 사용자(구직자, 구인자, 관리자)의 핵심 식별 정보,
+ * 개인 신상, 접근 권한 및 연관된 하위 엔티티 내역을 통합 관리하는 엔티티 클래스입니다.
+ */
 @Entity
-@Table(name = "users") // DB 테이블명
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -39,175 +23,140 @@ import lombok.Setter;
 @Builder
 public class UserEntity {
 
-	/*
-	 * ==========================
-	 * 1. 계정 식별 정보
-	 * ==========================
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "user_id")
-	private Long userId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    private Long userId;
 
-	@Column(nullable = false, unique = true, length = 100)
-	private String email;
+    /** 로그인 시 식별자로 사용되는 고유 이메일 */
+    @Column(nullable = false, unique = true, length = 100)
+    private String email;
 
-	@Column(length = 255)
-	private String password;
+    @Column(length = 255)
+    private String password;
 
-	@Column(length = 50)
-	private String nickname;
+    @Column(length = 50)
+    private String nickname;
 
-	// DB: ENUM('SEEKER', 'RECRUITER', 'ADMIN') DEFAULT 'SEEKER'
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private Enum.UserRole role;
+    /** 플랫폼 내 사용자 권한 (SEEKER, RECRUITER, ADMIN) */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Enum.UserRole role;
 
-	/*
-	 * ==========================
-	 * 2. 성명 정보 (4개 필드)
-	 * ==========================
-	 */
-	@Column(name = "name_kanji_sei", nullable = false, length = 50)
-	private String nameKanjiSei;
+    @Column(name = "name_kanji_sei", nullable = false, length = 50)
+    private String nameKanjiSei;
 
-	@Column(name = "name_kanji_mei", nullable = false, length = 50)
-	private String nameKanjiMei;
+    @Column(name = "name_kanji_mei", nullable = false, length = 50)
+    private String nameKanjiMei;
 
-	@Column(name = "name_kana_sei", nullable = false, length = 50)
-	private String nameKanaSei;
+    @Column(name = "name_kana_sei", nullable = false, length = 50)
+    private String nameKanaSei;
 
-	@Column(name = "name_kana_mei", nullable = false, length = 50)
-	private String nameKanaMei;
+    @Column(name = "name_kana_mei", nullable = false, length = 50)
+    private String nameKanaMei;
 
-	/*
-	 * ==========================
-	 * 3. 개인 신상 정보
-	 * ==========================
-	 */
-	@Column(name = "birth_date")
-	private LocalDate birthDate;
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
 
-	// DB: ENUM('MALE', 'FEMALE', 'OTHER')
-	@Enumerated(EnumType.STRING)
-	@Column(length = 10)
-	private Enum.Gender gender;
+    /** 성별 (MALE, FEMALE, OTHER) */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private Enum.Gender gender;
 
-	@Column(length = 20, unique = true)
-	private String contact;
+    @Column(length = 20, unique = true)
+    private String contact;
 
-	// 기존에 있던 String profileImage; 필드를 지우고 아래로 !
+    /** 사용자 프로필 이미지 매핑 (순환 참조 방지 적용) */
+    @ToString.Exclude
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ProfileImageEntity profileImage;
 
-	@ToString.Exclude // 🔥 무한 루프 방지! (이걸 꼭 붙여주세요)
-	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-	private ProfileImageEntity profileImage;
+    @Column(name = "zip_code", length = 10)
+    private String zipCode;
 
-	/*
-	 * ==========================
-	 * 4. 주소 정보 (표시용)
-	 * ==========================
-	 */
-	@Column(name = "zip_code", length = 10)
-	private String zipCode;
+    @Column(name = "address_main", length = 255)
+    private String addressMain;
 
-	@Column(name = "address_main", length = 255)
-	private String addressMain;
+    @Column(name = "address_detail", length = 255)
+    private String addressDetail;
 
-	@Column(name = "address_detail", length = 255)
-	private String addressDetail;
+    @Column(name = "addr_prefecture", length = 50)
+    private String addrPrefecture;
 
-	/*
-	 * ==========================
-	 * 5. 주소 정보 (검색용 3단 분리)
-	 * ==========================
-	 */
-	@Column(name = "addr_prefecture", length = 50)
-	private String addrPrefecture; // 도/현
+    @Column(name = "addr_city", length = 50)
+    private String addrCity;
 
-	@Column(name = "addr_city", length = 50)
-	private String addrCity; // 시/구
+    @Column(name = "addr_town", length = 50)
+    private String addrTown;
 
-	@Column(name = "addr_town", length = 50)
-	private String addrTown; // 동/읍
+    @Column(columnDefinition = "DECIMAL(10, 8)")
+    private Double latitude;
 
-	/*
-	 * ==========================
-	 * 6. 위치 정보 (지도용 좌표)
-	 * ==========================
-	 */
-	// DB: DECIMAL(10, 8) -> Java: Double
-	@Column(columnDefinition = "DECIMAL(10, 8)")
-	private Double latitude;
+    @Column(columnDefinition = "DECIMAL(11, 8)")
+    private Double longitude;
 
-	@Column(columnDefinition = "DECIMAL(11, 8)")
-	private Double longitude;
+    /** 사용자 가입 경로 등 메타 데이터 */
+    @Column(name = "join_path", length = 50)
+    private String joinPath;
 
-	/*
-	 * ==========================
-	 * 7. 가입 및 메타 정보
-	 * ==========================
-	 */
-	@Column(name = "join_path", length = 50)
-	private String joinPath;
+    /** 마케팅 및 광고 정보 수신 동의 여부 */
+    @Column(name = "ad_receive")
+    @Builder.Default
+    private boolean adReceive = false;
 
-	@Column(name = "ad_receive")
-	@Builder.Default
-	private boolean adReceive = false;
+    /** 계정 활성화 여부 (정지/탈퇴 처리 시 false) */
+    @Column(name = "is_active")
+    @Builder.Default
+    private boolean isActive = true;
 
-	@Column(name = "is_active")
-	@Builder.Default
-	private boolean isActive = true;
+    /** 소셜 로그인 제공자 정보 (Google, Line 등) */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private Enum.SocialProvider socialProvider;
 
-	// 소셜 로그인용 (nullable)
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = true)
-	private Enum.SocialProvider socialProvider;
+    /** 소셜 연동 고유 식별자 */
+    @Column(name = "social_id", length = 100, nullable = true)
+    private String socialId;
 
-	@Column(name = "social_id", length = 100, nullable = true)
-	private String socialId;
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
-	/*
-	 * ==========================
-	 * 8. 타임스탬프 (자동 관리)
-	 * ==========================
-	 */
-	@CreationTimestamp
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
-	@UpdateTimestamp
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
+    /** 계정 보안을 위한 로그인 연속 실패 횟수 (성공 시 초기화됨) */
+    @Column(name = "login_fail_count", nullable = false)
+    @Builder.Default
+    private int loginFailCount = 0;
 
-	// ... 기존 필드들 (id, email, password 등) ...
+    /** 마지막 로그인 실패 발생 일시 */
+    @Column(name = "last_fail_at")
+    private LocalDateTime lastFailAt;
 
-	// 1. 실패 횟수 저장 (기본값 0)
-	@Column(name = "login_fail_count", nullable = false)
-	@Builder.Default // 이거 추가!
-	private int loginFailCount = 0;
+    /**
+     * 로그인 실패 시 실패 횟수를 증가시키고 발생 시간을 갱신합니다.
+     */
+    public void increaseFailCount() {
+        this.loginFailCount++;
+        this.lastFailAt = LocalDateTime.now();
+    }
 
-	// 2. 마지막 실패 시간 (null 가능)
-	@Column(name = "last_fail_at")
-	private LocalDateTime lastFailAt;
+    /**
+     * 로그인 성공 시 보안 관련 실패 횟수와 타임스탬프를 초기화합니다.
+     */
+    public void resetFailCount() {
+        this.loginFailCount = 0;
+        this.lastFailAt = null;
+    }
 
-	// 로그인 실패 시 호출: 횟수 +1, 시간 갱신
-	public void increaseFailCount() {
-		this.loginFailCount++;
-		this.lastFailAt = LocalDateTime.now();
-	}
+    /** 구인자(Recruiter) 계정에 등록된 사업장(회사) 목록 매핑 */
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CompanyEntity> companies = new ArrayList<>();
 
-	// 로그인 성공 시 호출: 횟수 0으로 초기화
-	public void resetFailCount() {
-		this.loginFailCount = 0;
-		this.lastFailAt = null;
-	}
-
-	// 🌟 1:N 관계 설정: 사장님 한 명이 여러 회사를 가짐(Recruiter 회사 정보)
-	@Builder.Default
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<CompanyEntity> companies = new ArrayList<>();
-
-    // 🌟 1:N 관계 설정: 구인자가 업로드한 여러 증빙서류들
+    /** 사용자 계정에 등록된 파일/증빙 서류 목록 매핑 (순환 참조 방지 적용) */
     @ToString.Exclude
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

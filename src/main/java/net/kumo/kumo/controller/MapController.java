@@ -1,4 +1,3 @@
-// 안녕하세요
 package net.kumo.kumo.controller;
 
 import java.security.Principal;
@@ -29,38 +28,39 @@ import net.kumo.kumo.repository.UserRepository;
 import net.kumo.kumo.service.MapService;
 import net.kumo.kumo.service.ScrapService;
 
+/**
+ * 지도 뷰(View) 라우팅 및 구인 공고 데이터, 신고, 지원 기능 등을 처리하는 Controller 클래스입니다.
+ */
 @Slf4j
 @Controller
 @RequestMapping("map")
 @RequiredArgsConstructor
 public class MapController {
 
-    // Key
     @Value("${GOOGLE_MAPS_KEY}")
     private String googleMapKey;
 
     private final MapService mapService;
-    private final ScrapService scrapService; // 🌟 추가: 찜하기 여부 확인용
+    private final ScrapService scrapService;
     private final UserRepository userRepo;
 
-    // --- 화면 반환 (View) ---
-
     /**
-     * 지도 메인페이지 연결
-     * 
-     * @return 메인 페이지
+     * 메인 지도 페이지를 렌더링합니다.
+     *
+     * @param model 뷰에 전달할 데이터를 담는 Model 객체
+     * @return 메인 지도 뷰 파일명
      */
     @GetMapping("main")
     public String mainMap(Model model) {
-        log.debug("메인화면 연결");
-
+        log.debug("지도 메인 화면 렌더링 요청");
         model.addAttribute("googleMapsKey", googleMapKey);
         return "mainView/main";
     }
 
     /**
-     * [VIEW] 구인 리스트 페이지 반환
-     * 파일 위치: resources/templates/mapView/job_list.html
+     * 구인 공고 리스트(모달/사이드바) 뷰를 반환합니다.
+     *
+     * @return 구인 리스트 뷰 파일명
      */
     @GetMapping("/job-list-view")
     public String jobListPage() {
@@ -68,55 +68,45 @@ public class MapController {
     }
 
     /**
-     * 공고 상세 페이지 이동
-     * 
-     * @param id      공고 아이디
-     * @param source  지역 꼬리표 'OSAKA', 'TOKYO' 등
-     * @param lang    언어 설정 'kr', 'jp'
-     * @param isOwner 공고 작성자 여부 (임시 테스트용, 추후 로그인 기능 구현시 Authenticate 로 변경)
-     * @param model
-     * @return mapView/job_detail.html 로 이동
+     * 특정 공고의 상세 페이지를 렌더링합니다.
+     * 조회된 공고 작성자 본인 여부 및 스크랩(찜) 상태를 확인하여 뷰에 전달합니다.
+     *
+     * @param id        조회할 공고 식별자
+     * @param source    공고 데이터 출처 (OSAKA, TOKYO 등)
+     * @param lang      클라이언트 언어 설정
+     * @param principal 현재 인증된 사용자 정보
+     * @param model     뷰에 전달할 데이터를 담는 Model 객체
+     * @return 공고 상세 페이지 뷰 파일명
      */
     @GetMapping("/jobs/detail")
     public String jobDetailPage(
             @RequestParam Long id,
             @RequestParam String source,
             @RequestParam(defaultValue = "kr") String lang,
-            Principal principal, // ★ HttpSession session 대신 Spring Security의 Principal 사용
+            Principal principal,
             Model model) {
 
-        // 1. 서비스에서 상세 데이터 조회
         JobDetailDTO job = mapService.getJobDetail(id, source, lang);
         boolean isOwner = false;
         boolean isSeeker = false;
+        boolean isScraped = false;
         UserEntity user;
 
-        // ==========================================
-        // 🌟 [수정된 로직] Spring Security 기반 스크랩(찜하기) 여부 확인
-        // ==========================================
-        boolean isScraped = false;
-
-        // principal이 null이 아니면 로그인된 상태
         if (principal != null) {
-            // principal.getName()은 보통 유저의 로그인 ID(email)를 반환합니다.
             String loginEmail = principal.getName();
             user = userRepo.findByEmail(loginEmail).orElse(null);
 
             if (user != null) {
                 isScraped = scrapService.checkIsScraped(user.getUserId(), id, source);
 
-                // 공고 작성 id와 user의 id 를 비교하여 공고 작성자 동일 여부를 확인
                 if (job.getUserId() != null) {
                     isOwner = user.getUserId().equals(job.getUserId());
                 }
-
                 isSeeker = (user.getRole() == Enum.UserRole.SEEKER);
             }
         }
 
         model.addAttribute("isScraped", isScraped);
-        // ==========================================
-
         model.addAttribute("job", job);
         model.addAttribute("googleMapsKey", googleMapKey);
         model.addAttribute("isOwner", isOwner);
@@ -127,20 +117,19 @@ public class MapController {
     }
 
     /**
-     * 구인 신청 메서드
-     * URL: /map/api/apply
+     * 구직자가 특정 구인 공고에 지원(구인 신청)합니다.
+     *
+     * @param dto       지원 대상 공고 식별자 및 출처 정보가 담긴 DTO
+     * @param principal 현재 인증된 사용자 정보
+     * @return 처리 결과 메시지를 포함한 ResponseEntity
      */
     @PostMapping("/api/apply")
     @ResponseBody
     public ResponseEntity<String> applyForJob(@RequestBody ApplicationDTO.ApplyRequest dto, Principal principal) {
-        // ★ 타입이 ApplicationDTO.ApplyRequest 로 변경됨!
-
-        // 1. 로그인 검증
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
 
-        // 2. 유저 정보 조회
         String loginEmail = principal.getName();
         UserEntity user = userRepo.findByEmail(loginEmail).orElse(null);
 
@@ -148,27 +137,28 @@ public class MapController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 사용자입니다.");
         }
 
-        // 3. 구직자 권한(SEEKER) 확인
         if (user.getRole() != Enum.UserRole.SEEKER) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("구직자(SEEKER) 계정만 지원할 수 있습니다.");
         }
 
-        // 4. 서비스 호출 및 예외 처리
         try {
             mapService.applyForJob(user, dto);
             return ResponseEntity.ok("구인 신청이 완료되었습니다.");
-
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            log.error("지원 처리 중 오류 발생: ", e);
+            log.error("지원 처리 중 시스템 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("지원 처리 중 서버 오류가 발생했습니다.");
         }
     }
 
     /**
-     * [NEW] 공고 삭제 API (작성자 전용)
-     * URL: /map/api/jobs
+     * 구인자가 본인이 작성한 특정 공고를 삭제합니다.
+     *
+     * @param id        삭제할 공고 식별자
+     * @param source    공고 데이터 출처
+     * @param principal 현재 인증된 사용자 정보
+     * @return 처리 결과 메시지를 포함한 ResponseEntity
      */
     @DeleteMapping("/api/jobs")
     @ResponseBody
@@ -177,12 +167,10 @@ public class MapController {
             @RequestParam String source,
             Principal principal) {
 
-        // 1. 로그인 검증
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
 
-        // 2. 유저 정보 조회
         String loginEmail = principal.getName();
         UserEntity user = userRepo.findByEmail(loginEmail).orElse(null);
 
@@ -190,35 +178,37 @@ public class MapController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 사용자입니다.");
         }
 
-        // 3. 서비스 호출 및 삭제 실행
         try {
             mapService.deleteJobPost(id, source, user);
             return ResponseEntity.ok("공고가 성공적으로 삭제되었습니다.");
         } catch (IllegalArgumentException | IllegalStateException e) {
-            // 본인 공고가 아니거나, 공고가 존재하지 않을 때
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
-            log.error("공고 삭제 중 오류 발생: ", e);
+            log.error("공고 삭제 중 시스템 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("공고 삭제 중 오류가 발생했습니다.");
         }
     }
 
-    // ==========================================
-    // [NEW] 검색 리스트 관련 매핑
-    // ==========================================
-
     /**
-     * 1. [VIEW] 검색 리스트 페이지 반환
-     * URL: /map/search_list
+     * 상세 검색 리스트 페이지를 렌더링합니다.
+     *
+     * @return 검색 리스트 뷰 파일명
      */
     @GetMapping("/search_list")
     public String searchListPage() {
-        // resources/templates/mapView/search_job_list.html 을 반환
         return "mapView/search_job_list";
     }
 
-    // --- 데이터 반환 (API) ---
-
+    /**
+     * 현재 지도 화면(Bounding Box) 영역 내에 존재하는 구인 공고 리스트를 조회합니다.
+     *
+     * @param minLat 최소 위도
+     * @param maxLat 최대 위도
+     * @param minLng 최소 경도
+     * @param maxLng 최대 경도
+     * @param lang   클라이언트 언어 설정
+     * @return 구인 공고 요약 리스트(JobSummaryDTO)
+     */
     @GetMapping("/api/jobs")
     @ResponseBody
     public List<JobSummaryDTO> getJobListApi(
@@ -227,26 +217,23 @@ public class MapController {
             @RequestParam Double minLng,
             @RequestParam Double maxLng,
             @RequestParam(defaultValue = "kr") String lang) {
-        // 서비스가 이미 정제된(JobResponse) 데이터를 줍니다.
         return mapService.getJobListInMap(minLat, maxLat, minLng, maxLng, lang);
     }
 
     /**
-     * [NEW] 신고 접수 API
-     * URL: /map/api/reports (주의: 클래스 매핑 "map" + 메소드 매핑 "/api/reports")
-     * 프론트엔드 fetch 주소 수정 필요: fetch('/map/api/reports', ...)
+     * 특정 공고에 대한 사용자 신고를 접수합니다.
+     *
+     * @param reportDTO 신고 내용 및 대상 공고 정보가 담긴 DTO
+     * @param principal 현재 인증된 사용자(신고자) 정보
+     * @return 처리 결과 메시지를 포함한 ResponseEntity
      */
     @PostMapping("/api/reports")
     @ResponseBody
-    public ResponseEntity<String> submitReport(@RequestBody ReportDTO reportDTO, Principal principal) { // ★ HttpSession
-                                                                                                        // 교체
-
-        // 1. 로그인 체크
+    public ResponseEntity<String> submitReport(@RequestBody ReportDTO reportDTO, Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
 
-        // 2. 신고자 정보 조회
         String loginEmail = principal.getName();
         UserEntity user = userRepo.findByEmail(loginEmail).orElse(null);
 
@@ -254,7 +241,6 @@ public class MapController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 사용자입니다.");
         }
 
-        // 3. 신고자 ID 설정 후 서비스 호출
         reportDTO.setReporterId(user.getUserId());
         mapService.createReport(reportDTO);
 
@@ -262,8 +248,13 @@ public class MapController {
     }
 
     /**
-     * 2. [API] 검색 조건에 맞는 공고 리스트 데이터 반환
-     * URL: /map/api/jobs/search
+     * 키워드 및 지역 조건을 기반으로 구인 공고를 검색합니다.
+     *
+     * @param keyword    검색 키워드 (선택)
+     * @param mainRegion 메인 지역 필터 (선택)
+     * @param subRegion  서브 지역 필터 (선택)
+     * @param lang       클라이언트 언어 설정
+     * @return 조건에 부합하는 공고 상세 리스트(JobDetailDTO)
      */
     @GetMapping("/api/jobs/search")
     @ResponseBody
@@ -272,8 +263,7 @@ public class MapController {
             @RequestParam(required = false) String mainRegion,
             @RequestParam(required = false) String subRegion,
             @RequestParam(defaultValue = "kr") String lang) {
-        log.info("검색 API 호출됨 - keyword: {}, mainRegion: {}, subRegion: {}", keyword, mainRegion, subRegion);
-
+        log.info("조건 기반 공고 검색 API 호출 - Keyword: {}, MainRegion: {}, SubRegion: {}", keyword, mainRegion, subRegion);
         return mapService.searchJobsList(keyword, mainRegion, subRegion, lang);
     }
 }

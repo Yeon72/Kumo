@@ -7,6 +7,10 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * 구직자의 구인 공고 지원 내역(Application)을 관리하는 엔티티 클래스입니다.
+ * 중복 지원 방지를 위해 '공고 출처, 공고 식별자, 구직자 식별자' 조합으로 유니크 제약 조건을 설정합니다.
+ */
 @Entity
 @Table(
         name = "applications",
@@ -36,7 +40,7 @@ public class ApplicationEntity {
     @JoinColumn(name = "seeker_id", nullable = false)
     private UserEntity seeker;
 
-    // 🌟 ENUM 타입 충돌을 피하기 위해 DB에는 STRING으로 저장
+    /** 지원 진행 상태 (데이터베이스에는 문자열로 저장됨) */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
     @Builder.Default
@@ -45,4 +49,5 @@ public class ApplicationEntity {
     @CreationTimestamp
     @Column(name = "applied_at", updatable = false)
     private LocalDateTime appliedAt;
+
 }

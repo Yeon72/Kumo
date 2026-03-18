@@ -1,4 +1,3 @@
-// 안녕하세요
 package net.kumo.kumo.domain.entity;
 
 import java.time.LocalDateTime;
@@ -18,132 +17,135 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kumo.kumo.domain.enums.JobStatus;
 
+/**
+ * 도쿄 지역 기반의 구인 공고 중, 지도 마커 배치를 위한
+ * 유효한 위치 좌표(Geocoding) 데이터를 포함하는 공고 정보를 관리하는 엔티티 클래스입니다.
+ */
 @Entity
 @Table(name = "tokyo_geocoded")
 @Getter
 @Setter
 public class TokyoGeocodedEntity extends BaseEntity {
 
-	@Column(name = "row_no")
-	private Integer rowNo;
+    @Column(name = "row_no")
+    private Integer rowNo;
 
-	@Column(name = "datanum", unique = true)
-	private Long datanum;
-	
-	@Column(name = "title", length = 50)
-	private String title;
-	
-	@Column(name = "href", length = 200)
-	private String href;
-	
-	@Column(name = "write_time")
-	private String writeTime;
-	
-	@Column(name = "img_urls", length = 500)
-	private String imgUrls;
-	
-	@Column(name = "body", columnDefinition = "TEXT")
-	private String body;
-	
-	@Column(name = "company_name", length = 50)
-	private String companyName;
+    @Column(name = "datanum", unique = true)
+    private Long datanum;
 
-	@Column(name = "address", length = 100)
-	private String address;
+    @Column(name = "title", length = 50)
+    private String title;
 
-	@Column(name = "contact_phone", length = 100)
-	private String contactPhone;
+    @Column(name = "href", length = 200)
+    private String href;
 
-	@Column(name = "position", length = 100)
-	private String position;
+    @Column(name = "write_time")
+    private String writeTime;
 
-	@Column(name = "job_description", columnDefinition = "TEXT")
-	private String jobDescription;
+    @Column(name = "img_urls", length = 500)
+    private String imgUrls;
 
-	@Column(name = "wage")
-	private String wage;
+    @Column(name = "body", columnDefinition = "TEXT")
+    private String body;
 
-	@Column(name = "wage_jp")
-	private String wageJp;
+    @Column(name = "company_name", length = 50)
+    private String companyName;
 
-	// 추가된 notes 필드 (원문)
-	@Column(name = "notes", columnDefinition = "TEXT")
-	private String notes;
+    @Column(name = "address", length = 100)
+    private String address;
 
-	@Column(name = "title_jp", length = 100)
-	private String titleJp;
+    @Column(name = "contact_phone", length = 100)
+    private String contactPhone;
 
-	@Column(name = "company_name_jp", length = 50)
-	private String companyNameJp;
+    @Column(name = "position", length = 100)
+    private String position;
 
-	@Column(name = "position_jp", length = 100)
-	private String positionJp;
-	
-	@Column(name = "contact_phone_jp", length = 100)
-	private String contactPhoneJp;
-	
-	@Column(name = "job_description_jp", columnDefinition = "TEXT")
-	private String jobDescriptionJp;
+    @Column(name = "job_description", columnDefinition = "TEXT")
+    private String jobDescription;
 
-	// 추가된 notesJp 필드 (번역)
-	@Column(name = "notes_jp", columnDefinition = "TEXT")
-	private String notesJp;
+    @Column(name = "wage")
+    private String wage;
 
-	@Column(nullable = false)
-	private Double lat;
+    @Column(name = "wage_jp")
+    private String wageJp;
 
-	@Column(nullable = false)
-	private Double lng;
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
 
-	@Column(name = "prefecture_jp", length = 20)
-	private String prefectureJp;
+    @Column(name = "title_jp", length = 100)
+    private String titleJp;
 
-	@Column(name = "city_jp", length = 20)
-	private String cityJp;
+    @Column(name = "company_name_jp", length = 50)
+    private String companyNameJp;
 
-	@Column(name = "ward_jp", length = 20)
-	private String wardJp;
+    @Column(name = "position_jp", length = 100)
+    private String positionJp;
 
-	@Column(name = "prefecture_kr", length = 20)
-	private String prefectureKr;
+    @Column(name = "contact_phone_jp", length = 100)
+    private String contactPhoneJp;
 
-	@Column(name = "city_kr", length = 20)
-	private String cityKr;
+    @Column(name = "job_description_jp", columnDefinition = "TEXT")
+    private String jobDescriptionJp;
 
-	@Column(name = "ward_kr", length = 20)
-	private String wardKr;
+    @Column(name = "notes_jp", columnDefinition = "TEXT")
+    private String notesJp;
 
-	@Column(name = "ward_city_jp", length = 20)
-	private String wardCityJp;
+    @Column(nullable = false)
+    private Double lat;
 
-	@Column(name = "ward_city_kr", length = 20)
-	private String wardCityKr;	
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id")
-	private UserEntity user;
+    @Column(nullable = false)
+    private Double lng;
 
-	@ManyToOne(fetch = FetchType.LAZY)	@JoinColumn(name = "company_id")
-	private CompanyEntity company;
-	
-	@Enumerated(EnumType.STRING)
-	@Column(columnDefinition = "ENUM('RECRUITING', 'CLOSED') DEFAULT 'RECRUITING'")
-	private JobStatus status;
-	
-	@CreationTimestamp
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
-	
-	@PrePersist
-	public void prePersist() {
-		if (this.status == null)
-			this.status = JobStatus.RECRUITING;
-//		if (this.viewCount == null)
-//			this.viewCount = 0;
-	}
-	
-	@Column(name = "salary_type")
-	private String salaryType;
-	
-	@Column(name = "salary_amount")
-	private Integer salaryAmount;
+    @Column(name = "prefecture_jp", length = 20)
+    private String prefectureJp;
+
+    @Column(name = "city_jp", length = 20)
+    private String cityJp;
+
+    @Column(name = "ward_jp", length = 20)
+    private String wardJp;
+
+    @Column(name = "prefecture_kr", length = 20)
+    private String prefectureKr;
+
+    @Column(name = "city_kr", length = 20)
+    private String cityKr;
+
+    @Column(name = "ward_kr", length = 20)
+    private String wardKr;
+
+    @Column(name = "ward_city_jp", length = 20)
+    private String wardCityJp;
+
+    @Column(name = "ward_city_kr", length = 20)
+    private String wardCityKr;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private CompanyEntity company;
+
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "ENUM('RECRUITING', 'CLOSED') DEFAULT 'RECRUITING'")
+    private JobStatus status;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.status == null) {
+            this.status = JobStatus.RECRUITING;
+        }
+    }
+
+    @Column(name = "salary_type")
+    private String salaryType;
+
+    @Column(name = "salary_amount")
+    private Integer salaryAmount;
 }

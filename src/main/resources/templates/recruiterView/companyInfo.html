@@ -2,236 +2,171 @@
 <html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 
 <head>
-  <meta charset="UTF-8" />
-  <title th:text="#{biz.info.page_title}">KUMO RECRUITER - 회사 정보 관리</title>
-  <script th:src="@{/js/recruiter/recruiterHeader.js}"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <meta charset="UTF-8" />
+    <title th:text="#{biz.info.page_title}">KUMO RECRUITER - 회사 정보 관리</title>
 
-  <link rel="stylesheet" th:href="@{/css/recruiter/recruiterHeader.css}" />
-  <link rel="stylesheet" th:href="@{/css/NonLoginFragments/NonLoginFooter.css}" />
-  <link rel="stylesheet" th:href="@{/css/recruiter/sidebar.css}" />
-  <link rel="stylesheet" th:href="@{/css/recruiter/rightSidebar.css}" />
-  <link rel="stylesheet" th:href="@{/css/recruiter/main.css}" />
-  <link rel="stylesheet" th:href="@{/css/recruiter/companyInfo.css}" />
-  <link rel="stylesheet" th:href="@{/css/recruiter/calendar.css}" />
-  <link rel="stylesheet" th:href="@{/css/recruiter/dark-theme.css}" />
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <link rel="stylesheet" th:href="@{/css/recruiter/recruiterHeader.css}" />
+    <link rel="stylesheet" th:href="@{/css/NonLoginFragments/NonLoginFooter.css}" />
+    <link rel="stylesheet" th:href="@{/css/recruiter/sidebar.css}" />
+    <link rel="stylesheet" th:href="@{/css/recruiter/rightSidebar.css}" />
+    <link rel="stylesheet" th:href="@{/css/recruiter/main.css}" />
+    <link rel="stylesheet" th:href="@{/css/recruiter/companyInfo.css}" />
+    <link rel="stylesheet" th:href="@{/css/recruiter/calendar.css}" />
+    <link rel="stylesheet" th:href="@{/css/recruiter/dark-theme.css}" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script th:inline="javascript">
+        /* <![CDATA[ */
+        const msgZipcodeAlert = /*[[#{biz.info.js.alert.zipcode}]]*/ '우편번호 7자리를 입력해 주세요.';
+        const msgNotFoundAlert = /*[[#{biz.info.js.alert.not_found}]]*/ '주소를 찾을 수 없습니다.';
+        const msgDelTitle = /*[[#{biz.info.swal.del_title}]]*/ '회사 삭제';
+        const msgDelText = /*[[#{biz.info.swal.del_text}]]*/ '정말 이 회사 정보를 삭제하시겠습니까?';
+        const msgConfirm = /*[[#{biz.info.swal.btn_confirm}]]*/ '삭제';
+        const msgCancel = /*[[#{biz.info.swal.btn_cancel}]]*/ '취소';
+        const msgCantDelete = /*[[#{biz.info.swal.cant_delete}]]*/ '삭제 불가';
+        const msgSuccess = /*[[#{biz.info.swal.success_title}]]*/ '삭제 완료';
+        const msgErrorTitle = /*[[#{biz.info.swal.error_title}]]*/ '오류';
+        const msgErrorText = /*[[#{biz.info.swal.error_text}]]*/ '삭제에 실패했습니다.';
+        const msgCommErrorTitle = /*[[#{biz.info.swal.comm_error_title}]]*/ '통신 오류';
+        const msgCommErrorText = /*[[#{biz.info.swal.comm_error_text}]]*/ '서버와 연결할 수 없습니다.';
+
+        // 분리된 JS에서 사용할 삭제 API 기본 URL
+        const deleteCompanyBaseUrl = /*[[@{/Recruiter/api/company/delete/}]]*/ '/Recruiter/api/company/delete/';
+        /* ]]> */
+    </script>
+
+    <script defer th:src="@{/js/recruiter/recruiterHeader.js}"></script>
+    <script defer th:src="@{/js/recruiter/rightSidebar.js}"></script>
+    <script defer th:src="@{/js/recruiter/global-calendar.js}"></script>
+    <script defer th:src="@{/js/recruiter/companyInfo.js}"></script>
 </head>
 
 <body>
-  <header th:replace="~{recruiterView/fragments/recruiterHeader :: headerFragment}"></header>
+<header th:replace="~{recruiterView/fragments/recruiterHeader :: headerFragment}"></header>
 
-  <div class="dashboard-wrapper">
+<div class="dashboard-wrapper">
     <div th:replace="~{recruiterView/fragments/sidebar :: sidebarFragment}"></div>
 
     <div class="main-container">
-      <main class="content-body">
-        <div class="company-mgmt-container">
-          <div class="header-title-area mb-4">
-            <h2 class="table-title" th:text="#{biz.info.title}">
-              회사 정보 관리
-            </h2>
-            <p class="text-muted small" th:text="#{biz.info.subtitle}">
-              등록된 회사 정보를 확인하고 수정할 수 있습니다.
-            </p>
-          </div>
+        <main class="content-body">
+            <div class="company-mgmt-container">
+                <div class="header-title-area mb-4">
+                    <h2 class="table-title" th:text="#{biz.info.title}">
+                        회사 정보 관리
+                    </h2>
+                    <p class="text-muted small" th:text="#{biz.info.subtitle}">
+                        등록된 회사 정보를 확인하고 수정할 수 있습니다.
+                    </p>
+                </div>
 
-          <div class="company-navigation mb-4">
-            <div class="nav-pills-wrapper">
-              <th:block th:each="comp : ${companyList}">
-                <button type="button" class="nav-pill"
-                  th:classappend="${currentCompany?.companyId == comp.companyId} ? 'active' : ''"
-                  th:onclick="|location.href='@{/Recruiter/CompanyInfo(id=${comp.companyId})}'|"
-                  th:text="${comp.bizName}">
-                  회사명
-                </button>
-              </th:block>
-              <button type="button" class="nav-pill-add" th:classappend="${isNew} ? 'active' : ''"
-                onclick="location.href='/Recruiter/CompanyInfo'">
-                <i class="bi bi-plus-lg"></i>
-              </button>
+                <div class="company-navigation mb-4">
+                    <div class="nav-pills-wrapper">
+                        <th:block th:each="comp : ${companyList}">
+                            <button type="button" class="nav-pill"
+                                    th:classappend="${currentCompany?.companyId == comp.companyId} ? 'active' : ''"
+                                    th:onclick="|location.href='@{/Recruiter/CompanyInfo(id=${comp.companyId})}'|"
+                                    th:text="${comp.bizName}">
+                                회사명
+                            </button>
+                        </th:block>
+                        <button type="button" class="nav-pill-add" th:classappend="${isNew} ? 'active' : ''"
+                                onclick="location.href='/Recruiter/CompanyInfo'">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="info-glass-card" th:if="${currentCompany != null}">
+                    <div class="mb-4">
+                        <h4 th:text="${isNew} ? #{biz.info.mode.new} : #{biz.info.mode.edit}">
+                            모드 제목
+                        </h4>
+                    </div>
+
+                    <form id="companyForm" th:action="@{/Recruiter/CompanyUpdate}" method="post">
+                        <input type="hidden" name="companyId" th:value="${currentCompany?.companyId}" />
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="info-label" th:text="#{biz.info.label.name}">회사명</label>
+                                <input type="text" name="bizName" class="kumo-form-control" th:value="${currentCompany?.bizName}"
+                                       required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="info-label" th:text="#{biz.info.label.ceo}">대표자명</label>
+                                <input type="text" name="ceoName" class="kumo-form-control" th:value="${currentCompany?.ceoName}" />
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="info-label" th:text="#{biz.info.label.address}">회사 주소</label>
+                                <div class="zipcode-group">
+                                    <input type="text" id="zipcode" name="zipCode" class="kumo-form-control"
+                                           th:value="${currentCompany?.zipCode}" maxlength="7"
+                                           th:placeholder="#{biz.info.placeholder.zipcode}" />
+                                    <button type="button" class="btn-address-search" onclick="searchAddress()"
+                                            th:text="#{biz.info.btn.search}">
+                                        주소 찾기
+                                    </button>
+                                </div>
+                                <div class="mb-2">
+                                    <input type="text" id="address_main" name="addressMain" class="kumo-form-control"
+                                           th:value="${currentCompany?.addressMain}" readonly
+                                           th:placeholder="#{biz.info.placeholder.address_main}" />
+                                </div>
+                                <div>
+                                    <input type="text" id="address_detail" name="addressDetail" class="kumo-form-control"
+                                           th:value="${currentCompany?.addressDetail}"
+                                           th:placeholder="#{biz.info.placeholder.address_detail}" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="addr_prefecture" name="addrPrefecture"
+                               th:value="${currentCompany?.addrPrefecture}" />
+                        <input type="hidden" id="addr_city" name="addrCity" th:value="${currentCompany?.addrCity}" />
+                        <input type="hidden" id="addr_town" name="addrTown" th:value="${currentCompany?.addrTown}" />
+                        <input type="hidden" id="latitude" name="latitude" th:value="${currentCompany?.latitude}" />
+                        <input type="hidden" id="longitude" name="longitude" th:value="${currentCompany?.longitude}" />
+
+                        <div class="form-actions d-flex justify-content-center gap-3 mt-4 mb-3">
+
+                            <button type="button" class="btn-delete" th:if="${!isNew}" th:onclick="deleteCompany([[${currentCompany.companyId}]])"
+                                    th:text="#{biz.info.btn.delete}">
+                                회사 삭제
+                            </button>
+
+                            <button type="submit" class="btn-save" th:text="${isNew} ? #{biz.info.btn.submit_new} : #{biz.info.btn.submit_edit}">
+                                저장
+                            </button>
+
+                        </div>
+                    </form>
+                </div>
+
+                <div class="info-glass-card text-center p-5" th:if="${currentCompany == null && !isNew}">
+                    <p class="text-muted" th:text="#{biz.info.empty_msg}">
+                        등록된 회사 정보가 없습니다. + 버튼을 눌러 회사를 등록해주세요!
+                    </p>
+                </div>
             </div>
-          </div>
 
-          <div class="info-glass-card" th:if="${currentCompany != null}">
-            <div class="mb-4">
-              <h4 th:text="${isNew} ? #{biz.info.mode.new} : #{biz.info.mode.edit}">
-                모드 제목
-              </h4>
-            </div>
-
-            <form id="companyForm" th:action="@{/Recruiter/CompanyUpdate}" method="post">
-              <input type="hidden" name="companyId" th:value="${currentCompany?.companyId}" />
-
-              <div class="row g-4">
-                <div class="col-md-6">
-                  <label class="info-label" th:text="#{biz.info.label.name}">회사명</label>
-                  <input type="text" name="bizName" class="kumo-form-control" th:value="${currentCompany?.bizName}"
-                    required />
-                </div>
-                <div class="col-md-6">
-                  <label class="info-label" th:text="#{biz.info.label.ceo}">대표자명</label>
-                  <input type="text" name="ceoName" class="kumo-form-control" th:value="${currentCompany?.ceoName}" />
-                </div>
-
-                <div class="col-md-12">
-                  <label class="info-label" th:text="#{biz.info.label.address}">회사 주소</label>
-                  <div class="zipcode-group">
-                    <input type="text" id="zipcode" name="zipCode" class="kumo-form-control"
-                      th:value="${currentCompany?.zipCode}" maxlength="7"
-                      th:placeholder="#{biz.info.placeholder.zipcode}" />
-                    <button type="button" class="btn-address-search" onclick="searchAddress()"
-                      th:text="#{biz.info.btn.search}">
-                      주소 찾기
-                    </button>
-                  </div>
-                  <div class="mb-2">
-                    <input type="text" id="address_main" name="addressMain" class="kumo-form-control"
-                      th:value="${currentCompany?.addressMain}" readonly
-                      th:placeholder="#{biz.info.placeholder.address_main}" />
-                  </div>
-                  <div>
-                    <input type="text" id="address_detail" name="addressDetail" class="kumo-form-control"
-                      th:value="${currentCompany?.addressDetail}"
-                      th:placeholder="#{biz.info.placeholder.address_detail}" />
-                  </div>
-                </div>
-              </div>
-
-              <input type="hidden" id="addr_prefecture" name="addrPrefecture"
-                th:value="${currentCompany?.addrPrefecture}" />
-              <input type="hidden" id="addr_city" name="addrCity" th:value="${currentCompany?.addrCity}" />
-              <input type="hidden" id="addr_town" name="addrTown" th:value="${currentCompany?.addrTown}" />
-              <input type="hidden" id="latitude" name="latitude" th:value="${currentCompany?.latitude}" />
-              <input type="hidden" id="longitude" name="longitude" th:value="${currentCompany?.longitude}" />
-
-              <div class="form-actions d-flex justify-content-center gap-3 mt-4 mb-3">
-              
-                <button type="button" class="btn-delete" th:if="${!isNew}" th:onclick="deleteCompany([[${currentCompany.companyId}]])"
-                  th:text="#{biz.info.btn.delete}">
-                  회사 삭제
-                </button>
-              
-                <button type="submit" class="btn-save" th:text="${isNew} ? #{biz.info.btn.submit_new} : #{biz.info.btn.submit_edit}">
-                  저장
-                </button>
-              
-              </div>
-            </form>
-          </div>
-
-          <div class="info-glass-card text-center p-5" th:if="${currentCompany == null && !isNew}">
-            <p class="text-muted" th:text="#{biz.info.empty_msg}">
-              등록된 회사 정보가 없습니다. + 버튼을 눌러 회사를 등록해주세요!
-            </p>
-          </div>
-        </div>
-
-        <footer th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"></footer>
-      </main>
+            <footer th:replace="~{NonLoginFragments/NonLoginFooter :: footerFragment}"></footer>
+        </main>
     </div>
 
     <div th:replace="~{recruiterView/fragments/rightSidebar :: rightSidebarFragment}"></div>
-      <div th:replace="~{fragments/floatingChat :: floatingChatFragment}"></div>
-  </div>
+    <div th:replace="~{fragments/floatingChat :: floatingChatFragment}"></div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script th:src="@{/js/recruiter/rightSidebar.js}"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.10/index.global.min.js"></script>
-  <script th:src="@{/js/recruiter/global-calendar.js}"></script>
-  <script th:src="@{'https://maps.googleapis.com/maps/api/js?key=' + ${googleMapsKey} + '&libraries=places'}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{'https://maps.googleapis.com/maps/api/js?key=' + ${googleMapsKey} + '&libraries=places'}"></script>
 
-  <script th:inline="javascript">
-    /* <![CDATA[ */
-    // 🌟 다국어 변수 세팅
-    const msgZipcodeAlert = /*[[#{biz.info.js.alert.zipcode}]]*/ '우편번호 7자리를 입력해 주세요.';
-    const msgNotFoundAlert = /*[[#{biz.info.js.alert.not_found}]]*/ '주소를 찾을 수 없습니다.';
-    const msgDelTitle = /*[[#{biz.info.swal.del_title}]]*/ '회사 삭제';
-    const msgDelText = /*[[#{biz.info.swal.del_text}]]*/ '정말 이 회사 정보를 삭제하시겠습니까?';
-    const msgConfirm = /*[[#{biz.info.swal.btn_confirm}]]*/ '삭제';
-    const msgCancel = /*[[#{biz.info.swal.btn_cancel}]]*/ '취소';
-    const msgCantDelete = /*[[#{biz.info.swal.cant_delete}]]*/ '삭제 불가';
-    const msgSuccess = /*[[#{biz.info.swal.success_title}]]*/ '삭제 완료';
-    const msgErrorTitle = /*[[#{biz.info.swal.error_title}]]*/ '오류';
-    const msgErrorText = /*[[#{biz.info.swal.error_text}]]*/ '삭제에 실패했습니다.';
-    const msgCommErrorTitle = /*[[#{biz.info.swal.comm_error_title}]]*/ '통신 오류';
-    const msgCommErrorText = /*[[#{biz.info.swal.comm_error_text}]]*/ '서버와 연결할 수 없습니다.';
-
-    function searchAddress() {
-      const zip = document.getElementById('zipcode').value;
-      if (!zip || zip.length < 7) {
-        alert(msgZipcodeAlert);
-        return;
-      }
-
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ address: zip, region: 'jp', language: 'ja' }, (results, status) => {
-        if (status === "OK") {
-          const addrResult = results[0];
-          document.getElementById('latitude').value = addrResult.geometry.location.lat();
-          document.getElementById('longitude').value = addrResult.geometry.location.lng();
-
-          let pref = "", city = "", town = "", rest = "";
-          addrResult.address_components.forEach(comp => {
-            const t = comp.types;
-            if (t.includes("administrative_area_level_1")) pref = comp.long_name;
-            if (t.includes("locality")) city = comp.long_name;
-            if (t.includes("sublocality_level_1")) town = comp.long_name;
-            if (t.includes("sublocality_level_2") || t.includes("premise")) rest += comp.long_name + " ";
-          });
-
-          document.getElementById('address_main').value = `${pref} ${city} ${town} ${rest}`.trim();
-          document.getElementById('addr_prefecture').value = pref;
-          document.getElementById('addr_city').value = city;
-          document.getElementById('addr_town').value = town;
-          document.getElementById('address_detail').focus();
-        } else {
-          alert(msgNotFoundAlert);
-        }
-      });
-    }
-
-    function deleteCompany(id) {
-      Swal.fire({
-        title: msgDelTitle,
-        text: msgDelText,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ff4d4f',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: msgConfirm,
-        cancelButtonText: msgCancel
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // 🌟 URL 가져오기
-          const baseUrl = /*[[@{/Recruiter/api/company/delete/}]]*/ '/api/company/delete/';
-
-          // 🌟 fetch 명령어 실행
-          fetch(baseUrl + id, { method: 'DELETE' })
-            .then(res => {
-              if (res.status === 409) {
-                return res.text().then(msg => {
-                  Swal.fire({ icon: 'warning', title: msgCantDelete, text: msg });
-                });
-              } else if (res.ok) {
-                Swal.fire({ icon: 'success', title: msgSuccess, showConfirmButton: false, timer: 1200 })
-                  .then(() => location.href = '/Recruiter/CompanyInfo');
-              } else {
-                Swal.fire({ icon: 'error', title: msgErrorTitle, text: msgErrorText });
-              }
-            })
-            .catch(err => {
-              console.error(err);
-              Swal.fire({ icon: 'error', title: msgCommErrorTitle, text: msgCommErrorText });
-            });
-        }
-      });
-    }
-    /* ]]> */
-  </script>
 </body>
-
 </html>

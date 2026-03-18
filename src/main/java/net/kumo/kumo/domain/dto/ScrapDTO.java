@@ -7,28 +7,26 @@ import lombok.Data;
 import java.sql.Timestamp;
 
 /**
- * 사용자가 즐겨찾기(찜)한 공고 게시글의 정보를 담고 있는 통합 DTO
- * (DB 매핑 및 프론트엔드 AJAX 통신 겸용)
+ * 사용자가 즐겨찾기(찜)한 구인 공고 정보를 담는 데이터 전송 객체입니다.
+ * 클라이언트와의 비동기 통신(AJAX/Fetch) 및 ORM(MyBatis/JPA) 매핑용으로 함께 사용됩니다.
  */
 @Data
-@NoArgsConstructor  // 🌟 필수: JSON 변환 및 MyBatis 매핑을 위한 기본 생성자
-@AllArgsConstructor // 🌟 옵션: 모든 필드를 포함하는 생성자
+@NoArgsConstructor
+@AllArgsConstructor
 public class ScrapDTO {
-	
-	// ===================================
-	// 1. DB 테이블 매핑용 필드 (kumo.scraps)
-	// ===================================
-	private Long scrapId;
-	private Long userId;
-	private Long jobPostId;
-	private Timestamp createTime;
-	
-	// ===================================
-	// 2. 프론트엔드 통신용 추가 필드
-	// ===================================
-	private Long targetPostId;  // JS에서 AJAX로 보낼 때 받을 이름
-	private boolean isScraped;  // JS로 응답(결과)을 돌려줄 때 쓸 이름
-	
-	private String targetSource;
-	
+
+    private Long scrapId;
+    private Long userId;
+    private Long jobPostId;
+    private Timestamp createTime;
+
+    /** 클라이언트 통신을 위한 대상 구인 공고 식별자 */
+    private Long targetPostId;
+
+    /** 클라이언트 응답용 스크랩 처리 결과 상태 반환값 */
+    private boolean isScraped;
+
+    /** 대상 공고 데이터 출처 (OSAKA, TOKYO 등) */
+    private String targetSource;
+
 }

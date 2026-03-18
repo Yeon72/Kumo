@@ -23,24 +23,28 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 관리자(Admin) 대시보드 및 백오피스 관리에 필요한 핵심 비즈니스 로직을 처리하는 서비스 클래스입니다.
+ * 사용자 계정 관리, 구인 공고 모니터링, 통계 데이터 추출 및 신고 내역 처리 기능을 제공합니다.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminService {
 
-    // 크롤링 데이터 리포지토리 (4종)
     private final OsakaGeocodedRepository osakaGeoRepo;
     private final TokyoGeocodedRepository tokyoGeoRepo;
     private final OsakaNoGeocodedRepository osakaNoRepo;
     private final TokyoNoGeocodedRepository tokyoNoRepo;
 
-    // 신고/유저 리포지토리
     private final ReportRepository reportRepo;
     private final UserRepository userRepo;
     private final LoginHistoryRepository loginHistoryRepo;
 
     /**
-     * 최근 로그인 로그 50개 가져오기
+     * 플랫폼 전체의 최근 로그인 시도 이력(성공/실패 포함) 50건을 최신순으로 조회합니다.
+     *
+     * @return 로그인 이력 엔티티 리스트
      */
     @Transactional(readOnly = true)
     public List<LoginHistoryEntity> getRecentLoginLogs() {
@@ -50,43 +54,45 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
-    // 전체 유저 가져오기 (DTO 사용)
+    /**
+     * 관리자 페이지의 회원 관리 목록을 검색 및 필터 조건에 따라 페이징 처리하여 조회합니다.
+     *
+     * @param lang       다국어 설정
+     * @param searchType 검색 대상 (email 또는 nickname/name)
+     * @param keyword    검색 키워드
+     * @param role       권한 필터 (SEEKER, RECRUITER 등)
+     * @param status     상태 필터 (ACTIVE, INACTIVE)
+     * @param pageable   페이징 요청 정보
+     * @return 필터링 및 페이징이 완료된 사용자 정보 DTO Page 객체
+     */
     @Transactional(readOnly = true)
     public Page<UserManageDTO> getAllUsers(String lang, String searchType, String keyword, String role, String status, Pageable pageable) {
 
-        // 1. 전체 유저 조회
         List<UserEntity> allUsers = userRepo.findAll();
 
-        // 2. 스트림 필터링
         List<UserManageDTO> filteredList = allUsers.stream()
                 .map(UserManageDTO::new)
-                // (1) 역할(Role) 필터
                 .filter(dto -> {
                     if (role == null || role.isBlank()) return true;
                     return role.equalsIgnoreCase(dto.getRole());
                 })
-                // (2) 상태(Status) 필터 (ACTIVE / INACTIVE)
                 .filter(dto -> {
                     if (status == null || status.isBlank()) return true;
                     return status.equalsIgnoreCase(dto.getStatus());
                 })
-                // (3) 검색어 필터
                 .filter(dto -> {
                     if (keyword == null || keyword.isBlank()) return true;
                     String k = keyword.toLowerCase();
                     if ("email".equals(searchType)) {
                         return dto.getEmail().toLowerCase().contains(k);
                     } else {
-                        // 닉네임 또는 실명 검색
                         return dto.getNickname().toLowerCase().contains(k) ||
                                 dto.getName().toLowerCase().contains(k);
                     }
                 })
-                // (4) 정렬 (최신 가입순)
                 .sorted((a, b) -> b.getJoinedAt().compareTo(a.getJoinedAt()))
                 .collect(Collectors.toList());
 
-        // 3. 페이지네이션 처리
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredList.size());
 
@@ -98,22 +104,18 @@ public class AdminService {
         return new PageImpl<>(pagedContent, pageable, filteredList.size());
     }
 
-    // 유저 통계 가져오기
-    // 유저 통계 가져오기
+    /**
+     * 대시보드 상단 요약 패널에 노출될 전체 회원 및 신규/활성 회원 통계 데이터를 집계합니다.
+     *
+     * @return 통계 데이터가 담긴 맵(Map) 객체
+     */
     public Map<String, Object> getUserStats() {
         Map<String, Object> stats = new HashMap<>();
 
-        // 1. 전체 회원 수
         long total = userRepo.count();
-
-        // 2. 신규 회원 (신규 기준을 1일 전 자정 기준으로 통일)
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(1).withHour(0).withMinute(0);
         long newUsers = userRepo.countByCreatedAtAfter(sevenDaysAgo);
-
-        // 3. 활동 중인 회원 (Active)
         long active = userRepo.countByIsActiveTrue();
-
-        // 4. 비활성 회원
         long inactive = total - active;
 
         stats.put("totalUsers", total);
@@ -125,50 +127,58 @@ public class AdminService {
     }
 
     /**
-     * 유저 권한(Role) 및 상태(Status) 수정
+     * 특정 사용자의 시스템 권한(Role) 및 계정 활성화 상태를 관리자가 수동으로 변경합니다.
+     *
+     * @param userId    대상 사용자 식별자
+     * @param roleStr   변경할 권한 명칭 문자열
+     * @param statusStr 변경할 상태 명칭 문자열 (ACTIVE, INACTIVE)
      */
     @Transactional
     public void updateUserRoleAndStatus(Long userId, String roleStr, String statusStr) {
-        // 1. 유저 조회
         UserEntity user = userRepo.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. ID: " + userId));
 
-        // 2. 권한(Role) 변경
         if (roleStr != null && !roleStr.isBlank()) {
             user.setRole(Enum.UserRole.valueOf(roleStr.toUpperCase()));
         }
 
-        // 3. 상태(Status -> isActive) 변경
         if (statusStr != null && !statusStr.isBlank()) {
             boolean isActive = "ACTIVE".equalsIgnoreCase(statusStr);
-            user.setActive(isActive); // UserEntity의 isActive 필드 업데이트
+            user.setActive(isActive);
         }
     }
 
     /**
-     * 유저 단건 삭제
+     * 특정 사용자를 시스템에서 완전 삭제(Hard Delete)합니다.
+     * 연관된 하위 데이터의 외래키 제약조건 위반에 유의해야 합니다.
+     *
+     * @param userId 삭제할 사용자 식별자
      */
     @Transactional
     public void deleteUser(Long userId) {
-        // [주의] 만약 이 유저가 작성한 공고(Post)나 신고(Report) 내역이 있다면,
-        // DB 제약조건(FK) 때문에 에러가 날 수 있습니다.
-        // 필요하다면 연관된 데이터를 먼저 삭제하거나, 삭제 대신 '탈퇴 상태(isActive=false)'로 처리하는 것을 권장합니다.
-
         userRepo.deleteById(userId);
     }
 
-    // 전체 공고 통합 조회 (Lang 적용)
+    /**
+     * 4개로 분리된 구인 공고 테이블 데이터를 모두 통합하여,
+     * 검색 및 필터 조건에 따라 페이징 처리된 목록을 반환합니다.
+     *
+     * @param lang       다국어 설정
+     * @param searchType 검색 대상 (지역 필터 또는 키워드)
+     * @param keyword    검색 키워드
+     * @param status     공고 상태 (RECRUITING, CLOSED 등)
+     * @param pageable   페이징 요청 정보
+     * @return 통합 및 필터링된 구인 공고 DTO Page 객체
+     */
     @Transactional(readOnly = true)
     public Page<JobSummaryDTO> getAllJobSummaries(String lang, String searchType, String keyword, String status, Pageable pageable) {
         List<JobSummaryDTO> unifiedList = new ArrayList<>();
 
-        // 1. 데이터 통합 (기존 코드)
         unifiedList.addAll(osakaGeoRepo.findAll().stream().map(e -> new JobSummaryDTO(e, lang, "OSAKA")).toList());
         unifiedList.addAll(tokyoGeoRepo.findAll().stream().map(e -> new JobSummaryDTO(e, lang, "TOKYO")).toList());
         unifiedList.addAll(osakaNoRepo.findAll().stream().map(e -> new JobSummaryDTO(e, lang, "OSAKA_NO")).toList());
         unifiedList.addAll(tokyoNoRepo.findAll().stream().map(e -> new JobSummaryDTO(e, lang, "TOKYO_NO")).toList());
 
-        // 2. 필터링 및 정렬 (기존 코드)
         List<JobSummaryDTO> filteredList = unifiedList.stream()
                 .filter(dto -> {
                     if (status == null || status.isBlank()) return true;
@@ -197,30 +207,29 @@ public class AdminService {
                 })
                 .collect(Collectors.toList());
 
-        // 3. [추가] 페이지네이션 적용 (List -> Page 변환)
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredList.size());
 
-        // 요청한 페이지가 전체 개수보다 크면 빈 리스트 반환
         if (start > filteredList.size()) {
             return new PageImpl<>(new ArrayList<>(), pageable, filteredList.size());
         }
 
-        // 부분 리스트 생성
         List<JobSummaryDTO> pagedContent = filteredList.subList(start, end);
 
         return new PageImpl<>(pagedContent, pageable, filteredList.size());
     }
 
     /**
-     * 공고 상태(Status) 수정
+     * 특정 구인 공고의 모집 진행 상태를 강제로 변경합니다.
+     *
+     * @param source    공고 데이터 출처 지역
+     * @param id        공고 식별자
+     * @param statusStr 변경할 상태 문자열
      */
     @Transactional
     public void updatePostStatus(String source, Long id, String statusStr) {
-        // 1. 상태값 Enum 변환 (RECRUITING, CLOSED 등)
         JobStatus newStatus = JobStatus.valueOf(statusStr.toUpperCase());
 
-        // 2. source에 따라 해당하는 테이블(Repository)에서 데이터 조회 및 수정
         if ("OSAKA".equals(source)) {
             var post = osakaGeoRepo.findById(id).orElseThrow();
             post.setStatus(newStatus);
@@ -240,13 +249,16 @@ public class AdminService {
         else {
             throw new IllegalArgumentException("유효하지 않은 공고 출처입니다: " + source);
         }
-
-        // @Transactional 덕분에 setter만 호출해도 DB에 자동 반영(Dirty Checking)됩니다.
     }
 
-    // =================================================================
-    // [수정] 신고 목록 조회 (페이징 지원 및 Page 반환으로 변경)
-    // =================================================================
+    /**
+     * 관리자 페이지의 신고 관리 탭에 노출될 전체 신고 내역을 페이징하여 조회합니다.
+     * 신고 대상 공고가 이미 삭제된 경우에도 예외 없이 대응하여 렌더링합니다.
+     *
+     * @param lang     다국어 설정
+     * @param pageable 페이징 요청 정보
+     * @return 페이징이 완료된 신고 내역 DTO Page 객체
+     */
     @Transactional(readOnly = true)
     public Page<ReportDTO> getAllReports(String lang, Pageable pageable) {
         Page<ReportEntity> entities = reportRepo.findAll(pageable);
@@ -286,9 +298,12 @@ public class AdminService {
         });
     }
 
-    // =================================================================
-    // [새로 추가] 신고 처리 상태 변경
-    // =================================================================
+    /**
+     * 관리자가 개별 신고 내역의 처리 상태(접수, 완료, 기각 등)를 갱신합니다.
+     *
+     * @param reportId  갱신할 신고 내역 식별자
+     * @param statusStr 변경할 상태 문자열
+     */
     @Transactional
     public void updateReportStatus(Long reportId, String statusStr) {
         ReportEntity report = reportRepo.findById(reportId)
@@ -297,9 +312,12 @@ public class AdminService {
         report.updateStatus(statusStr.toUpperCase());
     }
 
-    // =================================================================
-    // 3. 공고 일괄 삭제 (수정됨: 연관된 신고 내역 선처리)
-    // =================================================================
+    /**
+     * 관리자가 다중 선택한 구인 공고들을 시스템에서 일괄 완전 삭제(Hard Delete)합니다.
+     * 삭제 전 해당 공고를 타겟으로 하는 신고 내역을 선행 삭제 처리합니다.
+     *
+     * @param mixedIds "출처_식별자" 형태(예: OSAKA_123)의 식별자 리스트
+     */
     @Transactional
     public void deleteMixedPosts(List<String> mixedIds) {
         if (mixedIds == null || mixedIds.isEmpty()) return;
@@ -312,11 +330,6 @@ public class AdminService {
                 String source = mixedId.substring(0, lastUnderscore);
                 Long id = Long.parseLong(mixedId.substring(lastUnderscore + 1));
 
-                // [추가] 1. 외래키(FK)가 없으므로 공고를 지우기 전에 이 공고를 타겟으로 하는 신고 내역을 먼저 삭제
-                // (만약 ReportRepository에 deleteByTargetSourceAndTargetPostId 메서드가 없다면 만들어주셔야 합니다)
-                // reportRepo.deleteByTargetSourceAndTargetPostId(source, id);
-
-                // 2. 공고 삭제 처리
                 switch (source) {
                     case "OSAKA" -> osakaGeoRepo.deleteById(id);
                     case "TOKYO" -> tokyoGeoRepo.deleteById(id);
@@ -330,9 +343,11 @@ public class AdminService {
         }
     }
 
-    // =================================================================
-    // 4. 신고 내역 삭제
-    // =================================================================
+    /**
+     * 관리자가 다중 선택한 신고 내역들을 데이터베이스에서 일괄 삭제합니다.
+     *
+     * @param ids 삭제할 신고 내역 식별자 리스트
+     */
     @Transactional
     public void deleteReports(List<Long> ids) {
         if (ids != null && !ids.isEmpty()) {
@@ -340,9 +355,12 @@ public class AdminService {
         }
     }
 
-    // =================================================================
-    // 5. 대시보드 데이터
-    // =================================================================
+    /**
+     * 관리자 대시보드 렌더링에 필요한 지역별 공고 등록 현황 차트,
+     * 최근 6개월 가입자 통계 등의 집계 데이터를 생성하여 반환합니다.
+     *
+     * @return 대시보드 통계 데이터가 담긴 DTO
+     */
     @Transactional(readOnly = true)
     public AdminDashboardDTO getDashboardData() {
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(6).withHour(0).withMinute(0);
@@ -373,17 +391,13 @@ public class AdminService {
         Map<String, Long> osakaWards = listToMap(osakaGeoRepo.countByWard());
         Map<String, Long> tokyoWards = listToMap(tokyoGeoRepo.countByWard());
 
-        // 1. 기존의 mockUserStats 관련 코드를 지웁니다.
-
-        // 2. 최근 6개월 치 진짜 DB 데이터 가져오기 및 월별 그룹화 (수정된 코드)
         LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(5).withDayOfMonth(1).withHour(0).withMinute(0);
         List<UserEntity> recentUsers = userRepo.findByCreatedAtAfter(sixMonthsAgo);
 
-        // 연-월(예: 2026-01, 2026-02) 기준으로 그룹화하여 카운트
         Map<String, Long> realMonthlyStats = recentUsers.stream()
                 .collect(Collectors.groupingBy(
                         user -> user.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM")),
-                        TreeMap::new, // 시간순 정렬을 위해 TreeMap 사용
+                        TreeMap::new,
                         Collectors.counting()
                 ));
 
@@ -395,11 +409,10 @@ public class AdminService {
                 .weeklyPostStats(weeklyStats)
                 .osakaWardStats(osakaWards)
                 .tokyoWardStats(tokyoWards)
-                .monthlyUserStats(realMonthlyStats) // <-- 진짜 DB 데이터 맵핑!
+                .monthlyUserStats(realMonthlyStats)
                 .build();
     }
 
-    // --- Helper Methods ---
     private Map<String, Long> listToMap(List<Object[]> list) {
         Map<String, Long> map = new HashMap<>();
         for (Object[] row : list) {
