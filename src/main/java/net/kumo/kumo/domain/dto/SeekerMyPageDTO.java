@@ -17,39 +17,35 @@ import java.time.LocalDate;
 @Setter
 @Builder
 public class SeekerMyPageDTO {
-
-    private Long id;
-    private String email;
-    private String name;
-    private String nickname;
-
-    /** 등록된 프로필 이미지 접근 URL */
-    private String fileUrl;
-
-    private String address;
-    private LocalDate birthDate;
-    private String contact;
-
-    /** 소셜 로그인 연동 제공자 정보 */
-    private Enum.SocialProvider SocialProvider;
-
-    /**
-     * UserEntity 객체를 기반으로 화면 렌더링용 SeekerMyPageDTO를 생성합니다.
-     *
-     * @param userEntity 변환할 구직자 엔티티 객체
-     * @return 매핑이 완료된 SeekerMyPageDTO 객체
-     */
-    public static SeekerMyPageDTO EntityToDto(UserEntity userEntity) {
-        return SeekerMyPageDTO.builder()
-                .id(userEntity.getUserId())
-                .email(userEntity.getEmail())
-                .contact(userEntity.getContact())
-                .name(userEntity.getNameKanjiSei() + " " + userEntity.getNameKanjiSei())
-                .nickname(userEntity.getNickname())
-                .fileUrl(userEntity.getProfileImage() != null ? userEntity.getProfileImage().getFileUrl() : null)
-                .address(userEntity.getAddressMain() + " " + userEntity.getAddressDetail())
-                .birthDate(userEntity.getBirthDate())
-                .SocialProvider(userEntity.getSocialProvider())
-                .build();
-    }
-}
+	private Long id;                // PK
+	private String email;           // 이메일
+	private String name;            // 실명
+	private String nickname;        // 닉네임
+	private String fileUrl;    // 프로필 이미지 URL
+	private String address;         // 주소
+	private LocalDate birthDate;    // 생년월일
+	private  String contact;
+	
+	
+	// 소셜 연동 여부 (화면의 토글 스위치용)
+	private Enum.SocialProvider SocialProvider;
+	
+	
+	
+	// 엔티티 -> DTO 변환 메서드 (편의상 추가)
+	public static SeekerMyPageDTO EntityToDto (UserEntity userEntity) {
+		return SeekerMyPageDTO.builder()
+				.id(userEntity.getUserId())
+				.email(userEntity.getEmail())
+				.contact(userEntity.getContact())
+				.name(userEntity.getNameKanjiSei()+ " " +userEntity.getNameKanjiMei())
+				.nickname(userEntity.getNickname())
+				.fileUrl(userEntity.getProfileImage() != null ? userEntity.getProfileImage().getFileUrl() : null) // 없으면 null
+				.address(userEntity.getAddressMain() + " " + userEntity.getAddressDetail())
+				.birthDate(userEntity.getBirthDate())
+				// 예시: provider 필드나 별도 테이블을 통해 연동 여부 확인 로직 필요
+				.SocialProvider(userEntity.getSocialProvider())
+				.build();
+	
+		}
+	}
